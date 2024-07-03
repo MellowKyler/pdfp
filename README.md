@@ -14,23 +14,23 @@ PDF Processor - a GUI for some common PDF operations.
 
 ## Dependencies
 pdfp is basically just a wrapper for other software, so there are a lot of dependencies. Tested in Linux. I cannot confirm that everything will work in Windows, but most things should.
-**Python:**
-- PySide6
-- pyperclip
-**Operating System:**
-- [Bal4Web](https://www.cross-plus-a.com/bweb.htm)
-- [Balabolka](https://www.cross-plus-a.com/balabolka.htm)
-- [Briss (2.0 preferable)](https://github.com/mbaeuerle/Briss-2.0)
-- pdftk
-- ocrmypdf
-- ebook-convert
-- pdftotext
-- pdftoppm
+- **Python:**
+  - PySide6
+  - pyperclip
+- **Operating System:**
+  - [Bal4Web](https://www.cross-plus-a.com/bweb.htm)
+  - [Balabolka](https://www.cross-plus-a.com/balabolka.htm)
+  - [Briss (2.0 preferable)](https://github.com/mbaeuerle/Briss-2.0)
+  - pdftk
+  - ocrmypdf
+  - ebook-convert
+  - pdftotext
+  - pdftoppm
 
 ## Balabolka advice
 - I recommend against using Bal4Web TTS, since it has less language options will cause the whole application to stall until it slowly works. It's mostly included just a proof of concept.
 - Instead, I recommend using Balabolka itself. Here is my advised setup!
-View > Skins (Ctrl + K) > FM 
-View > Font and Colors (Ctrl + B) > Dark
-Tools > Use online TTS service (Ctrl + Shift + D) > Google [1]
-Remember to save to windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
+  - View > Skins (Ctrl + K) > FM 
+  - View > Font and Colors (Ctrl + B) > Dark
+  - Tools > Use online TTS service (Ctrl + Shift + D) > Google [1]
+  - Remember to save to windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
