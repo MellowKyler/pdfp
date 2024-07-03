@@ -41,3 +41,8 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
 
 ## Installation and Running
 Code button >> download zip >> unzip file >> cd into directory >> `python main.py`
+
+## Notes
+srry this is hella scuffed i tried my best :3 <br>
+it's my first time trying GUI dev, i hope to improve this over time and make it more stable
+
