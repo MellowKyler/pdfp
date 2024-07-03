@@ -24,7 +24,7 @@ class Converter(QObject):
         output_file = construct_filename(epub, "epub_ps")
         try:
             subprocess.run(["ebook-convert", epub, output_file], check=True)
-            self.op_msgs.emit("Conversion succeeded.")
+            self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
         except subprocess.CalledProcessError as e:
             self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
             return

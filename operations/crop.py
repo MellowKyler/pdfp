@@ -23,14 +23,14 @@ class Converter(QObject):
 
         
 
-        automation_enabled = self.settings.auto_crop_checkbox.isChecked()
+        automation_enabled = self.settings.auto_crop_radio.isChecked()
         if automation_enabled:
             self.op_msgs.emit(f"Cropping {pdf}...")
             QApplication.processEvents()
             output_file = construct_filename(pdf, "crop_ps")
             try:
                 subprocess.run([f"{briss_location}", "-s", pdf, "-d", output_file], check=True)
-                self.op_msgs.emit(f"Crop complete.")
+                self.op_msgs.emit(f"Crop complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
                     file_tree.add_file(output_file)
             except subprocess.CalledProcessError as e:
@@ -39,8 +39,8 @@ class Converter(QObject):
             self.op_msgs.emit(f"Launching Briss...")
             QApplication.processEvents()
             try:
-                subprocess.run([f"{briss_location}", pdf], check=True)
-            except subprocess.CalledProcessError as e:
-                self.op_msgs.emit(f"Briss launch failed with exit code {e.returncode}.")
+                subprocess.Popen([briss_location, pdf], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            except:
+                self.op_msgs.emit(f"Launching Balabolka failed")
 
 crop = Converter()

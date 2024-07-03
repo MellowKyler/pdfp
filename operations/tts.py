@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QApplication
 from settings_window import SettingsWindow
 from utils.filename_constructor import construct_filename
 from utils.command_installed import check_cmd
+import shlex
 
 class Converter(QObject):
     op_msgs = Signal(str)
@@ -15,7 +16,8 @@ class Converter(QObject):
             self.op_msgs.emit(f"File is not a PDF.")
             return
         self.settings = SettingsWindow()
-        wine_prefix_location = self.settings.wine_prefix_location_display
+        wine_prefix_location = self.settings.wine_prefix_location_display.text()
+        wine_prefix_location = shlex.quote(wine_prefix_location)
         wine_prefix_enabled = self.settings.wine_prefix_checkbox.isChecked()
 
         if self.settings.bal4web_radio.isChecked():
@@ -35,7 +37,7 @@ class Converter(QObject):
                 QApplication.processEvents()
                 try:
                     subprocess.run(wine_prefix_cmd + bal4web_command)
-                    self.op_msgs.emit(f"Conversion completed.")
+                    self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
                 except subprocess.CalledProcessError as e:
                     self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
             else:
@@ -53,15 +55,16 @@ class Converter(QObject):
                 if wine_prefix_location == "":
                     self.op_msgs.emit(f"Wine Prefix is enabled but not specified")
                     return
-                wine_prefix_cmd = ["env", f"WINEPREFIX=\"{wine_prefix_location}\""]
+                wine_prefix_cmd = ["env", f"WINEPREFIX={wine_prefix_location}"]
                 try:
-                    subprocess.run(wine_prefix_cmd + balabolka_command, check=True)
-                except subprocess.CalledProcessError as e:
-                    self.op_msgs.emit(f"Launching Balabolka failed with exit code {e.returncode}.")
+                    command = wine_prefix_cmd + balabolka_command
+                    subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                except:
+                    self.op_msgs.emit(f"Launching Balabolka failed.")
             else:
                 try:
-                    subprocess.run(balabolka_command, check=True)
-                except subprocess.CalledProcessError as e:
-                    self.op_msgs.emit(f"Launching Balabolka failed with exit code {e.returncode}.")
+                    subprocess.Popen(balabolka_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                except:
+                    self.op_msgs.emit(f"Launching Balabolka failed")
 
 tts = Converter()

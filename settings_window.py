@@ -394,8 +394,6 @@ class SettingsWindow(QWidget):
         enable_add_file = self.add_file_checkbox.isChecked()
         set_value("enable_add_file", enable_add_file)
 
-        enable_auto_crop = self.auto_crop_checkbox.isChecked()
-        set_value("enable_auto_crop", enable_auto_crop)
         briss_location = self.briss_location_display.text()
         set_value("briss_location", briss_location)
 

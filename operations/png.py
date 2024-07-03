@@ -6,6 +6,8 @@ from PySide6.QtWidgets import QApplication
 from settings_window import SettingsWindow
 from utils.filename_constructor import construct_filename
 from utils.command_installed import check_cmd
+from PyPDF2 import PdfFileReader
+import importlib
 
 class Converter(QObject):
     op_msgs = Signal(str)
@@ -30,13 +32,21 @@ class Converter(QObject):
         if not check_cmd.check_command_installed("pdftoppm"):
             return
 
+        try:
+            importlib.import_module("PyPDF2")
+        except ImportError:
+            self.op_msgs.emit(f"PyPDF2 is not installed. Please install it using 'pip install PyPDF2'")
+            return
+
         self.op_msgs.emit(f"Converting {pdf} to PNG...")
         QApplication.processEvents()
 
         filename = construct_filename(pdf, "png_ps")
         try:
             subprocess.run(["pdftoppm", "-png", "-f", pg, "-l", pg, pdf, filename], check=True)
-            formatted_pg = pg.zfill(3)
+            pdf_reader = PdfFileReader(pdf)
+            pdf_pg_digits = len(str(len(pdf_reader.pages)))
+            formatted_pg = pg.zfill(pdf_pg_digits)
             tmp_file = f"{filename}-{formatted_pg}.png"
             output_file = f"{filename}.png"
             shutil.move(tmp_file, output_file)
@@ -44,6 +54,6 @@ class Converter(QObject):
             self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}")
             return
 
-        self.op_msgs.emit(f"Conversion complete.")
+        self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
 
 pdf2png = Converter()

@@ -29,7 +29,7 @@ class Converter(QObject):
         except subprocess.CalledProcessError as e:
             self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}")
             return
-        self.op_msgs.emit(f"OCR complete.")
+        self.op_msgs.emit(f"OCR complete. Output: {output_file}")
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
 

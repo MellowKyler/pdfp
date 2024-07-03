@@ -30,14 +30,15 @@ class Converter(QObject):
             keep_pgs = [keep_pgs]
         else:
             keep_pgs = keep_pgs.split()
-        output_file = construct_filename(pdf, "op_ps")
-        command = ["pdftk", pdf, "cat"] + keep_pgs + ["output", output_file]
+        output_file = construct_filename(pdf, "rm_pages_ps")
+        # command = ["pdftk", pdf, "cat"] + keep_pgs + ["output", output_file]
         try:
-            subprocess.run([command], check=True)
+            # subprocess.run(command, check=True)
+            subprocess.run(["pdftk", pdf, "cat"] + keep_pgs + ["output", output_file], check=True)
         except subprocess.CalledProcessError as e:
             self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
             return
 
-        self.op_msgs.emit(f"Conversion of {pdf} completed.")
+        self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
 
 rm_pages = Converter()

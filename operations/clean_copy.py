@@ -6,6 +6,7 @@ import pyperclip
 from settings_window import SettingsWindow
 from utils.filename_constructor import construct_filename
 from utils.command_installed import check_cmd
+import importlib
 
 class Converter(QObject):
     op_msgs = Signal(str)
@@ -28,7 +29,7 @@ class Converter(QObject):
         if cc_file_checked:
             with open(output_txt_path, 'w', encoding='utf-8') as output_txt_file:
                 output_txt_file.write(full_text)
-            self.op_msgs.emit(f"Conversion completed.")
+            self.op_msgs.emit(f"Conversion complete. Output: {output_txt_path}")
         else:
             pyperclip.copy(full_text)
             self.op_msgs.emit(f"PDF contents copied to clipboard.")
@@ -37,6 +38,11 @@ class Converter(QObject):
             self.util_msgs.emit(f"File is not a PDF.")
             return
         if not check_cmd.check_command_installed("pdftotext"):
+            return
+        try:
+            importlib.import_module("pyperclip")
+        except ImportError:
+            self.op_msgs.emit(f"pyperclip is not installed. Please install it using 'pip install pyperclip'")
             return
         self.settings = SettingsWindow()
         self.op_msgs.emit(f"Converting {pdf}...")
