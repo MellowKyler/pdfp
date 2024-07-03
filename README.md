@@ -3,6 +3,8 @@
 # pdfp
 PDF Processor - a GUI for some common PDF operations.
 
+![pdfp](https://github.com/MellowKyler/pdfp/assets/108599378/cadedac6-8246-4d87-9121-732d6234db19)
+
 ## Operations
 - Converts EPUBs to PDFs
 - Turns PDF pages into PNGs
@@ -17,6 +19,7 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
 - **Python:**
   - PySide6
   - pyperclip
+  - PyPDF2
 - **Operating System:**
   - [Bal4Web](https://www.cross-plus-a.com/bweb.htm)
   - [Balabolka](https://www.cross-plus-a.com/balabolka.htm)
@@ -28,7 +31,7 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
   - pdftoppm
 
 ## Balabolka advice
-- I recommend against using Bal4Web TTS, since it has less language options will cause the whole application to stall until it slowly works. It's mostly included just a proof of concept.
+- I recommend against using Bal4Web TTS, since it has less language options will cause the whole application to stall while it slowly works. It's mostly included just a proof of concept.
 - Instead, I recommend using Balabolka itself. Here is my advised setup!
   - View > Skins (Ctrl + K) > FM 
   - View > Font and Colors (Ctrl + B) > Dark
