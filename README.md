@@ -36,4 +36,4 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
   - View > Skins (Ctrl + K) > FM 
   - View > Font and Colors (Ctrl + B) > Dark
   - Tools > Use online TTS service (Ctrl + Shift + D) > Google [1]
-  - Remember to save to windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
+  - Remember to save to Windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
