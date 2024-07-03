@@ -5,7 +5,7 @@ PDF Processor - a GUI for some common PDF operations.
 
 ![pdfp](https://github.com/MellowKyler/pdfp/assets/108599378/cadedac6-8246-4d87-9121-732d6234db19)
 
-## Operations
+## Features
 - Converts EPUBs to PDFs
 - Turns PDF pages into PNGs
 - Optical character recognition
@@ -13,6 +13,7 @@ PDF Processor - a GUI for some common PDF operations.
 - Removes pages and keeps specified pages
 - Copies contents without line breaks or trailing em-dashes
 - Converts text to speech
+- Drag, drop, and convert multiple files at a time
 
 ## Dependencies
 pdfp is basically just a wrapper for other software, so there are a lot of dependencies. Tested in Linux. I cannot confirm that everything will work in Windows, but most things should.
@@ -23,7 +24,7 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
 - **Operating System:**
   - [Bal4Web](https://www.cross-plus-a.com/bweb.htm)
   - [Balabolka](https://www.cross-plus-a.com/balabolka.htm)
-  - [Briss (2.0 preferable)](https://github.com/mbaeuerle/Briss-2.0)
+  - [Briss](https://github.com/mbaeuerle/Briss-2.0)
   - pdftk
   - ocrmypdf
   - ebook-convert
@@ -37,3 +38,6 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
   - View > Font and Colors (Ctrl + B) > Dark
   - Tools > Use online TTS service (Ctrl + Shift + D) > Google [1]
   - Remember to save to Windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
+
+## Installation and Running
+Code button >> download zip >> unzip file >> cd into directory >> `python main.py`
