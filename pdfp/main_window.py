@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("PDF Processor")
         msg_box.setText("<strong>Version 0.0.1</strong>")
-        pdf_utils_icon = QPixmap('logo.ico')
+        pdf_utils_icon = QPixmap('images/logo.ico')
         msg_box.setIconPixmap(pdf_utils_icon)
         html_text = (
             "<p>A GUI for some common PDF operations.</p>"

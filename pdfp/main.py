@@ -4,7 +4,7 @@ import sys
 from main_window import MainWindow
 
 app = QApplication(sys.argv)
-app.setWindowIcon(QIcon('logo.ico'))
+app.setWindowIcon(QIcon('images/logo.ico'))
 window = MainWindow(app)
 window.show()
 app.exec()

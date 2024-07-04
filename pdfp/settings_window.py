@@ -276,6 +276,7 @@ class SettingsWindow(QWidget):
         filename_box = QGroupBox()
         filename_box.setLayout(filename_layout)
 
+        #button box
         self.button_box = QDialogButtonBox(QDialogButtonBox.Reset | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.save_settings)
         self.button_box.rejected.connect(self.load_settings)
@@ -289,6 +290,7 @@ class SettingsWindow(QWidget):
 
         self.load_settings()
 
+        #layout
         scrollable_content = QWidget()
         scrollable_content.setMinimumHeight(850)
         

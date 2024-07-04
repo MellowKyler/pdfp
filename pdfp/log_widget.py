@@ -27,7 +27,6 @@ class LogWidget(QWidget):
         button_widget.button_msgs.connect(self.add_log_message)
         file_tree_widget.file_added.connect(self.add_log_message)
 
-
         self.log_widget = QTextEdit()
         self.log_widget.setReadOnly(True)
         layout = QVBoxLayout()

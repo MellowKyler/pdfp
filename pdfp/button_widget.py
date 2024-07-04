@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-# from log_widget import LogWidget
 from settings_window import SettingsWindow
 from operations.epub import epub2pdf
 from operations.png import pdf2png
@@ -20,16 +19,6 @@ class ButtonWidget(QWidget):
         self.settings = SettingsWindow()
 
         self.file_tree_widget = file_tree_widget
-
-        # self.log_widget = LogWidget()
-
-        # epub2pdf.util_msgs.connect(self.button_msgs)
-        # pdf2png.util_msgs.connect(self.button_msgs)
-        # ocr.util_msgs.connect(self.button_msgs)
-        # crop.util_msgs.connect(self.button_msgs)
-        # rm_pages.util_msgs.connect(self.button_msgs)
-        # clean_copy.util_msgs.connect(self.button_msgs)
-        # tts.util_msgs.connect(self.button_msgs)
 
         epub_button = QPushButton("Convert EPUB")
         epub_button.clicked.connect(self.epub_clicked)
