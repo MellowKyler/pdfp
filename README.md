@@ -1,9 +1,9 @@
-<img align="left" width="100" height="100" src="https://raw.githubusercontent.com/MellowKyler/pdfp/main/logo.ico" alt="icon">
+<img align="left" width="100" height="100" src="https://raw.githubusercontent.com/MellowKyler/pdfp/main/pdfp/images/logo.ico" alt="icon">
 
 # pdfp
 PDF Processor - a GUI for some common PDF operations.
 
-![pdfp](https://github.com/MellowKyler/pdfp/assets/108599378/cadedac6-8246-4d87-9121-732d6234db19)
+![pdfp](https://raw.githubusercontent.com/MellowKyler/pdfp/main/pdfp/images/demo.png)
 
 ## Features
 - Converts EPUBs to PDFs
