@@ -2,7 +2,7 @@ import os
 from settings_window import SettingsWindow
 
 def construct_filename(input_file, operation_ps):
-    settings = SettingsWindow()
+    settings = SettingsWindow.instance()
     dirpath = os.path.dirname(input_file)
 
     default_filename_enabled = settings.default_filename_checkbox.isChecked()

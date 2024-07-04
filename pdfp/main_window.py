@@ -16,8 +16,11 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(350)
         self.setMinimumHeight(250)
 
-        menu_bar = self.menuBar()
+        self.settings_window = SettingsWindow.instance()
+        if self.settings_window.remember_window_checkbox.isChecked():
+           self.restore_geometry()
 
+        menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("&File")
         select_file_action = file_menu.addAction("Select File")
         select_file_action.triggered.connect(self.select_file)
@@ -63,8 +66,7 @@ class MainWindow(QMainWindow):
                 self.file_tree_widget.add_file(selected_file)
 
     def settings_popup(self):
-        self.settings_window = SettingsWindow()
-        self.settings_window.show()
+       self.settings_window.show()
     
     def about_popup(self):
         msg_box = QMessageBox()
@@ -78,3 +80,17 @@ class MainWindow(QMainWindow):
         )
         msg_box.setInformativeText(html_text)
         msg_box.exec()
+
+    def closeEvent(self, event):
+        self.save_geometry()
+        event.accept()
+
+    def save_geometry(self):
+        self.settings_window.settings.setValue("geometry", self.saveGeometry())
+        self.settings_window.settings.setValue("pos", self.pos())
+        self.settings_window.settings.setValue("size", self.size())
+
+    def restore_geometry(self):
+        self.restoreGeometry(self.settings_window.settings.value("geometry"))
+        self.move(self.settings_window.settings.value("pos"))
+        self.resize(self.settings_window.settings.value("size"))

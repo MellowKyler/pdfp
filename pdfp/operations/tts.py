@@ -15,7 +15,7 @@ class Converter(QObject):
         if not pdf.endswith('.pdf'):
             self.op_msgs.emit(f"File is not a PDF.")
             return
-        self.settings = SettingsWindow()
+        self.settings = SettingsWindow.instance()
         wine_prefix_location = self.settings.wine_prefix_location_display.text()
         wine_prefix_location = shlex.quote(wine_prefix_location)
         wine_prefix_enabled = self.settings.wine_prefix_checkbox.isChecked()

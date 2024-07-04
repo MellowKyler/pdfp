@@ -22,7 +22,7 @@ class Converter(QObject):
         QApplication.processEvents()
 
         
-        self.settings = SettingsWindow()
+        self.settings = SettingsWindow.instance()
         output_file = construct_filename(pdf, "ocr_ps")
         try:
             subprocess.run(["ocrmypdf", "--force-ocr", pdf, output_file], check=True)

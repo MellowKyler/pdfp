@@ -78,7 +78,7 @@ class Converter(QObject):
         except ImportError:
             self.op_msgs.emit(f"pyperclip is not installed. Please install it using 'pip install pyperclip'")
             return
-        self.settings = SettingsWindow()
+        self.settings = SettingsWindow.instance()
         self.op_msgs.emit(f"Converting {pdf}...")
         QApplication.processEvents()
         output_txt_path = construct_filename(pdf, "cc_ps")

@@ -7,7 +7,7 @@ class FileTreeWidget(QTreeView):
 
     def __init__(self):
         super().__init__()
-
+        
         self.model = QStandardItemModel()
         self.setModel(self.model)
         self.header().hide()

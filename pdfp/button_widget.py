@@ -16,7 +16,7 @@ class ButtonWidget(QWidget):
         super().__init__()
         self.main_window = main_window
         self.app = QApplication.instance()
-        self.settings = SettingsWindow()
+        self.settings = SettingsWindow.instance()
 
         self.file_tree_widget = file_tree_widget
 

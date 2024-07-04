@@ -3,8 +3,25 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 
 class SettingsWindow(QWidget):
+
+    #if i don't put this here, multiple qwidgets get loaded for SettingsWindow on startup.
+    #invokations should look like now instead: self.settings = SettingsWindow.instance()
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(SettingsWindow, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = SettingsWindow()
+        return cls._instance
+
     def __init__(self):
+        if hasattr(self, '_initialized'):
+            return
         super().__init__()
+
         self.setWindowTitle("Settings")
         self.setGeometry(500, 500, 450, 600)
         self.setMinimumHeight(250)
@@ -22,10 +39,16 @@ class SettingsWindow(QWidget):
         center_af_cb.addWidget(self.add_file_checkbox)
         center_af_cb.setAlignment(Qt.AlignCenter)
 
+        self.remember_window_checkbox = QCheckBox("Remember window placement")
+        center_rw_cb = QHBoxLayout()
+        center_rw_cb.addWidget(self.remember_window_checkbox)
+        center_rw_cb.setAlignment(Qt.AlignCenter)
+
         gen_box = QGroupBox()
         gen_box_layout = QVBoxLayout()
         gen_box_layout.addLayout(center_gen_settings_label)
         gen_box_layout.addLayout(center_af_cb)
+        gen_box_layout.addLayout(center_rw_cb)
         gen_box.setLayout(gen_box_layout)
         
         #briss / crop
@@ -193,7 +216,6 @@ class SettingsWindow(QWidget):
 
         self.default_filename_checkbox.toggled.connect(self.default_filename_checkbox_action)
         self.prefix_suffix_checkbox.toggled.connect(self.prefix_suffix_checkbox_action)
-
         
         ps_box_label = QLabel("<strong>Operation Prefixes/Suffixes:<strong>")
         ps_box_label.setAlignment(Qt.AlignCenter)
@@ -290,9 +312,12 @@ class SettingsWindow(QWidget):
 
         self.load_settings()
 
+        if self.remember_window_checkbox.isChecked():
+            self.restore_geometry()
+
         #layout
         scrollable_content = QWidget()
-        scrollable_content.setMinimumHeight(875)
+        #scrollable_content.setMinimumHeight(925)
         
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
@@ -333,6 +358,9 @@ class SettingsWindow(QWidget):
 
         enable_add_file = get_value("enable_add_file", True, type=bool)
         self.add_file_checkbox.setChecked(enable_add_file)
+
+        enable_remember_window = get_value("enable_remember_window", True, type=bool)
+        self.remember_window_checkbox.setChecked(enable_remember_window)
 
         auto_crop_checked = get_value("auto_crop_checked", False, type=bool)
         self.auto_crop_radio.setChecked(auto_crop_checked)
@@ -420,6 +448,9 @@ class SettingsWindow(QWidget):
 
         enable_add_file = self.add_file_checkbox.isChecked()
         set_value("enable_add_file", enable_add_file)
+
+        enable_remember_window = self.remember_window_checkbox.isChecked()
+        set_value("enable_remember_window", enable_remember_window)
 
         briss_location = self.briss_location_display.text()
         set_value("briss_location", briss_location)
@@ -571,5 +602,17 @@ class SettingsWindow(QWidget):
                 file_path += ".ini"
 
         return file_path
-
       
+    def closeEvent(self, event):
+        self.save_geometry()
+        event.accept()
+
+    def save_geometry(self):
+        self.settings.setValue("settings-geometry", self.saveGeometry())
+        self.settings.setValue("settings-pos", self.pos())
+        self.settings.setValue("settings-size", self.size())
+
+    def restore_geometry(self):
+        self.restoreGeometry(self.settings.value("settings-geometry"))
+        self.move(self.settings.value("settings-pos"))
+        self.resize(self.settings.value("settings-size"))

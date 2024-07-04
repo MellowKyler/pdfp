@@ -25,7 +25,7 @@ class Converter(QObject):
         
         self.op_msgs.emit(f"Converting {pdf}")
         QApplication.processEvents()
-        self.settings = SettingsWindow()
+        self.settings = SettingsWindow.instance()
         if "-" not in keep_pgs and " " not in keep_pgs:
             keep_pgs = f"{keep_pgs}-{keep_pgs}"
             keep_pgs = [keep_pgs]

@@ -15,7 +15,7 @@ class Converter(QObject):
             self.op_msgs.emit(f"File is not a PDF.")
             return
 
-        self.settings = SettingsWindow()
+        self.settings = SettingsWindow.instance()
         briss_location = self.settings.briss_location_display.text()
         if not os.path.exists(briss_location):
             self.op_msgs.emit(f"Briss location invalid. Configure in settings.")
