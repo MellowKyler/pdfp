@@ -1,4 +1,4 @@
-/__pycache__/*
-/operations/__pycache__/*
-/utils/__pycache__/*
-/config/*
+/__pycache__/
+/operations/__pycache__/
+/utils/__pycache__/
+/config/
