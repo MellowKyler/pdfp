@@ -292,7 +292,7 @@ class SettingsWindow(QWidget):
 
         #layout
         scrollable_content = QWidget()
-        scrollable_content.setMinimumHeight(850)
+        scrollable_content.setMinimumHeight(875)
         
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
@@ -551,20 +551,20 @@ class SettingsWindow(QWidget):
                 selected_folder = folder_paths[0]
                 return selected_folder
 
-    def get_saves_dir(self):
+    def get_config_dir(self):
         project_root = QDir.currentPath()
-        saves_directory = os.path.join(project_root, "saves")
-        if not os.path.isdir(saves_directory):
-            os.mkdir(saves_directory)
-        return saves_directory
+        config_directory = os.path.join(project_root, "config")
+        if not os.path.isdir(config_directory):
+            os.mkdir(config_directory)
+        return config_directory
                 
     def save_ini_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
-        saves_directory = self.get_saves_dir()
+        config_directory = self.get_config_dir()
 
-        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create INI File",saves_directory,"INI Files (*.ini);;All Files (*)",options=options)
+        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create INI File",config_directory,"INI Files (*.ini);;All Files (*)",options=options)
 
         if file_path:
             if not file_path.endswith(".ini"):
