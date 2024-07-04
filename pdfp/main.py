@@ -8,4 +8,4 @@ app.setWindowIcon(QIcon('images/logo.ico'))
 window = MainWindow(app)
 window.show()
 app.exec()
-
+print("test")
