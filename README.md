@@ -45,7 +45,7 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
 
 ```bash
 $ pip install pdfp
-$ songs-to-youtube
+$ pdfp
 ```
 
 ### Run from source
