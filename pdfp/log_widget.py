@@ -1,15 +1,15 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QTreeView, QLineEdit, QGroupBox, QRadioButton, QLabel, QFrame, QTextEdit
 from PySide6.QtCore import QSize, Qt, Slot, Signal
 from PySide6.QtGui import QAction, QIcon, QStandardItem, QStandardItemModel
-from utils.command_installed import check_cmd
-from operations.epub import epub2pdf
-from operations.png import pdf2png
-from operations.ocr import ocr
-from operations.crop import crop
-from operations.rm_pages import rm_pages
-from operations.clean_copy import clean_copy
-from operations.tts import tts
-from button_widget import ButtonWidget
+from pdfp.utils.command_installed import check_cmd
+from pdfp.operations.epub import epub2pdf
+from pdfp.operations.png import pdf2png
+from pdfp.operations.ocr import ocr
+from pdfp.operations.crop import crop
+from pdfp.operations.rm_pages import rm_pages
+from pdfp.operations.clean_copy import clean_copy
+from pdfp.operations.tts import tts
+from pdfp.button_widget import ButtonWidget
 
 class LogWidget(QWidget):
     def __init__(self, file_tree_widget, main_window):

@@ -1,5 +1,5 @@
 import os
-from settings_window import SettingsWindow
+from pdfp.settings_window import SettingsWindow
 
 def construct_filename(input_file, operation_ps):
     settings = SettingsWindow.instance()

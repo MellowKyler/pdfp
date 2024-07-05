@@ -1,13 +1,13 @@
 import os
 import subprocess
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QApplication
-import pyperclip
-from settings_window import SettingsWindow
-from utils.filename_constructor import construct_filename
-from utils.command_installed import check_cmd
 import importlib
 import math
+import pyperclip
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QApplication
+from pdfp.settings_window import SettingsWindow
+from pdfp.utils.filename_constructor import construct_filename
+from pdfp.utils.command_installed import check_cmd
 
 class Converter(QObject):
     op_msgs = Signal(str)

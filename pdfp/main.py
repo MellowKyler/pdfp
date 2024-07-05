@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtCore import QDir
 import sys
 import os
-from main_window import MainWindow
+from pdfp.main_window import MainWindow
 
 def main():
     os.chdir(os.path.dirname(__file__))

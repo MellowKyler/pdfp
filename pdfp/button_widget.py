@@ -1,14 +1,14 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from settings_window import SettingsWindow
-from operations.epub import epub2pdf
-from operations.png import pdf2png
-from operations.ocr import ocr
-from operations.crop import crop
-from operations.rm_pages import rm_pages
-from operations.clean_copy import clean_copy
-from operations.tts import tts
+from pdfp.settings_window import SettingsWindow
+from pdfp.operations.epub import epub2pdf
+from pdfp.operations.png import pdf2png
+from pdfp.operations.ocr import ocr
+from pdfp.operations.crop import crop
+from pdfp.operations.rm_pages import rm_pages
+from pdfp.operations.clean_copy import clean_copy
+from pdfp.operations.tts import tts
 
 class ButtonWidget(QWidget):
     button_msgs = Signal(str)

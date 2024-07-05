@@ -1,11 +1,11 @@
+import os
 from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QSplitter, QLabel, QFileDialog
 from PySide6.QtCore import QSize, Qt, QDir
 from PySide6.QtGui import QAction, QIcon, QPixmap
-from settings_window import SettingsWindow
-from file_tree_widget import FileTreeWidget
-from button_widget import ButtonWidget
-from log_widget import LogWidget
-import os
+from pdfp.settings_window import SettingsWindow
+from pdfp.file_tree_widget import FileTreeWidget
+from pdfp.button_widget import ButtonWidget
+from pdfp.log_widget import LogWidget
 
 class MainWindow(QMainWindow):
     def __init__(self, app):
