@@ -91,6 +91,9 @@ class MainWindow(QMainWindow):
         self.settings_window.settings.setValue("size", self.size())
 
     def restore_geometry(self):
-        self.restoreGeometry(self.settings_window.settings.value("geometry"))
-        self.move(self.settings_window.settings.value("pos"))
-        self.resize(self.settings_window.settings.value("size"))
+        if geo := self.settings_window.settings.value("geometry"):
+            self.restoreGeometry(geo)
+        if pos := self.settings_window.settings.value("pos"):
+            self.move(pos)
+        if size := self.settings_window.settings.value("size"):
+            self.resize(size)

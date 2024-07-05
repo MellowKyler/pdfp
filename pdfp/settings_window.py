@@ -613,6 +613,9 @@ class SettingsWindow(QWidget):
         self.settings.setValue("settings-size", self.size())
 
     def restore_geometry(self):
-        self.restoreGeometry(self.settings.value("settings-geometry"))
-        self.move(self.settings.value("settings-pos"))
-        self.resize(self.settings.value("settings-size"))
+        if geo := self.settings.value("geometry"):
+            self.restoreGeometry(geo)
+        if pos := self.settings.value("pos"):
+            self.move(pos)
+        if size := self.settings.value("size"):
+            self.resize(size)

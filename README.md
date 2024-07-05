@@ -40,6 +40,10 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
   - Remember to save to Windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
 
 ## Installation and Running
+### pip
+[https://pypi.org/project/pdfp/](https://pypi.org/project/pdfp/)
+`pip install pdfp`
+### Manual
 Code button >> download zip >> unzip file >> cd into directory >> `python main.py`
 
 ## Notes

@@ -5,9 +5,13 @@ import sys
 import os
 from main_window import MainWindow
 
-os.chdir(os.path.dirname(__file__))
-app = QApplication(sys.argv)
-app.setWindowIcon(QIcon(os.path.join(QDir.currentPath(), "images", "logo.ico")))
-window = MainWindow(app)
-window.show()
-app.exec()
+def main():
+    os.chdir(os.path.dirname(__file__))
+    app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(os.path.join(QDir.currentPath(), "images", "logo.ico")))
+    window = MainWindow(app)
+    window.show()
+    app.exec()
+
+if __name__ == "__main__":
+    main()
