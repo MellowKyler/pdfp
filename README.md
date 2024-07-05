@@ -40,11 +40,20 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
   - Remember to save to Windows style directory if you're on Linux (ex. Z:\home\willow\Downloads\book.wav)
 
 ## Installation and Running
-### pip
-[https://pypi.org/project/pdfp/](https://pypi.org/project/pdfp/)
-`pip install pdfp`
-### Manual
-Code button >> download zip >> unzip file >> cd into directory >> `python main.py`
+
+### Install from [PyPI](https://pypi.org/project/pdfp/)
+
+```bash
+$ pip install songs-to-youtube
+$ songs-to-youtube
+```
+
+### Run from source
+
+1. Have Python version 3.10-3.11 installed, and [poetry](https://python-poetry.org/)
+2. Download the source code
+3. Install required Python modules with `poetry install`
+4. Run the program with `poetry run pdfp`
 
 ## Notes
 srry this is hella scuffed i tried my best :3 <br>
