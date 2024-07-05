@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "pdfp"
+version = "0.0.1"
+description = "PDF Processor - a GUI for some common PDF operations."
+authors = ["MellowKyler <drearywillowdev@gmail.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+pyperclip = "^1.9.0"
+PySide6 = "^6.7.2"
+pypdf = "^4.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

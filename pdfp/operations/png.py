@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 from settings_window import SettingsWindow
 from utils.filename_constructor import construct_filename
 from utils.command_installed import check_cmd
-from PyPDF2 import PdfFileReader
+from pypdf import PdfReader
 import importlib
 
 class Converter(QObject):
@@ -33,9 +33,9 @@ class Converter(QObject):
             return
 
         try:
-            importlib.import_module("PyPDF2")
+            importlib.import_module("pypdf")
         except ImportError:
-            self.op_msgs.emit(f"PyPDF2 is not installed. Please install it using 'pip install PyPDF2'")
+            self.op_msgs.emit(f"pypdf is not installed. Please install it using 'pip install pypdf'")
             return
 
         self.op_msgs.emit(f"Converting {pdf} to PNG...")
@@ -44,7 +44,7 @@ class Converter(QObject):
         filename = construct_filename(pdf, "png_ps")
         try:
             subprocess.run(["pdftoppm", "-png", "-f", pg, "-l", pg, pdf, filename], check=True)
-            pdf_reader = PdfFileReader(pdf)
+            pdf_reader = PdfReader(pdf)
             pdf_pg_digits = len(str(len(pdf_reader.pages)))
             formatted_pg = pg.zfill(pdf_pg_digits)
             tmp_file = f"{filename}-{formatted_pg}.png"

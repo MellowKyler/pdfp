@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QSplitter, QLabel, QFileDialog
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QDir
 from PySide6.QtGui import QAction, QIcon, QPixmap
 from settings_window import SettingsWindow
 from file_tree_widget import FileTreeWidget
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("PDF Processor")
         msg_box.setText("<strong>Version 0.0.1</strong>")
-        pdf_utils_icon = QPixmap('images/logo.ico')
+        pdf_utils_icon = QPixmap(os.path.join(QDir.currentPath(), "images", "logo.ico"))
         msg_box.setIconPixmap(pdf_utils_icon)
         html_text = (
             "<p>A GUI for some common PDF operations.</p>"

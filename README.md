@@ -3,7 +3,7 @@
 # pdfp
 PDF Processor - a GUI for some common PDF operations.
 
-![pdfp](https://raw.githubusercontent.com/MellowKyler/pdfp/main/pdfp/images/demo.png)
+![pdfp](https://raw.githubusercontent.com/MellowKyler/pdfp/main/docs/demo.png)
 
 ## Features
 - Converts EPUBs to PDFs
@@ -20,7 +20,7 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
 - **Python:**
   - PySide6
   - pyperclip
-  - PyPDF2
+  - pypdf
 - **Operating System:**
   - [Bal4Web](https://www.cross-plus-a.com/bweb.htm)
   - [Balabolka](https://www.cross-plus-a.com/balabolka.htm)
