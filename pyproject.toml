@@ -3,7 +3,7 @@ name = "pdfp"
 version = "0.0.2"
 description = "PDF Processor - a GUI for some common PDF operations."
 authors = ["Dreary <drearywillowdev@gmail.com>"]
-license = "GPL-3.0-only"
+license = "AGPL-3.0-only"
 readme = "README.md"
 
 [tool.poetry.dependencies]
