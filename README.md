@@ -44,7 +44,7 @@ pdfp is basically just a wrapper for other software, so there are a lot of depen
 ### Install from [PyPI](https://pypi.org/project/pdfp/)
 
 ```bash
-$ pip install songs-to-youtube
+$ pip install pdfp
 $ songs-to-youtube
 ```
 
