@@ -311,6 +311,10 @@ class SettingsWindow(QWidget):
         save_preset_button.clicked.connect(self.save_as_settings)
 
         self.load_settings()
+        # if i want to reference settings values explicitly elsewhere, we should save settings after load.
+        # this is really only an issue when default values have not been overwritten by the user.
+        # this is also only an issue so far for filename_constructor
+        self.save_settings()
 
         if self.remember_window_checkbox.isChecked():
             self.restore_geometry()
@@ -359,7 +363,7 @@ class SettingsWindow(QWidget):
         enable_add_file = get_value("enable_add_file", True, type=bool)
         self.add_file_checkbox.setChecked(enable_add_file)
 
-        enable_remember_window = get_value("enable_remember_window", True, type=bool)
+        enable_remember_window = get_value("enable_remember_window", False, type=bool)
         self.remember_window_checkbox.setChecked(enable_remember_window)
 
         auto_crop_checked = get_value("auto_crop_checked", False, type=bool)

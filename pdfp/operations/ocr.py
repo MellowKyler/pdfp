@@ -25,7 +25,7 @@ class Converter(QObject):
         self.settings = SettingsWindow.instance()
         output_file = construct_filename(pdf, "ocr_ps")
         try:
-            subprocess.run(["ocrmypdf", "--force-ocr", pdf, output_file], check=True)
+            subprocess.run(["ocrmypdf", "--force-ocr", pdf, output_file, "--deskew"], check=True)
         except subprocess.CalledProcessError as e:
             self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}")
             return

@@ -1,3 +1,4 @@
+import os
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
@@ -70,6 +71,9 @@ class FileTreeWidget(QTreeView):
             super().keyPressEvent(event)
 
     def add_file(self, file_path):
+        if not os.path.exists(file_path):
+            self.file_added.emit(f"{file_path} does not exist.")
+            return
         if any(file_path.lower().endswith(ext) for ext in self.allowed_extensions):
             if file_path not in self.file_paths:
                 file_item = QStandardItem(file_path)
