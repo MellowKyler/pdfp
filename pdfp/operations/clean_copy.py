@@ -1,6 +1,5 @@
 import os
 import subprocess
-import importlib
 import math
 import pyperclip
 import pymupdf
@@ -73,16 +72,6 @@ class Converter(QObject):
     def convert(self, file_tree, pdf, cc_file_checked):
         if not pdf.endswith('.pdf'):
             self.util_msgs.emit(f"File is not a PDF.")
-            return
-        try:
-            importlib.import_module("pymupdf")
-        except ImportError:
-            self.op_msgs.emit(f"pymupdf is not installed. Please install it using 'pip install pymupdf'")
-            return
-        try:
-            importlib.import_module("pyperclip")
-        except ImportError:
-            self.op_msgs.emit(f"pyperclip is not installed. Please install it using 'pip install pyperclip'")
             return
         
         self.settings = SettingsWindow.instance()
