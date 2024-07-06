@@ -16,19 +16,20 @@ PDF Processor - a GUI for some common PDF operations.
 - Drag, drop, and convert multiple files at a time
 
 ## Pre-Installation
-  - Download [Briss](https://github.com/mbaeuerle/Briss-2.0)
-    - Specify the location of the jar file in pdfp's settings.
+- Download [Briss](https://github.com/mbaeuerle/Briss-2.0)
+  - Specify the location of the jar file in pdfp's settings.
+- You might need to install [ocrmypdf's requirements](https://github.com/ocrmypdf/OCRmyPDF?tab=readme-ov-file#requirements) if you don't have them already.
 
 ## Installation and Running
 
-### Install from [PyPI](https://pypi.org/project/pdfp/)
+### Install with [PyPI](https://pypi.org/project/pdfp/)
 
 ```bash
 $ pip install pdfp
 $ pdfp
 ```
 
-Or install with git (if I haven't pushed an update):
+Or install from git (if I haven't published an update):
 
 ```bash
 $ pip install git+https://github.com/MellowKyler/pdfp.git
