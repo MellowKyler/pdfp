@@ -1,10 +1,10 @@
 import os
 import subprocess
+import pymupdf
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
-from pdfp.utils.command_installed import check_cmd
 
 class Converter(QObject):
     op_msgs = Signal(str)
@@ -17,17 +17,31 @@ class Converter(QObject):
             self.op_msgs.emit(f"{epub} is not an epub.")
             return
         
-        if not check_cmd.check_command_installed("ebook-convert"):
-            return
         self.op_msgs.emit(f"Converting {epub} to PDF...")
         QApplication.processEvents()
+
+        doc = pymupdf.open(epub)
+
+        temp = doc.convert_to_pdf()
+        pdf = pymupdf.open("pdf", temp)
+
+        toc = doc.get_toc()
+        pdf.set_toc(toc)
+
+        # link processing
+        for page in doc:
+            links = page.get_links()
+            page_out = pdf[page.number]
+            for l in links:
+                if l["kind"] == pymupdf.LINK_NAMED:
+                    continue
+                page_out.insert_link(l)
+
         output_file = construct_filename(epub, "epub_ps")
-        try:
-            subprocess.run(["ebook-convert", epub, output_file], check=True)
-            self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
-        except subprocess.CalledProcessError as e:
-            self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
-            return
+        pdf.save(output_file, garbage=4, deflate=True)
+        self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+
+        self.settings = SettingsWindow.instance()
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
 
