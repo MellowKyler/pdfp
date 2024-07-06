@@ -15,14 +15,11 @@ PDF Processor - a GUI for some common PDF operations.
 - Converts text to speech
 - Drag, drop, and convert multiple files at a time
 
-## Dependencies
-Working on getting these down.
-- **Operating System:**
+## Pre-Installation
+Install these to your operating system.
   - [Briss](https://github.com/mbaeuerle/Briss-2.0)
-  - ocrmypdf
-  - pdftk
-  - ebook-convert
-  - pdftoppm
+    - Don't forget to specify the location of the jar file in pdfp's settings.
+  - [ocrmypdf](https://github.com/ocrmypdf/OCRmyPDF)
 
 ## Installation and Running
 
@@ -42,7 +39,7 @@ $ pdfp
 
 ### Run from source
 
-1. Have Python version 3.10-3.11 installed, and [poetry](https://python-poetry.org/)
+1. Have Python version 3.10-3.13 installed, and [poetry](https://python-poetry.org/)
 2. Download the source code
 3. Install required Python modules with `poetry install`
 4. Run the program with `poetry run pdfp`
