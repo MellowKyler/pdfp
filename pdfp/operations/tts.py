@@ -1,11 +1,54 @@
-import os
-import subprocess
-import shlex
+import logging
+import re
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 from pdfp.utils.command_installed import check_cmd
+from gtts import gTTS
+import pymupdf
+
+class SharedState:
+    def __init__(self):
+        # self.text_part_digit = None
+        # self.part_digit = None
+        # to implement later: progress bar
+        self.progress = 0
+        self.total_parts = 0 
+        self.progress_percentage = 0
+
+class QueueHandler(logging.Handler):
+    def __init__(self, shared_state, op_msgs):
+        super().__init__()
+        self.shared_state = shared_state
+        self.op_msgs = op_msgs
+    
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            
+            match = re.search(r"text_parts: (\d+)", msg)
+            if match:
+                digit_str = match.group(1)
+                self.shared_state.total_parts = int(digit_str)
+                # print(f"Total parts: {self.shared_state.total_parts}")
+                self.op_msgs.emit(f"Total parts: {self.shared_state.total_parts}")
+                QApplication.processEvents()
+            
+            match = re.search(r"part-(\d) created", msg)
+            if match:
+                # digit_str = match.group(1)
+                # self.shared_state.part_digit = int(digit_str)
+                # print(f"Part digit: {self.shared_state.part_digit}")
+                self.shared_state.progress += 1
+                self.shared_state.progress_percentage = (self.shared_state.progress / self.shared_state.total_parts) * 100
+                # print(f"Progress: {self.shared_state.progress_percentage}%")
+                rounded_progress = round(self.shared_state.progress_percentage)
+                self.op_msgs.emit(f"Progress: {rounded_progress}%")
+                QApplication.processEvents()
+                
+        except Exception:
+            self.handleError(record)
 
 class Converter(QObject):
     op_msgs = Signal(str)
@@ -16,55 +59,31 @@ class Converter(QObject):
             self.op_msgs.emit(f"File is not a PDF.")
             return
         self.settings = SettingsWindow.instance()
-        wine_prefix_location = self.settings.wine_prefix_location_display.text()
-        wine_prefix_location = shlex.quote(wine_prefix_location)
-        wine_prefix_enabled = self.settings.wine_prefix_checkbox.isChecked()
+        self.op_msgs.emit(f"Converting {pdf}")
 
-        if self.settings.bal4web_radio.isChecked():
-            bal4web_location = self.settings.bal4web_location_display.text()
-            if bal4web_location == "":
-                self.op_msgs.emit(f"Bal4Web location is not specified")
-                return
-            bal4web_command = ["wine-stable", bal4web_location, "-f", pdf, "-w", output_file, "-s", "Google", "-l", "en-US", "-g", "female"]
+        # Initialize the shared state
+        shared_state = SharedState()
+        
+        # Set up the logger and the custom handler
+        logger = logging.getLogger('gtts.tts')
+        logger.setLevel(logging.DEBUG)
+        handler = QueueHandler(shared_state, self.op_msgs)
+        logger.addHandler(handler)
+
+        #eventually call clean_copy to retreive text
+        try:
+            # if pdf.endswith('.pdf'):
+            with pymupdf.open(pdf) as doc:
+                text = "\n".join([page.get_text() for page in doc])
+            # if pdf.endswith('.txt'):
+            # with open(txt_path, "r", encoding="utf-8") as txt_file:
+            #     text = txt_file.read()
+            tts = gTTS(text, lang='en', tld='us')
             output_file = construct_filename(pdf, "tts_ps")
-            output_file = f"Z:{output_file}".replace('/', '\\')
-            if wine_prefix_enabled:
-                if wine_prefix_location == "":
-                    self.op_msgs.emit(f"Wine Prefix is enabled but not specified")
-                    return
-                wine_prefix_cmd = ["env", f"WINEPREFIX=\"{wine_prefix_location}\""]
-                self.op_msgs.emit(f"Converting {pdf}")
-                QApplication.processEvents()
-                try:
-                    subprocess.run(wine_prefix_cmd + bal4web_command)
-                    self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
-                except subprocess.CalledProcessError as e:
-                    self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
-            else:
-                try:
-                    subprocess.run(bal4web_command, check=True)
-                except subprocess.CalledProcessError as e:
-                    self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
-        else:
-            balabolka_location = self.settings.balabolka_location_display.text()
-            if balabolka_location == "":
-                "Balabolka location is not specified"
-                return
-            balabolka_command = ["wine-stable", "C:\\\\windows\\\\command\\\\start.exe", "/Unix", balabolka_location]
-            if wine_prefix_enabled:
-                if wine_prefix_location == "":
-                    self.op_msgs.emit(f"Wine Prefix is enabled but not specified")
-                    return
-                wine_prefix_cmd = ["env", f"WINEPREFIX={wine_prefix_location}"]
-                try:
-                    command = wine_prefix_cmd + balabolka_command
-                    subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                except:
-                    self.op_msgs.emit(f"Launching Balabolka failed.")
-            else:
-                try:
-                    subprocess.Popen(balabolka_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                except:
-                    self.op_msgs.emit(f"Launching Balabolka failed")
+            tts.save(output_file)
+            self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+        except Exception as e:
+            error_msg = f"Error converting {pdf}: {str(e)}"
+            self.op_msgs.emit(error_msg)
 
 tts = Converter()

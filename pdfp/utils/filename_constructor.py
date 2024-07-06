@@ -44,7 +44,7 @@ def construct_filename(input_file, operation_ps):
     if operation_ps == "cc_ps":
         output_file = f"{output_file}.txt"
     elif operation_ps == "tts_ps":
-        output_file = f"{output_file}.wav"
+        output_file = f"{output_file}.mp3"
     elif operation_ps != "png_ps":
         output_file = f"{output_file}.pdf"
     return output_file

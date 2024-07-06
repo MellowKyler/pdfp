@@ -23,7 +23,8 @@ class Converter(QObject):
         with open(output_txt_path, 'w', encoding='utf-8') as output_txt_file:
             output_txt_file.write(text)
         self.op_msgs.emit(f"Conversion complete. Output: {output_txt_path}")
-    def copy_pdf(self, file_tree, pdf, output_txt_path, cc_file_checked):
+    def copy_pdf(self, file_tree, pdf, cc_file_checked):
+        output_txt_path = construct_filename(pdf, "cc_ps")
         try:
             process = subprocess.Popen(['pdftotext', pdf, '-'], stdout=subprocess.PIPE, universal_newlines=True)
             full_text, _ = process.communicate()
@@ -81,7 +82,6 @@ class Converter(QObject):
         self.settings = SettingsWindow.instance()
         self.op_msgs.emit(f"Converting {pdf}...")
         QApplication.processEvents()
-        output_txt_path = construct_filename(pdf, "cc_ps")
-        self.copy_pdf(file_tree, pdf, output_txt_path, cc_file_checked)
+        self.copy_pdf(file_tree, pdf, cc_file_checked)
         
 clean_copy = Converter()

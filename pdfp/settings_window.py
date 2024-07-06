@@ -121,64 +121,6 @@ class SettingsWindow(QWidget):
         cc_box_layout.addLayout(self.wordcount_split_box)
         cc_box.setLayout(cc_box_layout)
 
-        #balabolka / tts
-        tts_settings_label = QLabel("<strong>Text-To-Speech Settings</strong>")
-        center_tts_settings_label = QHBoxLayout()
-        center_tts_settings_label.addWidget(tts_settings_label)
-        center_tts_settings_label.setAlignment(Qt.AlignCenter)
-
-        self.bal4web_location_button = QPushButton("Bal4Web location")
-        self.bal4web_location_button.setFixedWidth(125)
-        self.bal4web_location_display = QLineEdit()
-        self.bal4web_location_display.setPlaceholderText("Required")
-        self.bal4web_location_display.setReadOnly(True)
-        self.bal4web_location_button.clicked.connect(self.select_bal4web_file)
-        bal4web_location_layout = QHBoxLayout()
-        bal4web_location_layout.addWidget(self.bal4web_location_button)
-        bal4web_location_layout.addWidget(self.bal4web_location_display)
-
-        self.balabolka_location_button = QPushButton("Balabolka location")
-        self.balabolka_location_button.setFixedWidth(125)
-        self.balabolka_location_display = QLineEdit()
-        self.balabolka_location_display.setPlaceholderText("Required")
-        self.balabolka_location_display.setReadOnly(True)
-        self.balabolka_location_button.clicked.connect(self.select_balabolka_file)
-        balabolka_location_layout = QHBoxLayout()
-        balabolka_location_layout.addWidget(self.balabolka_location_button)
-        balabolka_location_layout.addWidget(self.balabolka_location_display)
-
-        self.wine_prefix_checkbox = QCheckBox("Use Wine prefix")
-        self.wine_prefix_checkbox.toggled.connect(self.wine_prefix_checkbox_action)
-        center_wine_prefix_checkbox = QHBoxLayout()
-        center_wine_prefix_checkbox.addWidget(self.wine_prefix_checkbox)
-        center_wine_prefix_checkbox.setAlignment(Qt.AlignCenter)
-        self.wine_prefix_location_button = QPushButton("Wine prefix location")
-        self.bal4web_location_button.setFixedWidth(125)
-        self.wine_prefix_location_display = QLineEdit()
-        self.wine_prefix_location_display.setPlaceholderText("Not required")
-        self.wine_prefix_location_display.setReadOnly(True)
-        self.wine_prefix_location_button.clicked.connect(self.select_wine_prefix_folder)
-        wine_prefix_location_layout = QHBoxLayout()
-        wine_prefix_location_layout.addWidget(self.wine_prefix_location_button)
-        wine_prefix_location_layout.addWidget(self.wine_prefix_location_display)
-
-        tts_radio_layout = QHBoxLayout()
-        self.bal4web_radio = QRadioButton("Automated (Bal4Web)")
-        self.balabolka_radio = QRadioButton("Launch Balabolka")
-        tts_radio_layout.addWidget(self.bal4web_radio)
-        tts_radio_layout.addWidget(self.balabolka_radio)
-        tts_radio_layout.setAlignment(Qt.AlignCenter)
-
-        tts_box = QGroupBox()
-        tts_box_layout = QVBoxLayout()
-        tts_box_layout.addLayout(center_tts_settings_label)
-        tts_box_layout.addLayout(tts_radio_layout)
-        tts_box_layout.addLayout(bal4web_location_layout)
-        tts_box_layout.addLayout(balabolka_location_layout)
-        tts_box_layout.addLayout(center_wine_prefix_checkbox)
-        tts_box_layout.addLayout(wine_prefix_location_layout)
-        tts_box.setLayout(tts_box_layout)
-
         #filename
         filename_settings_label = QLabel("<strong>Filename Settings</strong>")
         self.default_filename_checkbox = QCheckBox("Default Filename:")
@@ -321,13 +263,11 @@ class SettingsWindow(QWidget):
 
         #layout
         scrollable_content = QWidget()
-        #scrollable_content.setMinimumHeight(925)
         
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
         scrollable_layout.addWidget(cc_box)
         scrollable_layout.addWidget(crop_box)
-        scrollable_layout.addWidget(tts_box)
         scrollable_layout.addWidget(filename_box)
 
         scroll_area = QScrollArea()
@@ -401,22 +341,6 @@ class SettingsWindow(QWidget):
         self.cc_file_radio.setChecked(cc_file_checked)
         self.cc_copy_radio.setChecked(not cc_file_checked)
 
-        bal4web_checked = get_value("bal4web_radio_checked", False, type=bool)
-        self.bal4web_radio.setChecked(bal4web_checked)
-        self.balabolka_radio.setChecked(not bal4web_checked)
-
-        bal4web_location = get_value("bal4web_location", "", type=str)
-        self.bal4web_location_display.setText(bal4web_location)
-
-        balabolka_location = get_value("balabolka_location", "", type=str)
-        self.balabolka_location_display.setText(balabolka_location)
-
-        enable_wine_prefix = get_value("enable_wine_prefix", False, type=bool)
-        self.wine_prefix_checkbox.setChecked(enable_wine_prefix)
-
-        wine_prefix_location = get_value("wine_prefix_location", "", type=str)
-        self.wine_prefix_location_display.setText(wine_prefix_location)
-
         epub_ps = get_value("epub_ps", "epub", type=str)
         self.epub_ps_input.setText(epub_ps)
         png_ps = get_value("png_ps", "png", type=str)
@@ -486,21 +410,6 @@ class SettingsWindow(QWidget):
         cc_file_checked = self.cc_file_radio.isChecked()
         set_value("cc_file_radio_checked", cc_file_checked)
 
-        bal4web_checked = self.bal4web_radio.isChecked()
-        set_value("bal4web_radio_checked", bal4web_checked)
-
-        bal4web_location = self.bal4web_location_display.text()
-        set_value("bal4web_location", bal4web_location)
-
-        balabolka_location = self.balabolka_location_display.text()
-        set_value("balabolka_location", balabolka_location)
-
-        enable_wine_prefix = self.wine_prefix_checkbox.isChecked()
-        set_value("enable_wine_prefix", enable_wine_prefix)
-
-        wine_prefix_location = self.wine_prefix_location_display.text()
-        set_value("wine_prefix_location", wine_prefix_location)
-
         epub_ps = self.epub_ps_input.text()
         set_value("epub_ps", epub_ps)
         png_ps = self.png_ps_input.text()
@@ -533,10 +442,6 @@ class SettingsWindow(QWidget):
     def prefix_suffix_checkbox_action(self, checked):
         self.ps_box.setEnabled(checked)
 
-    def wine_prefix_checkbox_action(self, checked):
-        self.wine_prefix_location_button.setEnabled(checked)
-        self.wine_prefix_location_display.setEnabled(checked)
-
     def split_txt_checkbox_action(self, checked):
         self.wordcount_split_label.setEnabled(checked)
         self.wordcount_split_display.setEnabled(checked)
@@ -544,18 +449,6 @@ class SettingsWindow(QWidget):
     def select_briss_file(self):
         selected_file = self.select_file()
         self.briss_location_display.setText(selected_file)
-
-    def select_bal4web_file(self):
-        selected_file = self.select_file()
-        self.bal4web_location_display.setText(selected_file)
-
-    def select_balabolka_file(self):
-        selected_file = self.select_file()
-        self.balabolka_location_display.setText(selected_file)
-
-    def select_wine_prefix_folder(self):
-        selected_folder = self.select_folder()
-        self.wine_prefix_location_display.setText(selected_folder)
 
     def load_ini_file(self):
         return self.select_file("ini")

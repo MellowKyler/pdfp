@@ -161,9 +161,6 @@ class ButtonWidget(QWidget):
         self.call_selected_function(clean_copy.convert, cc_file_checked)
 
     def tts_clicked(self):
-        if not self.settings.bal4web_radio.isChecked():
-            tts.convert(self.file_tree_widget, ".pdf")
-            return
         self.button_msgs.emit(f"Attempting to TTS PDF...")
         QApplication.processEvents()
         self.call_selected_function(tts.convert)

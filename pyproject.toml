@@ -11,6 +11,8 @@ python = ">=3.10,<3.13"
 pyperclip = "^1.5.0"
 PySide6 = "^6.5.0"
 pypdf = "^4.2.0"
+pymupdf = "^1.24.7"
+gtts = "^2.5.1"
 
 [tool.poetry.scripts]
 pdfp = "pdfp.main:main"
