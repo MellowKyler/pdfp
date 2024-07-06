@@ -16,10 +16,8 @@ PDF Processor - a GUI for some common PDF operations.
 - Drag, drop, and convert multiple files at a time
 
 ## Pre-Installation
-Install these to your operating system.
-  - [Briss](https://github.com/mbaeuerle/Briss-2.0)
-    - Don't forget to specify the location of the jar file in pdfp's settings.
-  - [ocrmypdf](https://github.com/ocrmypdf/OCRmyPDF)
+  - Download [Briss](https://github.com/mbaeuerle/Briss-2.0)
+    - Specify the location of the jar file in pdfp's settings.
 
 ## Installation and Running
 

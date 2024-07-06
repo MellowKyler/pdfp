@@ -1,9 +1,8 @@
-import subprocess
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
-from pdfp.utils.command_installed import check_cmd
+import ocrmypdf
 
 class Converter(QObject):
     op_msgs = Signal(str)
@@ -13,20 +12,17 @@ class Converter(QObject):
         if not pdf.endswith('.pdf'):
             self.util_msgs.emit(f"File is not a PDF.")
             return
-        if not check_cmd.check_command_installed("ocrmypdf"):
-            return
 
         self.op_msgs.emit(f"OCRing {pdf}...")
         QApplication.processEvents()
-
         
         self.settings = SettingsWindow.instance()
         output_file = construct_filename(pdf, "ocr_ps")
-        try:
-            subprocess.run(["ocrmypdf", "--force-ocr", pdf, output_file, "--deskew"], check=True)
-        except subprocess.CalledProcessError as e:
-            self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}")
-            return
+        # include a toggle for deskew
+        # include a toggle for pdfa vs pdf
+        # clean is also an option
+        # optimize=0 is for speed
+        ocrmypdf.ocr(pdf, output_file, deskew=True, force_ocr=True, output_type='pdf', optimize=0)
         self.op_msgs.emit(f"OCR complete. Output: {output_file}")
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
