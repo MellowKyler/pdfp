@@ -181,7 +181,7 @@ class SettingsWindow(QWidget):
 
         ps_grid = QGridLayout()
 
-        f2pdf_ps_label = QLabel("f2pdf: ")
+        f2pdf_ps_label = QLabel("file2pdf: ")
         f2pdf_ps_label.setAlignment(Qt.AlignCenter)
         ps_grid.addWidget(f2pdf_ps_label,0,0)
         png_ps_label = QLabel("png: ")
@@ -203,7 +203,7 @@ class SettingsWindow(QWidget):
         self.crop_ps_input = QLineEdit()
         ps_grid.addWidget(self.crop_ps_input,3,1)
 
-        trim_ps_label = QLabel("remove pages: ")
+        trim_ps_label = QLabel("trim pages: ")
         trim_ps_label.setAlignment(Qt.AlignCenter)
         ps_grid.addWidget(trim_ps_label,0,2)
         cc_ps_label = QLabel("clean copy: ")
@@ -336,7 +336,7 @@ class SettingsWindow(QWidget):
         self.prefix_suffix_checkbox.setChecked(get_value("enable_prefix_suffix", True, type=bool))
         self.prefix_radio.setChecked(prefix_checked := get_value("prefix_radio_checked", False, type=bool))
         self.suffix_radio.setChecked(not prefix_checked)
-        self.f2pdf_ps_input.setText(get_value("f2pdf_ps", "f2pdf", type=str))
+        self.f2pdf_ps_input.setText(get_value("f2pdf_ps", "f2p", type=str))
         self.png_ps_input.setText(get_value("png_ps", "png", type=str))
         self.ocr_ps_input.setText(get_value("ocr_ps", "ocr", type=str))
         self.crop_ps_input.setText(get_value("crop_ps", "crop", type=str))
