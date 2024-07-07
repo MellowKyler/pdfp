@@ -6,7 +6,7 @@ PDF Processor - a GUI for some common PDF operations.
 ![pdfp](https://raw.githubusercontent.com/MellowKyler/pdfp/main/docs/demo.png)
 
 ## Features
-- Converts EPUBs to PDFs
+- Converts files to PDF
 - Turns PDF pages into PNGs
 - Optical character recognition
 - Crops PDF dimensions
