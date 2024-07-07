@@ -50,6 +50,12 @@ class SettingsWindow(QWidget):
         gen_box_layout.addLayout(center_af_cb)
         gen_box_layout.addLayout(center_rw_cb)
         gen_box.setLayout(gen_box_layout)
+
+        #epub
+
+        #png
+
+        #ocr
         
         #briss / crop
         crop_settings_label = QLabel("<strong>Crop Settings</strong>")
@@ -80,6 +86,8 @@ class SettingsWindow(QWidget):
         crop_box_layout.addLayout(crop_radio_layout)
         crop_box_layout.addLayout(briss_location_layout)
         crop_box.setLayout(crop_box_layout)
+
+        #rm_pages
 
         #clean_copy
         cc_settings_label = QLabel("<strong>Clean Copy Settings</strong>")
@@ -120,6 +128,8 @@ class SettingsWindow(QWidget):
         cc_box_layout.addLayout(center_split_txt_cb)
         cc_box_layout.addLayout(self.wordcount_split_box)
         cc_box.setLayout(cc_box_layout)
+
+        #tts
 
         #filename
         filename_settings_label = QLabel("<strong>Filename Settings</strong>")
@@ -300,67 +310,41 @@ class SettingsWindow(QWidget):
         else:
             get_value = self.settings.value
 
-        enable_add_file = get_value("enable_add_file", True, type=bool)
-        self.add_file_checkbox.setChecked(enable_add_file)
+        #general
+        self.add_file_checkbox.setChecked(get_value("enable_add_file", True, type=bool))
+        self.remember_window_checkbox.setChecked(get_value("enable_remember_window", False, type=bool))
 
-        enable_remember_window = get_value("enable_remember_window", False, type=bool)
-        self.remember_window_checkbox.setChecked(enable_remember_window)
-
-        auto_crop_checked = get_value("auto_crop_checked", False, type=bool)
-        self.auto_crop_radio.setChecked(auto_crop_checked)
+        #briss/crop
+        self.auto_crop_radio.setChecked(auto_crop_checked := get_value("auto_crop_checked", False, type=bool))
         self.launch_briss_radio.setChecked(not auto_crop_checked)
+        self.briss_location_display.setText(get_value("briss_location", "", type=str))
 
-        briss_location = get_value("briss_location", "", type=str)
-        self.briss_location_display.setText(briss_location)
-
-        enable_split_txt = get_value("enable_split_txt", False, type=bool)
-        self.split_txt_checkbox.setChecked(enable_split_txt)
+        #clean copy
+        self.split_txt_checkbox.setChecked(enable_split_txt := get_value("enable_split_txt", False, type=bool))
         self.split_txt_checkbox_action(enable_split_txt)
-        wordcount_split = get_value("wordcount_split", "100000", type=str)
-        self.wordcount_split_display.setText(wordcount_split)
-
-        enable_default_filename = get_value("enable_default_filename", False, type=bool)
-        self.default_filename_checkbox.setChecked(enable_default_filename)
-        self.default_filename_checkbox_action(enable_default_filename)
-        default_filename = get_value("default_filename", "", type=str)
-        self.default_filename_input.setText(default_filename)
-
-        enable_first_word_filename = get_value("enable_first_word_filename", False, type=bool)
-        self.first_word_filename_checkbox.setChecked(enable_first_word_filename)
-        enable_lowercase_filename = get_value("enable_lowercase_filename", False, type=bool)
-        self.lowercase_filename_checkbox.setChecked(enable_lowercase_filename)
-
-        enable_prefix_suffix = get_value("enable_prefix_suffix", True, type=bool)
-        self.prefix_suffix_checkbox.setChecked(enable_prefix_suffix)
-
-        prefix_checked = get_value("prefix_radio_checked", False, type=bool)
-        self.prefix_radio.setChecked(prefix_checked)
-        self.suffix_radio.setChecked(not prefix_checked)
-
-        cc_file_checked = get_value("cc_file_radio_checked", False, type=bool)
-        self.cc_file_radio.setChecked(cc_file_checked)
+        self.wordcount_split_display.setText(get_value("wordcount_split", "100000", type=str))
+        self.cc_file_radio.setChecked(cc_file_checked := get_value("cc_file_radio_checked", False, type=bool))
         self.cc_copy_radio.setChecked(not cc_file_checked)
 
-        epub_ps = get_value("epub_ps", "epub", type=str)
-        self.epub_ps_input.setText(epub_ps)
-        png_ps = get_value("png_ps", "png", type=str)
-        self.png_ps_input.setText(png_ps)
-        ocr_ps = get_value("ocr_ps", "ocr", type=str)
-        self.ocr_ps_input.setText(ocr_ps)
-        crop_ps = get_value("crop_ps", "crop", type=str)
-        self.crop_ps_input.setText(crop_ps)
-        rm_pages_ps = get_value("rm_pages_ps", "trim", type=str)
-        self.rm_pages_ps_input.setText(rm_pages_ps)
-        cc_ps = get_value("cc_ps", "copy", type=str)
-        self.cc_ps_input.setText(cc_ps)
-        tts_ps = get_value("tts_ps", "tts", type=str)
-        self.tts_ps_input.setText(tts_ps)
-
-        char_ps = get_value("char_ps", "-", type=str)
-        self.char_ps_input.setText(char_ps)
-
-        disable_non_pdf_ps = get_value("disable_non_pdf_ps", True, type=bool)
-        self.disable_non_pdf_ps_checkbox.setChecked(disable_non_pdf_ps)
+        #filename
+        self.default_filename_checkbox.setChecked(enable_default_filename := get_value("enable_default_filename", False, type=bool))
+        self.default_filename_checkbox_action(enable_default_filename)
+        self.default_filename_input.setText(get_value("default_filename", "", type=str))
+        self.first_word_filename_checkbox.setChecked(get_value("enable_first_word_filename", False, type=bool))
+        self.lowercase_filename_checkbox.setChecked(get_value("enable_lowercase_filename", False, type=bool))
+        #   prefix/suffix
+        self.prefix_suffix_checkbox.setChecked(get_value("enable_prefix_suffix", True, type=bool))
+        self.prefix_radio.setChecked(prefix_checked := get_value("prefix_radio_checked", False, type=bool))
+        self.suffix_radio.setChecked(not prefix_checked)
+        self.epub_ps_input.setText(get_value("epub_ps", "epub", type=str))
+        self.png_ps_input.setText(get_value("png_ps", "png", type=str))
+        self.ocr_ps_input.setText(get_value("ocr_ps", "ocr", type=str))
+        self.crop_ps_input.setText(get_value("crop_ps", "crop", type=str))
+        self.rm_pages_ps_input.setText(get_value("rm_pages_ps", "trim", type=str))
+        self.cc_ps_input.setText(get_value("cc_ps", "copy", type=str))
+        self.tts_ps_input.setText(get_value("tts_ps", "tts", type=str))
+        self.char_ps_input.setText(get_value("char_ps", "-", type=str))
+        self.disable_non_pdf_ps_checkbox.setChecked(get_value("disable_non_pdf_ps", True, type=bool))
 
         if not remain_open:
             self.close()
@@ -371,65 +355,36 @@ class SettingsWindow(QWidget):
         else:
             set_value = self.settings.setValue
 
-        auto_crop_checked = self.auto_crop_radio.isChecked()
-        set_value("auto_crop_checked", auto_crop_checked)
+        #general
+        set_value("enable_add_file", self.add_file_checkbox.isChecked())
+        set_value("enable_remember_window", self.remember_window_checkbox.isChecked())
 
-        enable_add_file = self.add_file_checkbox.isChecked()
-        set_value("enable_add_file", enable_add_file)
+        #briss/crop
+        set_value("auto_crop_checked", self.auto_crop_radio.isChecked())
+        set_value("briss_location", self.briss_location_display.text())
 
-        enable_remember_window = self.remember_window_checkbox.isChecked()
-        set_value("enable_remember_window", enable_remember_window)
+        #clean copy
+        set_value("enable_split_txt", self.split_txt_checkbox.isChecked())
+        set_value("wordcount_split", self.wordcount_split_display.text())
+        set_value("cc_file_radio_checked", self.cc_file_radio.isChecked())
 
-        briss_location = self.briss_location_display.text()
-        set_value("briss_location", briss_location)
-
-        enable_split_txt = self.split_txt_checkbox.isChecked()
-        set_value("enable_split_txt", enable_split_txt)
-        wordcount_split = self.wordcount_split_display.text()
-        set_value("wordcount_split", wordcount_split)
-
-        enable_default_filename = self.default_filename_checkbox.isChecked()
-        set_value("enable_default_filename", enable_default_filename)
-        default_filename = self.default_filename_input.text()
-        set_value("default_filename", default_filename)
-
-        wordcount_split = self.wordcount_split_display.text()
-        set_value("wordcount_split", wordcount_split)
-
-        enable_first_word_filename = self.first_word_filename_checkbox.isChecked()
-        set_value("enable_first_word_filename", enable_first_word_filename)
-        enable_lowercase_filename = self.lowercase_filename_checkbox.isChecked()
-        set_value("enable_lowercase_filename", enable_lowercase_filename)
-
-        enable_prefix_suffix = self.prefix_suffix_checkbox.isChecked()
-        set_value("enable_prefix_suffix", enable_prefix_suffix)
-
-        prefix_checked = self.prefix_radio.isChecked()
-        set_value("prefix_radio_checked", prefix_checked)
-
-        cc_file_checked = self.cc_file_radio.isChecked()
-        set_value("cc_file_radio_checked", cc_file_checked)
-
-        epub_ps = self.epub_ps_input.text()
-        set_value("epub_ps", epub_ps)
-        png_ps = self.png_ps_input.text()
-        set_value("png_ps", png_ps)
-        ocr_ps = self.ocr_ps_input.text()
-        set_value("ocr_ps", ocr_ps)
-        crop_ps = self.crop_ps_input.text()
-        set_value("crop_ps", crop_ps)
-        rm_pages_ps = self.rm_pages_ps_input.text()
-        set_value("rm_pages_ps", rm_pages_ps)
-        cc_ps = self.cc_ps_input.text()
-        set_value("cc_ps", cc_ps)
-        tts_ps = self.tts_ps_input.text()
-        set_value("tts_ps", tts_ps)
-
-        char_ps = self.char_ps_input.text()
-        set_value("char_ps", char_ps)
-
-        disable_non_pdf_ps = self.disable_non_pdf_ps_checkbox.isChecked()
-        set_value("disable_non_pdf_ps", disable_non_pdf_ps)
+        #filename
+        set_value("enable_default_filename", self.default_filename_checkbox.isChecked())
+        set_value("default_filename", self.default_filename_input.text())
+        set_value("enable_first_word_filename", self.first_word_filename_checkbox.isChecked())
+        set_value("enable_lowercase_filename", self.lowercase_filename_checkbox.isChecked())
+        #   prefix/suffix
+        set_value("enable_prefix_suffix", self.prefix_suffix_checkbox.isChecked())
+        set_value("prefix_radio_checked", self.prefix_radio.isChecked())
+        set_value("epub_ps", self.epub_ps_input.text())
+        set_value("png_ps", self.png_ps_input.text())
+        set_value("ocr_ps", self.ocr_ps_input.text())
+        set_value("crop_ps", self.crop_ps_input.text())
+        set_value("rm_pages_ps", self.rm_pages_ps_input.text())
+        set_value("cc_ps", self.cc_ps_input.text())
+        set_value("tts_ps", self.tts_ps_input.text())
+        set_value("char_ps", self.char_ps_input.text())
+        set_value("disable_non_pdf_ps", self.disable_non_pdf_ps_checkbox.isChecked())
 
         if not remain_open:
             self.close()
@@ -489,7 +444,7 @@ class SettingsWindow(QWidget):
     def save_ini_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-
+        
         config_directory = self.get_config_dir()
 
         file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create INI File",config_directory,"INI Files (*.ini);;All Files (*)",options=options)
@@ -497,7 +452,6 @@ class SettingsWindow(QWidget):
         if file_path:
             if not file_path.endswith(".ini"):
                 file_path += ".ini"
-
         return file_path
       
     def closeEvent(self, event):
