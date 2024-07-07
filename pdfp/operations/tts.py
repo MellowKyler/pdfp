@@ -17,10 +17,12 @@ class SharedState:
         self.progress_percentage = 0
 
 class QueueHandler(logging.Handler):
-    def __init__(self, shared_state, op_msgs):
+    def __init__(self, shared_state, op_msgs, update_pb, revise_pb_label):
         super().__init__()
         self.shared_state = shared_state
         self.op_msgs = op_msgs
+        self.update_pb = update_pb
+        self.revise_pb_label = revise_pb_label
     
     def emit(self, record):
         try:
@@ -30,20 +32,14 @@ class QueueHandler(logging.Handler):
             if match:
                 digit_str = match.group(1)
                 self.shared_state.total_parts = int(digit_str)
-                # print(f"Total parts: {self.shared_state.total_parts}")
-                self.op_msgs.emit(f"Total parts: {self.shared_state.total_parts}")
+                self.revise_pb_label.emit(f"TTS Progress:")
                 QApplication.processEvents()
             
-            match = re.search(r"part-(\d) created", msg)
+            match = re.search(r"part-(\d+) created", msg)
             if match:
-                # digit_str = match.group(1)
-                # self.shared_state.part_digit = int(digit_str)
-                # print(f"Part digit: {self.shared_state.part_digit}")
                 self.shared_state.progress += 1
                 self.shared_state.progress_percentage = (self.shared_state.progress / self.shared_state.total_parts) * 100
-                # print(f"Progress: {self.shared_state.progress_percentage}%")
-                rounded_progress = round(self.shared_state.progress_percentage)
-                self.op_msgs.emit(f"Progress: {rounded_progress}%")
+                self.update_pb.emit(self.shared_state.progress_percentage)
                 QApplication.processEvents()
                 
         except Exception:
@@ -51,32 +47,34 @@ class QueueHandler(logging.Handler):
 
 class Converter(QObject):
     op_msgs = Signal(str)
+    view_pb = Signal(bool)
+    update_pb = Signal(int)
+    revise_pb_label = Signal(str)
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf):
-        if not pdf.endswith('.pdf'):
-            self.op_msgs.emit(f"File is not a PDF.")
+        if not any(pdf.lower().endswith(ext) for ext in ['.pdf', '.txt']):
+            self.op_msgs.emit(f"Cannot TTS. Filetype is not TXT or PDF.")
             return
         self.settings = SettingsWindow.instance()
         self.op_msgs.emit(f"Converting {pdf}")
 
-        # Initialize the shared state
         shared_state = SharedState()
-        
-        # Set up the logger and the custom handler
+
         logger = logging.getLogger('gtts.tts')
         logger.setLevel(logging.DEBUG)
-        handler = QueueHandler(shared_state, self.op_msgs)
+        handler = QueueHandler(shared_state, self.op_msgs, self.update_pb, self.revise_pb_label)
         logger.addHandler(handler)
 
+        self.view_pb.emit(True)
         #eventually call clean_copy to retreive text (or at least the option to do so)
         try:
-            # if pdf.endswith('.pdf'):
-            with pymupdf.open(pdf) as doc:
-                text = "\n".join([page.get_text() for page in doc])
-            # if pdf.endswith('.txt'):
-            # with open(txt_path, "r", encoding="utf-8") as txt_file:
-            #     text = txt_file.read()
+            if pdf.endswith('.pdf'):
+                with pymupdf.open(pdf) as doc:
+                    text = "\n".join([page.get_text() for page in doc])
+            elif pdf.endswith('.txt'):
+                with open(pdf, "r", encoding="utf-8") as txt_file:
+                    text = txt_file.read()
             tts = gTTS(text, lang='en', tld='us')
             output_file = construct_filename(pdf, "tts_ps")
             tts.save(output_file)
@@ -84,5 +82,6 @@ class Converter(QObject):
         except Exception as e:
             error_msg = f"Error converting {pdf}: {str(e)}"
             self.op_msgs.emit(error_msg)
+        self.view_pb.emit(False)
 
 tts = Converter()
