@@ -5,6 +5,7 @@ description = "PDF Processor - a GUI for some common PDF operations."
 authors = ["Dreary <drearywillowdev@gmail.com>"]
 license = "AGPL-3.0-only"
 readme = "README.md"
+homepage = "https://github.com/MellowKyler/pdfp"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
@@ -20,3 +21,9 @@ pdfp = "pdfp.main:main"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
+Source = "https://github.com/MellowKyler/pdfp"
+Issues = "https://github.com/MellowKyler/pdfp/issues"
+PyPi = "https://pypi.org/project/pdfp/"
+Bluesky = "https://bsky.app/profile/dreary.bsky.social"

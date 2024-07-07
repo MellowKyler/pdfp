@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QTreeView, QLineEdit, QGroupBox, QRadioButton, QLabel, QFrame, QTextEdit
 from PySide6.QtCore import QSize, Qt, Slot, Signal
 from PySide6.QtGui import QAction, QIcon, QStandardItem, QStandardItemModel
-from pdfp.utils.command_installed import check_cmd
 from pdfp.operations.epub import epub2pdf
 from pdfp.operations.png import pdf2png
 from pdfp.operations.ocr import ocr
@@ -15,7 +14,6 @@ class LogWidget(QWidget):
     def __init__(self, file_tree_widget, main_window):
         super().__init__()
         #connections
-        check_cmd.util_msgs.connect(self.add_log_message)
         epub2pdf.op_msgs.connect(self.add_log_message)
         pdf2png.op_msgs.connect(self.add_log_message)
         ocr.op_msgs.connect(self.add_log_message)
