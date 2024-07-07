@@ -24,7 +24,7 @@ class FileTreeWidget(QTreeView):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        self.allowed_extensions = ['.pdf', '.epub']
+        self.allowed_extensions = ['.pdf', '.epub', '.txt', '.cbz', '.mobi', '.xps', '.svg', '.fb2']
         self.file_paths = set()
 
     def dragEnterEvent(self, event):
@@ -83,4 +83,4 @@ class FileTreeWidget(QTreeView):
             else:
                 self.file_added.emit(f"{file_path} is already present.")
         else:
-            self.file_added.emit(f"{file_path} is not a PDF or EPUB file.")
+            self.file_added.emit(f"{file_path} is not a supported filetype: {self.allowed_extensions}")

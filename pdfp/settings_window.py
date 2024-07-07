@@ -51,7 +51,7 @@ class SettingsWindow(QWidget):
         gen_box_layout.addLayout(center_rw_cb)
         gen_box.setLayout(gen_box_layout)
 
-        #epub
+        #f2pdf
 
         #png
 
@@ -87,7 +87,7 @@ class SettingsWindow(QWidget):
         crop_box_layout.addLayout(briss_location_layout)
         crop_box.setLayout(crop_box_layout)
 
-        #rm_pages
+        #trim
 
         #clean_copy
         cc_settings_label = QLabel("<strong>Clean Copy Settings</strong>")
@@ -181,9 +181,9 @@ class SettingsWindow(QWidget):
 
         ps_grid = QGridLayout()
 
-        epub_ps_label = QLabel("epub: ")
-        epub_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(epub_ps_label,0,0)
+        f2pdf_ps_label = QLabel("f2pdf: ")
+        f2pdf_ps_label.setAlignment(Qt.AlignCenter)
+        ps_grid.addWidget(f2pdf_ps_label,0,0)
         png_ps_label = QLabel("png: ")
         png_ps_label.setAlignment(Qt.AlignCenter)
         ps_grid.addWidget(png_ps_label,1,0)
@@ -194,8 +194,8 @@ class SettingsWindow(QWidget):
         crop_ps_label.setAlignment(Qt.AlignCenter)
         ps_grid.addWidget(crop_ps_label,3,0)
 
-        self.epub_ps_input = QLineEdit()
-        ps_grid.addWidget(self.epub_ps_input,0,1)
+        self.f2pdf_ps_input = QLineEdit()
+        ps_grid.addWidget(self.f2pdf_ps_input,0,1)
         self.png_ps_input = QLineEdit()
         ps_grid.addWidget(self.png_ps_input,1,1)
         self.ocr_ps_input = QLineEdit()
@@ -203,9 +203,9 @@ class SettingsWindow(QWidget):
         self.crop_ps_input = QLineEdit()
         ps_grid.addWidget(self.crop_ps_input,3,1)
 
-        rm_pages_ps_label = QLabel("remove pages: ")
-        rm_pages_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(rm_pages_ps_label,0,2)
+        trim_ps_label = QLabel("remove pages: ")
+        trim_ps_label.setAlignment(Qt.AlignCenter)
+        ps_grid.addWidget(trim_ps_label,0,2)
         cc_ps_label = QLabel("clean copy: ")
         cc_ps_label.setAlignment(Qt.AlignCenter)
         ps_grid.addWidget(cc_ps_label,1,2)
@@ -213,8 +213,8 @@ class SettingsWindow(QWidget):
         tts_ps_label.setAlignment(Qt.AlignCenter)
         ps_grid.addWidget(tts_ps_label,2,2)
         
-        self.rm_pages_ps_input = QLineEdit()
-        ps_grid.addWidget(self.rm_pages_ps_input,0,3)
+        self.trim_ps_input = QLineEdit()
+        ps_grid.addWidget(self.trim_ps_input,0,3)
         self.cc_ps_input = QLineEdit()
         ps_grid.addWidget(self.cc_ps_input,1,3)
         self.tts_ps_input = QLineEdit()
@@ -336,11 +336,11 @@ class SettingsWindow(QWidget):
         self.prefix_suffix_checkbox.setChecked(get_value("enable_prefix_suffix", True, type=bool))
         self.prefix_radio.setChecked(prefix_checked := get_value("prefix_radio_checked", False, type=bool))
         self.suffix_radio.setChecked(not prefix_checked)
-        self.epub_ps_input.setText(get_value("epub_ps", "epub", type=str))
+        self.f2pdf_ps_input.setText(get_value("f2pdf_ps", "f2pdf", type=str))
         self.png_ps_input.setText(get_value("png_ps", "png", type=str))
         self.ocr_ps_input.setText(get_value("ocr_ps", "ocr", type=str))
         self.crop_ps_input.setText(get_value("crop_ps", "crop", type=str))
-        self.rm_pages_ps_input.setText(get_value("rm_pages_ps", "trim", type=str))
+        self.trim_ps_input.setText(get_value("trim_ps", "trim", type=str))
         self.cc_ps_input.setText(get_value("cc_ps", "copy", type=str))
         self.tts_ps_input.setText(get_value("tts_ps", "tts", type=str))
         self.char_ps_input.setText(get_value("char_ps", "-", type=str))
@@ -376,11 +376,11 @@ class SettingsWindow(QWidget):
         #   prefix/suffix
         set_value("enable_prefix_suffix", self.prefix_suffix_checkbox.isChecked())
         set_value("prefix_radio_checked", self.prefix_radio.isChecked())
-        set_value("epub_ps", self.epub_ps_input.text())
+        set_value("f2pdf_ps", self.f2pdf_ps_input.text())
         set_value("png_ps", self.png_ps_input.text())
         set_value("ocr_ps", self.ocr_ps_input.text())
         set_value("crop_ps", self.crop_ps_input.text())
-        set_value("rm_pages_ps", self.rm_pages_ps_input.text())
+        set_value("trim_ps", self.trim_ps_input.text())
         set_value("cc_ps", self.cc_ps_input.text())
         set_value("tts_ps", self.tts_ps_input.text())
         set_value("char_ps", self.char_ps_input.text())

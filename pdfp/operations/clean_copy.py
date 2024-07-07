@@ -5,7 +5,6 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
-from pdfp.utils.command_installed import check_cmd
 import pyperclip
 import pymupdf
 

@@ -2,11 +2,11 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from pdfp.settings_window import SettingsWindow
-from pdfp.operations.epub import epub2pdf
+from pdfp.operations.file2pdf import file2pdf
 from pdfp.operations.png import pdf2png
 from pdfp.operations.ocr import ocr
 from pdfp.operations.crop import crop
-from pdfp.operations.rm_pages import rm_pages
+from pdfp.operations.trim import trim
 from pdfp.operations.clean_copy import clean_copy
 from pdfp.operations.tts import tts
 
@@ -20,14 +20,14 @@ class ButtonWidget(QWidget):
 
         self.file_tree_widget = file_tree_widget
 
-        epub_button = QPushButton("Convert EPUB")
-        epub_button.clicked.connect(self.epub_clicked)
-        epub_box = QGroupBox()
-        epub_box_layout = QVBoxLayout()
-        epub_box_layout.setSpacing(1)
-        epub_box_layout.addWidget(epub_button)
-        epub_box.setLayout(epub_box_layout)
-        epub_box.setMaximumHeight(70)
+        f2pdf_button = QPushButton("Convert to PDF")
+        f2pdf_button.clicked.connect(self.f2pdf_clicked)
+        f2pdf_box = QGroupBox()
+        f2pdf_box_layout = QVBoxLayout()
+        f2pdf_box_layout.setSpacing(1)
+        f2pdf_box_layout.addWidget(f2pdf_button)
+        f2pdf_box.setLayout(f2pdf_box_layout)
+        f2pdf_box.setMaximumHeight(70)
         
         png_page_label = QLabel("Page to convert to PNG:")
         png_page_label.setMaximumHeight(15)
@@ -62,20 +62,20 @@ class ButtonWidget(QWidget):
         crop_box.setLayout(crop_box_layout)
         crop_box.setMaximumHeight(70)
 
-        rm_pages_label = QLabel("Pages to keep:")
-        rm_pages_label.setMaximumHeight(15)
+        trim_label = QLabel("Pages to keep:")
+        trim_label.setMaximumHeight(15)
         self.keep_pgs = QLineEdit()
         self.keep_pgs.setPlaceholderText("Ex: \"12-16 32-end\"")
-        rm_pages_button = QPushButton("Remove Pages")
-        rm_pages_button.clicked.connect(self.rm_pages_clicked)
-        rm_pages_box = QGroupBox()
-        rm_pages_box_layout = QVBoxLayout()
-        rm_pages_box_layout.setSpacing(5)
-        rm_pages_box_layout.addWidget(rm_pages_button)
-        rm_pages_box_layout.addWidget(rm_pages_label)
-        rm_pages_box_layout.addWidget(self.keep_pgs)
-        rm_pages_box.setLayout(rm_pages_box_layout)
-        rm_pages_box.setMaximumHeight(100)
+        trim_button = QPushButton("Trim Pages")
+        trim_button.clicked.connect(self.trim_clicked)
+        trim_box = QGroupBox()
+        trim_box_layout = QVBoxLayout()
+        trim_box_layout.setSpacing(5)
+        trim_box_layout.addWidget(trim_button)
+        trim_box_layout.addWidget(trim_label)
+        trim_box_layout.addWidget(self.keep_pgs)
+        trim_box.setLayout(trim_box_layout)
+        trim_box.setMaximumHeight(100)
 
         cc_clipboard = QRadioButton("Clipboard")
         self.cc_file = QRadioButton("File")
@@ -108,11 +108,11 @@ class ButtonWidget(QWidget):
         scrollable_content = QWidget()
         scrollable_content.setMinimumHeight(400)
         scrollable_layout = QVBoxLayout(scrollable_content)
-        scrollable_layout.addWidget(epub_button)
+        scrollable_layout.addWidget(f2pdf_button)
         scrollable_layout.addWidget(png_box)
         scrollable_layout.addWidget(ocr_button)
         scrollable_layout.addWidget(crop_button)
-        scrollable_layout.addWidget(rm_pages_box)
+        scrollable_layout.addWidget(trim_box)
         scrollable_layout.addWidget(cc_box)
         scrollable_layout.addWidget(tts_button)
         scrollable_layout.setSpacing(3)
@@ -127,10 +127,10 @@ class ButtonWidget(QWidget):
         layout.addWidget(scroll_area)
         self.setLayout(layout)
 
-    def epub_clicked(self):
-        self.button_msgs.emit(f"Attempting to convert EPUB to PDF...")
+    def f2pdf_clicked(self):
+        self.button_msgs.emit(f"Attempting to convert file to PDF...")
         QApplication.processEvents()
-        self.call_selected_function(epub2pdf.convert)
+        self.call_selected_function(file2pdf.convert)
 
     def png_clicked(self):
         page = self.png_page.text()
@@ -148,11 +148,11 @@ class ButtonWidget(QWidget):
         QApplication.processEvents()
         self.call_selected_function(crop.convert)
 
-    def rm_pages_clicked(self):
+    def trim_clicked(self):
         keep_pgs_input = self.keep_pgs.text()
         self.button_msgs.emit(f"Attempting to trim PDF...")
         QApplication.processEvents()
-        self.call_selected_function(rm_pages.convert, keep_pgs_input)
+        self.call_selected_function(trim.convert, keep_pgs_input)
 
     def clean_copy_clicked(self):
         cc_file_checked = self.cc_file.isChecked()

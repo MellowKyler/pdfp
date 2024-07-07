@@ -21,8 +21,6 @@ class Converter(QObject):
             self.op_msgs.emit(f"Briss location invalid. Configure in settings.")
             return
 
-        
-
         automation_enabled = self.settings.auto_crop_radio.isChecked()
         if automation_enabled:
             self.op_msgs.emit(f"Cropping {pdf}...")

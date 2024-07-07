@@ -46,18 +46,17 @@ class Converter(QObject):
             return
                     
         for start, end in page_ranges:
-            for page_num in range(start-1, end):  # PyMuPDF uses zero-based indexing
+            for page_num in range(start-1, end):
                 if page_num < 1 or page_num > pdf_length:
-                    # raise ValueError("Invalid page number")
                     self.op_msgs.emit(f"Invalid page number entry. Out of range")
                     return
                 page = input_pdf.load_page(page_num)
                 output_pdf.insert_pdf(input_pdf, from_page=page_num, to_page=page_num)
 
-        output_file = construct_filename(pdf, "rm_pages_ps")
+        output_file = construct_filename(pdf, "trim_ps")
         output_pdf.save(output_file)
         self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
 
-rm_pages = Converter()
+trim = Converter()

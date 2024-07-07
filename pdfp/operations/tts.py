@@ -69,7 +69,7 @@ class Converter(QObject):
         handler = QueueHandler(shared_state, self.op_msgs)
         logger.addHandler(handler)
 
-        #eventually call clean_copy to retreive text
+        #eventually call clean_copy to retreive text (or at least the option to do so)
         try:
             # if pdf.endswith('.pdf'):
             with pymupdf.open(pdf) as doc:
