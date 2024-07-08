@@ -32,7 +32,6 @@ class QueueHandler(logging.Handler):
             if match:
                 digit_str = match.group(1)
                 self.shared_state.total_parts = int(digit_str)
-                self.revise_pb_label.emit(f"TTS Progress:")
                 QApplication.processEvents()
             
             match = re.search(r"part-(\d+) created", msg)
@@ -66,8 +65,11 @@ class Converter(QObject):
         handler = QueueHandler(shared_state, self.op_msgs, self.update_pb, self.revise_pb_label)
         logger.addHandler(handler)
 
+
+        self.revise_pb_label.emit(f"TTS Progress:")
         self.view_pb.emit(True)
         #eventually call clean_copy to retreive text (or at least the option to do so)
+        #probably make the cleaning operation a .utils function
         try:
             if pdf.endswith('.pdf'):
                 with pymupdf.open(pdf) as doc:

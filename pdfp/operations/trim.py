@@ -47,7 +47,7 @@ class Converter(QObject):
                     
         for start, end in page_ranges:
             for page_num in range(start-1, end):
-                if page_num < 1 or page_num > pdf_length:
+                if page_num < 0 or page_num > pdf_length:
                     self.op_msgs.emit(f"Invalid page number entry. Out of range")
                     return
                 page = input_pdf.load_page(page_num)

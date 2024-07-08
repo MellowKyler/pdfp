@@ -29,6 +29,9 @@ class LogWidget(QWidget):
         tts.update_pb.connect(self.update_progress_bar)
         tts.view_pb.connect(self.view_progress_bar)
         tts.revise_pb_label.connect(self.revise_pb_label)
+        ocr.update_pb.connect(self.update_progress_bar)
+        ocr.view_pb.connect(self.view_progress_bar)
+        ocr.revise_pb_label.connect(self.revise_pb_label)
 
         #logbox
         self.log_widget = QTextEdit()
@@ -69,6 +72,9 @@ class LogWidget(QWidget):
 
     def view_progress_bar(self, toggle):
         self.pb_scroll_area.setVisible(toggle)
+        # not sure if i should handle cleanup here or within each operation
+        if toggle == False:
+            self.update_progress_bar(0)
 
     def update_progress_bar(self, value):
         self.progress_bar.setValue(value)
