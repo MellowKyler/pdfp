@@ -8,6 +8,12 @@ from pdfp.button_widget import ButtonWidget
 from pdfp.log_widget import LogWidget
 
 class MainWindow(QMainWindow):
+    """
+    Main window for the pdfp application. Holds file_tree_widget, button_widget, log_widget, and menu_bar.
+    The menu_bar contains the File menu with actions: Select File, Settings, About, and Quit.
+    file_tree_widget and button_widget are housed in a horizontal splitter within a vertical splitter with log_widget.
+    """
+
     def __init__(self, app):
         super().__init__()
         self.app = app 
@@ -51,9 +57,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(vsplitter)
 
     def quit_app(self):
+        """Close the pdfp application."""
         self.app.quit()
 
     def select_file(self):
+        """Launch a file selector to select one file."""
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select a File")
         file_dialog.setFileMode(QFileDialog.ExistingFile)
@@ -66,9 +74,11 @@ class MainWindow(QMainWindow):
                 self.file_tree_widget.add_file(selected_file)
 
     def settings_popup(self):
-       self.settings_window.show()
+        """Show the settings window."""
+        self.settings_window.show()
     
     def about_popup(self):
+        """Show the About popup."""
         msg_box = QMessageBox()
         msg_box.setWindowTitle("PDF Processor")
         msg_box.setText("<strong>Version 0.0.3</strong>")
@@ -82,15 +92,21 @@ class MainWindow(QMainWindow):
         msg_box.exec()
 
     def closeEvent(self, event):
+        """
+        Save the main_window geometry and close the main_window.
+        Overrides the default closeEvent.
+        """
         self.save_geometry()
         event.accept()
 
     def save_geometry(self):
+        """Save main_window geometry, position, and size to the settings."""
         self.settings_window.settings.setValue("geometry", self.saveGeometry())
         self.settings_window.settings.setValue("pos", self.pos())
         self.settings_window.settings.setValue("size", self.size())
 
     def restore_geometry(self):
+        """Restore main_window geometry, position, and size based on values in settings."""
         if geo := self.settings_window.settings.value("geometry"):
             self.restoreGeometry(geo)
         if pos := self.settings_window.settings.value("pos"):

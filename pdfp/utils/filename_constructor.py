@@ -2,6 +2,18 @@ import os
 from pdfp.settings_window import SettingsWindow
 
 def construct_filename(input_file, operation_ps):
+    """
+    Construct a filename based on user settings and operation specifics.
+    Args:
+        input_file (str): The path of the input file.
+        operation_ps (str): The operation-specific prefix or suffix identifier.
+    Returns:
+        str: The constructed output filename including the appropriate file extension based on the operation.
+    Notes:
+        - Uses settings from SettingsWindow instance to determine filename modifications.
+        - Supports default filename, lowercase conversion, first-word extraction, and prefix/suffix addition.
+        - Appends specific extensions based on the operation ('cc_ps', 'tts_ps', 'png_ps', default 'pdf').
+    """
     settings = SettingsWindow.instance()
     dirpath = os.path.dirname(input_file)
 

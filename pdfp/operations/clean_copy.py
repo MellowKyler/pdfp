@@ -9,11 +9,22 @@ import pyperclip
 import pymupdf
 
 class Converter(QObject):
+    """
+    Converter class to extract text from a PDF, transform it, and either write it to files
+    or copy it to the clipboard based on user settings.
+    Attributes:
+        op_msgs (Signal): Signal to emit operation messages.
+    """
     op_msgs = Signal(str)
     def __init__(self):
         super().__init__()
-
     def transform_text(self, text):
+        """Cleans up and normalizes the input text.
+        Args:
+            text (str): Text to be transformed.
+        Returns:
+            str: Transformed text.
+        """
         text = ' '.join(text.splitlines())
         text = text.replace('- ', '')
         text = text.strip()
@@ -21,11 +32,28 @@ class Converter(QObject):
         return text
 
     def write_to_file(self, text, output_txt_path):
+        """
+        Cleans up and normalizes the input text.
+        
+        Args:
+            text (str): Text to be transformed.
+        
+        Returns:
+            str: Transformed text.
+        """
         with open(output_txt_path, 'w', encoding='utf-8') as output_txt_file:
             output_txt_file.write(text)
         self.op_msgs.emit(f"Conversion complete. Output: {output_txt_path}")
 
     def copy_pdf(self, file_tree, pdf, cc_file_checked):
+        """
+        Extracts text from a PDF, handles text splitting if enabled, and either writes it to multiple
+        files or copies it to the clipboard.
+        Args:
+            file_tree (QObject): Tree widget to add output files.
+            pdf (str): Path to the PDF file to extract text from.
+            cc_file_checked (bool): Indicates whether to split text into multiple files or copy to clipboard.
+        """
         output_txt_path = construct_filename(pdf, "cc_ps")
 
         with pymupdf.open(pdf) as doc:
@@ -69,6 +97,13 @@ class Converter(QObject):
             self.op_msgs.emit(f"PDF contents copied to clipboard.")
 
     def convert(self, file_tree, pdf, cc_file_checked):
+        """
+        Initiates the PDF text extraction and transformation process based on user settings.
+        Args:
+            file_tree (QObject): Tree widget to add output files.
+            pdf (str): Path to the PDF file to extract text from.
+            cc_file_checked (bool): Indicates whether to split text into multiple files or copy to clipboard.
+        """
         if not pdf.endswith('.pdf'):
             self.util_msgs.emit(f"File is not a PDF.")
             return

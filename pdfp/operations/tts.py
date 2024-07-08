@@ -8,6 +8,9 @@ from gtts import gTTS
 import pymupdf
 
 class SharedState:
+    """
+    Stores shared state information for text-to-speech (TTS) conversion progress tracking.
+    """
     def __init__(self):
         # self.text_part_digit = None
         # self.part_digit = None
@@ -17,7 +20,18 @@ class SharedState:
         self.progress_percentage = 0
 
 class QueueHandler(logging.Handler):
+    """
+    Custom logging handler for processing specific log messages during TTS conversion.
+    """
     def __init__(self, shared_state, op_msgs, update_pb, revise_pb_label):
+        """
+        Initialize the QueueHandler with shared state and UI signals.
+        Args:
+            shared_state (SharedState): Shared state object for tracking conversion progress.
+            op_msgs (Signal): Signal to emit operation messages.
+            update_pb (Signal): Signal to update the progress bar.
+            revise_pb_label (Signal): Signal to revise the progress bar label.
+        """
         super().__init__()
         self.shared_state = shared_state
         self.op_msgs = op_msgs
@@ -25,6 +39,11 @@ class QueueHandler(logging.Handler):
         self.revise_pb_label = revise_pb_label
     
     def emit(self, record):
+        """
+        Emit the log record to process specific messages and update UI elements.
+        Args:
+            record (LogRecord): The log record to process.
+        """
         try:
             msg = self.format(record)
             
@@ -45,6 +64,9 @@ class QueueHandler(logging.Handler):
             self.handleError(record)
 
 class Converter(QObject):
+    """
+    Handles the text-to-speech (TTS) conversion process for PDF and text files.
+    """
     op_msgs = Signal(str)
     view_pb = Signal(bool)
     update_pb = Signal(int)

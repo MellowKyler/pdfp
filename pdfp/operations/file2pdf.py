@@ -5,12 +5,29 @@ from pdfp.utils.filename_constructor import construct_filename
 import pymupdf
 
 class Converter(QObject):
+    """
+    Converter class for converting various file formats to PDF.
+    Attributes:
+        op_msgs (Signal): Signal to emit operation messages.
+    """
     op_msgs = Signal(str)
 
     def __init__(self):
         super().__init__()
 
     def convert(self, file_tree, input_file):
+        """
+        Converts the input file to PDF format.
+            Args:
+                file_tree (QObject): Tree widget to add converted PDF file.
+                input_file (str): Path to the input file to be converted.
+            Notes:
+                - If input_file already ends with '.pdf', emits a message indicating it's already a PDF.
+                - If input_file format is not supported, emits a message with supported file types.
+                - Converts the input file to PDF, preserves table of contents (TOC) and links.
+                - Saves the converted PDF with a constructed filename.
+                - Optionally adds the converted file to the file_tree widget if specified in settings.
+        """
         if input_file.lower().endswith('.pdf'):
             self.op_msgs.emit(f"File is already a PDF!")
         elif not any(input_file.lower().endswith(ext) for ext in file_tree.allowed_extensions):

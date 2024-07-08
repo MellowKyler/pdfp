@@ -11,6 +11,18 @@ from pdfp.operations.tts import tts
 from pdfp.button_widget import ButtonWidget
 
 class LogWidget(QWidget):
+    """
+    Display logs and progress bars for pdfp operations.
+
+    This widget connects to various signals from different operations and displays log messages and progress.
+    
+    Attributes:
+        log_widget (QTextEdit): A text edit widget for displaying log messages.
+        pb_label (QLabel): A label for the progress bar.
+        progress_bar (QProgressBar): A progress bar to show operation progress.
+        pb_scroll_area (QScrollArea): A scroll area containing the progress bar and label.
+        layout (QHBoxLayout): The main layout of the widget.
+    """
     def __init__(self, file_tree_widget, main_window):
         super().__init__()
         #logbox connections
@@ -71,16 +83,37 @@ class LogWidget(QWidget):
         self.setLayout(self.layout)
 
     def view_progress_bar(self, toggle):
+        """
+        Toggle the visibility status of the progress bar widget.
+        Args:
+            toggle (bool): If True, show the progress bar. If False, hide it and reset the progress and label.
+        """
         self.pb_scroll_area.setVisible(toggle)
         # not sure if i should handle cleanup here or within each operation
         if toggle == False:
             self.update_progress_bar(0)
+            self.pb_label.setText("Progress:")
 
     def update_progress_bar(self, value):
+        """
+        Set the value of the progress bar.
+        Args:
+            value (int): The progress value to set (0-100).
+        """
         self.progress_bar.setValue(value)
 
     def revise_pb_label(self, string):
+        """
+        Set the text of the progress bar label.
+        Args:
+            string (str): The text to set on the progress bar label.
+        """
         self.pb_label.setText(string)
 
     def add_log_message(self, message):
+        """
+        Append a log message to the log widget display.
+        Args:
+            message (str): The log message to append.
+        """
         self.log_widget.append(message)

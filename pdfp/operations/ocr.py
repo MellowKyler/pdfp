@@ -7,12 +7,22 @@ import ocrmypdf
 import pymupdf
 
 class SharedState:
+    """
+    Holds shared state information for tracking progress of operations.
+    Attributes:
+        progress (int): Current progress of the operation.
+        total_parts (int): Total parts of the operation.
+        progress_percentage (float): Percentage of completion of the operation.
+    """
     def __init__(self):
         self.progress = 0
         self.total_parts = 0 
         self.progress_percentage = 0
 
 class QueueHandler(logging.Handler):
+    """
+    Custom logging handler to process log messages and update shared state and UI elements accordingly.
+    """
     def __init__(self, shared_state, op_msgs, update_pb, revise_pb_label):
         super().__init__()
         self.shared_state = shared_state
@@ -21,6 +31,14 @@ class QueueHandler(logging.Handler):
         self.revise_pb_label = revise_pb_label
 
     def emit(self, record):
+        """
+        Processes the log record and updates the shared state and UI elements as needed.
+        Args:
+            record (LogRecord): Log record containing information about the operation.
+        Notes:
+            - If the log message is "Grafting", updates progress and progress percentage.
+            - If the log message is "Postprocessing...", updates progress bar label.
+        """
         try:
             msg = self.format(record)
             if msg == "Grafting":
@@ -43,6 +61,16 @@ class QueueHandler(logging.Handler):
             self.handleError(record)
 
 class Converter(QObject):
+    """
+    Handles OCR (Optical Character Recognition) operations on PDF files using ocrmypdf.
+    Uses ocrmypdf and PyMuPDF to perform OCR on a specified PDF file and emits signals to update progress.
+    Signals:
+        op_msgs: Emits messages about the status of the OCR process.
+        view_pb: Toggles visibility of the progress bar during OCR.
+        update_pb: Updates the value of the progress bar during OCR.
+        revise_pb_label: Updates the label of the progress bar during OCR.
+    """
+
     op_msgs = Signal(str)
     view_pb = Signal(bool)
     update_pb = Signal(int)
@@ -50,6 +78,12 @@ class Converter(QObject):
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf):
+        """
+        Performs OCR on the specified PDF file.
+        Args:
+            file_tree (QWidget): The file tree widget where output files may be added.
+            pdf (str): Path of the PDF file to perform OCR on.
+        """
         if not pdf.endswith('.pdf'):
             self.util_msgs.emit(f"File is not a PDF.")
             return

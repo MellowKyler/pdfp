@@ -6,11 +6,22 @@ from pdfp.utils.filename_constructor import construct_filename
 import pymupdf
 
 class Converter(QObject):
+    """
+    Handles PDF trimming operations based on specified page ranges.
+    Signals:
+        op_msgs: Emits messages about the status of the conversion process.
+    """
     op_msgs = Signal(str)
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf, keep_pgs):
-
+        """
+        Performs PDF trimming operation based on specified page ranges.
+        Args:
+            file_tree (QWidget): The file tree widget where output files may be added.
+            pdf (str): Path of the PDF file to trim.
+            keep_pgs (str): Page ranges or numbers to keep in the PDF.
+        """
         if keep_pgs == "":
             self.op_msgs.emit(f"Enter pages to keep!")
             return

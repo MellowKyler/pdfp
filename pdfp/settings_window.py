@@ -3,16 +3,28 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 
 class SettingsWindow(QWidget):
+    """
+    A settings window for the pdfp application; manages general, operation-specific, and filename settings.
+    Configuration can be saved to and loaded from an INI file.
+    """
 
     #if i don't put this here, multiple qwidgets get loaded for SettingsWindow on startup.
-    #invokations should look like now instead: self.settings = SettingsWindow.instance()
     _instance = None
     def __new__(cls, *args, **kwargs):
+        """
+        Override __new__ method to ensure only one instance of SettingsWindow exists.
+        If no existing instance, create one and return it. If an instance exists, return that instance.
+        """
         if not cls._instance:
             cls._instance = super(SettingsWindow, cls).__new__(cls, *args, **kwargs)
         return cls._instance
     @classmethod
     def instance(cls):
+        """
+        Returns the single instance of SettingsWindow.
+        If no instance exists, creates one and returns it.
+        Call this function when referencing SettingsWindow values.
+        """
         if cls._instance is None:
             cls._instance = SettingsWindow()
         return cls._instance
@@ -291,20 +303,30 @@ class SettingsWindow(QWidget):
         self.setLayout(layout)
 
     def save_as_settings(self):
+        """Save current settings configuration to an INI file."""
         save_filename = self.save_ini_file()
         self.ini_file = QSettings(save_filename, QSettings.IniFormat)
-        self.save_settings("remain_open", self.ini_file)
+        self.save_settings(True, self.ini_file)
 
     def load_as_settings(self):
+        """Load settings configuration from an INI file."""
         load_filename = self.load_ini_file()
         self.ini_file = QSettings(load_filename, QSettings.IniFormat)
-        self.load_settings("remain_open", self.ini_file)
+        self.load_settings(True, self.ini_file)
 
     def reset_settings(self):
+        """Clear current settings configuration and load default values."""
         self.settings.clear()
-        self.load_settings("remain_open")
+        self.load_settings(True)
     
-    def load_settings(self, remain_open=0, ini_file=""):
+    def load_settings(self, remain_open=False, ini_file=""):
+        """
+        Load settings configuration from the current settings or an INI file.
+        Args:
+            remain_open (bool): If True, keep SettingsWindow open after loading settings.
+            ini_file (QSettings or str): Optional. QSettings object or INI file path to load settings from.
+        """
+
         if ini_file != "":
             get_value = ini_file.value
         else:
@@ -349,7 +371,14 @@ class SettingsWindow(QWidget):
         if not remain_open:
             self.close()
     
-    def save_settings(self, remain_open=0, ini_file=""):
+    def save_settings(self, remain_open=False, ini_file=""):
+        """
+        Save settings configuration to the current settings or an INI file.
+        Args:
+            remain_open (bool): If True, keep SettingsWindow open after saving settings.
+            ini_file (QSettings or str): Optional. QSettings object or INI file path to save settings to.
+        """
+
         if ini_file != "":
             set_value = ini_file.setValue
         else:
@@ -390,25 +419,47 @@ class SettingsWindow(QWidget):
             self.close()
 
     def default_filename_checkbox_action(self, checked):
+        """
+        Enable and disable filename widgets based on the checked status of default filename checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
         self.default_filename_input.setEnabled(checked)
         self.first_word_filename_checkbox.setEnabled(not checked)
         self.lowercase_filename_checkbox.setEnabled(not checked)
 
     def prefix_suffix_checkbox_action(self, checked):
+        """
+        Handle action for prefix/suffix checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
         self.ps_box.setEnabled(checked)
 
     def split_txt_checkbox_action(self, checked):
+        """
+        Handle action for split text checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
         self.wordcount_split_label.setEnabled(checked)
         self.wordcount_split_display.setEnabled(checked)
 
     def select_briss_file(self):
+        """Open a file dialog to select Briss executable and set its location in the UI."""
         selected_file = self.select_file()
         self.briss_location_display.setText(selected_file)
 
     def load_ini_file(self):
+        """Open a file dialog to select an INI file and return its path."""
         return self.select_file("ini")
 
     def select_file(self, filetype=""):
+        """
+        Open a file dialog to select a file and return its path.
+        Args:
+            filetype (str): Optional. File type filter for the file dialog.
+        """
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select a File")
         file_dialog.setFileMode(QFileDialog.ExistingFile)
@@ -423,6 +474,7 @@ class SettingsWindow(QWidget):
                 return selected_file
 
     def select_folder(self):
+        """Open a file dialog to select a folder and return its path."""
         folder_dialog = QFileDialog(self)
         folder_dialog.setWindowTitle("Select a Folder")
         folder_dialog.setFileMode(QFileDialog.Directory)
@@ -435,6 +487,7 @@ class SettingsWindow(QWidget):
                 return selected_folder
 
     def get_config_dir(self):
+        """Check if the config directory exists. If not, create it. Return the config directory path."""
         project_root = QDir.currentPath()
         config_directory = os.path.join(project_root, "config")
         if not os.path.isdir(config_directory):
@@ -442,6 +495,7 @@ class SettingsWindow(QWidget):
         return config_directory
                 
     def save_ini_file(self):
+        """Open a file dialog to select or create an INI file and return its path."""
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         
@@ -455,15 +509,22 @@ class SettingsWindow(QWidget):
         return file_path
       
     def closeEvent(self, event):
+        """
+        Save geometry and accept the close event.
+        Args:
+            event (QCloseEvent): Close event object.
+        """
         self.save_geometry()
         event.accept()
 
     def save_geometry(self):
+        """Save settings_window geometry, position, and size to the settings."""
         self.settings.setValue("settings-geometry", self.saveGeometry())
         self.settings.setValue("settings-pos", self.pos())
         self.settings.setValue("settings-size", self.size())
 
     def restore_geometry(self):
+        """Restore settings_window geometry, position, and size based on values in settings."""
         if geo := self.settings.value("settings-geometry"):
             self.restoreGeometry(geo)
         if pos := self.settings.value("settings-pos"):

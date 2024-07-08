@@ -7,10 +7,28 @@ from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 
 class Converter(QObject):
+    """
+    Converter class for managing the cropping of PDF files either automatically or by launching Briss
+    based on user settings.
+    Attributes:
+        op_msgs (Signal): Signal to emit operation messages.
+    """
     op_msgs = Signal(str)
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf):
+        """
+        Performs PDF cropping operation using Briss based on user settings.
+            Args:
+                file_tree (QObject): Tree widget to add cropped PDF file.
+                pdf (str): Path to the PDF file to be cropped.
+            Notes:
+                - Emits a message if the provided file is not a PDF.
+                - Retrieves Briss executable location from settings and verifies its existence.
+                - If automatic cropping is enabled, crops the PDF using Briss and saves the output.
+                - Launches Briss with the PDF file if automatic cropping is disabled.
+                - Adds the cropped file to the file_tree widget if specified in settings.
+        """
         if not pdf.endswith('.pdf'):
             self.op_msgs.emit(f"File is not a PDF.")
             return

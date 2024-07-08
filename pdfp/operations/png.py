@@ -5,12 +5,24 @@ from pdfp.utils.filename_constructor import construct_filename
 import pymupdf
 
 class Converter(QObject):
+    """
+    Handles PDF to PNG conversion.
+    Signals:
+        op_msgs: Emits messages about the status of the conversion process.
+    """
     op_msgs = Signal(str)
 
     def __init__(self):
         super().__init__()
 
     def convert(self, file_tree, pdf, pg):
+        """
+        Converts a specific page of a PDF file to PNG format.
+        Args:
+            file_tree (QWidget): The file tree widget where output files may be added.
+            pdf (str): Path of the PDF file to convert.
+            pg (str): Page number (as a string) to convert to PNG. If empty, defaults to "1".
+        """
         if not pdf.endswith('.pdf'):
             self.op_msgs.emit(f"File is not a PDF.")
             return
