@@ -34,10 +34,8 @@ class Converter(QObject):
     def write_to_file(self, text, output_txt_path):
         """
         Cleans up and normalizes the input text.
-        
         Args:
             text (str): Text to be transformed.
-        
         Returns:
             str: Transformed text.
         """
@@ -54,12 +52,18 @@ class Converter(QObject):
             pdf (str): Path to the PDF file to extract text from.
             cc_file_checked (bool): Indicates whether to split text into multiple files or copy to clipboard.
         """
-        output_txt_path = construct_filename(pdf, "cc_ps")
 
-        with pymupdf.open(pdf) as doc:
-            full_text = "\n".join([page.get_text() for page in doc])
+        if pdf.endswith('.pdf'):
+            with pymupdf.open(pdf) as doc:
+                full_text = "\n".join([page.get_text() for page in doc])
+        elif pdf.endswith('.txt'):
+            with open(pdf, 'r', encoding='utf-8') as txt_file:
+                full_text = txt_file.read()
+        else:
+            self.util_msgs.emit(f"Filetype is not PDF or TXT.")
+            return
+
         full_text = self.transform_text(full_text)
-
         full_text_split = full_text.split()
         wordcount = len(full_text_split)
         self.op_msgs.emit(f"Word count: {wordcount}")
@@ -77,9 +81,12 @@ class Converter(QObject):
                 self.op_msgs.emit(f"Error: Word count split value configured in settings is not an integer. Continuing without splitting...")
                 QApplication.processEvents()
 
+        output_txt_path = construct_filename(pdf, "cc_ps")
+
         if cc_file_checked:
             if tts_limit:
-                output_txt_path = output_txt_path[:-4]
+                output_txt_path, _ = os.path.splitext(output_txt_path)
+                return
                 txtcount = int(math.ceil(wordcount / splitvalue))
                 for i in range(1, txtcount + 1):
                     startpoint = ((i - 1) * splitvalue) + 1
@@ -89,9 +96,14 @@ class Converter(QObject):
                         text = " ".join(full_text_split[startpoint:wordcount])
                     else:
                         text = " ".join(full_text_split[startpoint:(i * splitvalue)])
-                    self.write_to_file(text, output_txt_path + str(i) + ".txt")
+                    output_txt_path = f"{output_txt_path}-{i}.txt"
+                    self.write_to_file(text, output_txt_path)
+                    if self.settings.add_file_checkbox.isChecked():
+                        file_tree.add_file(output_txt_path)
             else:
                 self.write_to_file(full_text, output_txt_path)
+                if self.settings.add_file_checkbox.isChecked():
+                    file_tree.add_file(output_txt_path)
         else:
             pyperclip.copy(full_text)
             self.op_msgs.emit(f"PDF contents copied to clipboard.")
@@ -104,9 +116,6 @@ class Converter(QObject):
             pdf (str): Path to the PDF file to extract text from.
             cc_file_checked (bool): Indicates whether to split text into multiple files or copy to clipboard.
         """
-        if not pdf.endswith('.pdf'):
-            self.util_msgs.emit(f"File is not a PDF.")
-            return
         
         self.settings = SettingsWindow.instance()
         self.op_msgs.emit(f"Converting {pdf}...")

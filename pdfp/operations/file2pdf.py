@@ -1,3 +1,4 @@
+import os
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
@@ -14,6 +15,26 @@ class Converter(QObject):
 
     def __init__(self):
         super().__init__()
+
+    def check_for_cover_image(self, input_file):
+        dirpath = os.path.dirname(input_file)
+        filename = os.path.basename(input_file)
+        filename, _ = os.path.splitext(filename)
+        patterns = ["cover.jpg", "cover.jpeg", "cover.png"]
+        for pattern in patterns:
+            if os.path.exists(os.path.join(dirpath, pattern)):
+                return os.path.join(dirpath, pattern)
+        return None
+
+    def set_cover_image(self, cover_image, original_pdf):
+        new_pdf = pymupdf.open()
+        first_page = original_pdf[0]
+        width, height = first_page.rect.width, first_page.rect.height
+        new_page = new_pdf.new_page(width=width, height=height)
+        new_page.insert_image(new_page.rect, filename=cover_image)
+        for page_num in range(len(original_pdf)):
+            new_pdf.insert_pdf(original_pdf, from_page=page_num, to_page=page_num)
+        return new_pdf
 
     def convert(self, file_tree, input_file):
         """
@@ -53,9 +74,14 @@ class Converter(QObject):
                     continue
                 page_out.insert_link(l)
 
+        #add a settings option to opt-into this
+        cover_image = self.check_for_cover_image(input_file)
+        pdf = self.set_cover_image(cover_image, pdf)
+
         output_file = construct_filename(input_file, "f2pdf_ps")
         pdf.save(output_file, garbage=4, deflate=True)
         self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+        QApplication.processEvents()
 
         self.settings = SettingsWindow.instance()
         if self.settings.add_file_checkbox.isChecked():

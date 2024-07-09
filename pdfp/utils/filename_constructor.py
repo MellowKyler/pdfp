@@ -1,12 +1,12 @@
 import os
 from pdfp.settings_window import SettingsWindow
 
-def construct_filename(input_file, operation_ps):
+def construct_filename(input_file, operation_ps_id):
     """
     Construct a filename based on user settings and operation specifics.
     Args:
         input_file (str): The path of the input file.
-        operation_ps (str): The operation-specific prefix or suffix identifier.
+        operation_ps_id (str): The operation-specific prefix or suffix identifier.
     Returns:
         str: The constructed output filename including the appropriate file extension based on the operation.
     Notes:
@@ -17,8 +17,7 @@ def construct_filename(input_file, operation_ps):
     settings = SettingsWindow.instance()
     dirpath = os.path.dirname(input_file)
 
-    default_filename_enabled = settings.default_filename_checkbox.isChecked()
-    if default_filename_enabled:
+    if settings.default_filename_checkbox.isChecked():
         filename = default_filename
     else:
         filename = os.path.basename(input_file)
@@ -42,23 +41,35 @@ def construct_filename(input_file, operation_ps):
             filename = alpha_string
 
     ps_enabled = settings.prefix_suffix_checkbox.isChecked()
-    disable_ps_ext = settings.disable_non_pdf_ps_checkbox.isChecked() and (operation_ps in ("png_ps", "cc_ps", "tts_ps"))
+    disable_ps_ext = settings.disable_non_pdf_ps_checkbox.isChecked() and (operation_ps_id in ("png_ps", "cc_ps", "tts_ps")) # and input_file.endswith('.pdf') #txt files with cc could match output_file name
     if ps_enabled and not disable_ps_ext:
         prefix_enabled = settings.prefix_radio.isChecked()
         char_ps = settings.char_ps_input.text()
-        operation_ps = settings.settings.value(operation_ps, "", type=str)
+        operation_ps = settings.settings.value(operation_ps_id, "", type=str)
         if operation_ps != "":
             if prefix_enabled:
                 filename = f"{operation_ps}{char_ps}{filename}"
             else:
                 filename = f"{filename}{char_ps}{operation_ps}"
+                
     output_file = os.path.join(dirpath, filename)
-    if operation_ps == "cc_ps":
+    if operation_ps_id == "cc_ps":
         output_file = f"{output_file}.txt"
-    elif operation_ps == "tts_ps":
+    elif operation_ps_id == "tts_ps":
         output_file = f"{output_file}.mp3"
-    elif operation_ps == "png_ps":
+    elif operation_ps_id == "png_ps":
         output_file = f"{output_file}.png"
     else:
         output_file = f"{output_file}.pdf"
+
+    #(make this a function?) and make it a setting
+    if os.path.exists(output_file):
+        base, extension = os.path.splitext(output_file)
+        counter = 1
+        new_output_file = output_file
+        while os.path.exists(new_output_file):
+            new_output_file = f"{base}_{counter}{extension}"
+            counter += 1
+        output_file = new_output_file
+
     return output_file
