@@ -9,7 +9,7 @@ class Converter(QObject):
     """
     Handles PDF trimming operations based on specified page ranges.
     Signals:
-        op_msgs: Emits messages about the status of the conversion process.
+        op_msgs: Emits messages about the status of the conversion process. Connects to log_widget.
     """
     op_msgs = Signal(str)
     def __init__(self):

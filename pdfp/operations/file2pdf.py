@@ -9,7 +9,7 @@ class Converter(QObject):
     """
     Converter class for converting various file formats to PDF.
     Attributes:
-        op_msgs (Signal): Signal to emit operation messages.
+        op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
     """
     op_msgs = Signal(str)
 

@@ -8,7 +8,7 @@ class Converter(QObject):
     """
     Handles PDF to PNG conversion.
     Signals:
-        op_msgs: Emits messages about the status of the conversion process.
+        op_msgs: Emits messages about the status of the conversion process. Connects to log_widget.
     """
     op_msgs = Signal(str)
 

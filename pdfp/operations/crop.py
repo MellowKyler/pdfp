@@ -11,7 +11,7 @@ class Converter(QObject):
     Converter class for managing the cropping of PDF files either automatically or by launching Briss
     based on user settings.
     Attributes:
-        op_msgs (Signal): Signal to emit operation messages.
+        op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
     """
     op_msgs = Signal(str)
     def __init__(self):

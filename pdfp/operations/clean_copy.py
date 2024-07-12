@@ -13,7 +13,7 @@ class Converter(QObject):
     Converter class to extract text from a PDF, transform it, and either write it to files
     or copy it to the clipboard based on user settings.
     Attributes:
-        op_msgs (Signal): Signal to emit operation messages.
+        op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
     """
     op_msgs = Signal(str)
     def __init__(self):

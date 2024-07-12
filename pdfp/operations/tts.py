@@ -28,9 +28,9 @@ class QueueHandler(logging.Handler):
         Initialize the QueueHandler with shared state and UI signals.
         Args:
             shared_state (SharedState): Shared state object for tracking conversion progress.
-            op_msgs (Signal): Signal to emit operation messages.
-            update_pb (Signal): Signal to update the progress bar.
-            revise_pb_label (Signal): Signal to revise the progress bar label.
+            op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
+            update_pb (Signal): Signal to update the progress bar. Connects to log_widget.
+            revise_pb_label (Signal): Signal to revise the progress bar label. Connects to log_widget.
         """
         super().__init__()
         self.shared_state = shared_state

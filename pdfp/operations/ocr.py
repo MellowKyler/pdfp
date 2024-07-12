@@ -65,10 +65,10 @@ class Converter(QObject):
     Handles OCR (Optical Character Recognition) operations on PDF files using ocrmypdf.
     Uses ocrmypdf and PyMuPDF to perform OCR on a specified PDF file and emits signals to update progress.
     Signals:
-        op_msgs: Emits messages about the status of the OCR process.
-        view_pb: Toggles visibility of the progress bar during OCR.
-        update_pb: Updates the value of the progress bar during OCR.
-        revise_pb_label: Updates the label of the progress bar during OCR.
+        op_msgs: Emits messages about the status of the OCR process. Connects to log_widget.
+        view_pb: Toggles visibility of the progress bar during OCR. Connects to log_widget.
+        update_pb: Updates the value of the progress bar during OCR. Connects to log_widget.
+        revise_pb_label: Updates the label of the progress bar during OCR. Connects to log_widget.
     """
 
     op_msgs = Signal(str)

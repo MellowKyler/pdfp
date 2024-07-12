@@ -38,12 +38,14 @@ class MainWindow(QMainWindow):
         quit_action.triggered.connect(self.quit_app)
         
         self.file_tree_widget = FileTreeWidget()
+        self.file_tree_widget.button_toggle.connect(self.toggle_button_widget)
         self.log_widget = LogWidget(self.file_tree_widget, self)
-        button_widget = ButtonWidget(self.file_tree_widget, self)
+        self.button_widget = ButtonWidget(self.file_tree_widget, self)
+        self.button_widget.setEnabled(False)
 
         hsplitter = QSplitter(Qt.Horizontal)
         hsplitter.addWidget(self.file_tree_widget)
-        hsplitter.addWidget(button_widget)
+        hsplitter.addWidget(self.button_widget)
         hsplitter.setSizes([600, 200])
         hsplitter.setHandleWidth(8)
         hsplitter.setContentsMargins(10,10,10,2)
@@ -113,3 +115,7 @@ class MainWindow(QMainWindow):
             self.move(pos)
         if size := self.settings_window.settings.value("size"):
             self.resize(size)
+
+    def toggle_button_widget(self, toggle):
+        self.button_widget.setEnabled(toggle)
+        print(f"disabling buttons... {toggle}")
