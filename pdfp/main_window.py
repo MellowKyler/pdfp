@@ -117,5 +117,6 @@ class MainWindow(QMainWindow):
             self.resize(size)
 
     def toggle_button_widget(self, toggle):
+        """Enable or disable ButtonWidget."""
         self.button_widget.setEnabled(toggle)
-        print(f"disabling buttons... {toggle}")
+        #print(f"disabling buttons... {toggle}")

@@ -68,6 +68,40 @@ class SettingsWindow(QWidget):
         #png
 
         #ocr
+        ocr_settings_label = QLabel("<strong>OCR Settings</strong>")
+        center_ocr_settings_label = QHBoxLayout()
+        center_ocr_settings_label.addWidget(ocr_settings_label)
+        center_ocr_settings_label.setAlignment(Qt.AlignCenter)
+
+        self.ocr_deskew_checkbox = QCheckBox("Deskew")
+        center_deskew_cb = QHBoxLayout()
+        center_deskew_cb.addWidget(self.ocr_deskew_checkbox)
+        center_deskew_cb.setAlignment(Qt.AlignCenter)
+
+        ocr_radio_label = QLabel("Output format: ")
+        self.ocr_pdf_radio = QRadioButton("PDF")
+        self.ocr_pdfa_radio = QRadioButton("PDFA")
+        ocr_radio_layout = QHBoxLayout()
+        ocr_radio_layout.addWidget(ocr_radio_label)
+        ocr_radio_layout.addWidget(self.ocr_pdf_radio)
+        ocr_radio_layout.addWidget(self.ocr_pdfa_radio)
+        ocr_radio_layout.setAlignment(Qt.AlignCenter)
+
+        ocr_optimize_label = QLabel("Optimization level: ")
+        self.ocr_optimize_level = QSpinBox()
+        self.ocr_optimize_level.setRange(0,3)
+        center_ocr_optimize_cb = QHBoxLayout()
+        center_ocr_optimize_cb.addWidget(ocr_optimize_label)
+        center_ocr_optimize_cb.addWidget(self.ocr_optimize_level)
+        center_ocr_optimize_cb.setAlignment(Qt.AlignCenter)
+
+        ocr_box = QGroupBox()
+        ocr_box_layout = QVBoxLayout()
+        ocr_box_layout.addLayout(center_ocr_settings_label)
+        ocr_box_layout.addLayout(center_deskew_cb)
+        ocr_box_layout.addLayout(ocr_radio_layout)
+        ocr_box_layout.addLayout(center_ocr_optimize_cb)
+        ocr_box.setLayout(ocr_box_layout)
         
         #briss / crop
         crop_settings_label = QLabel("<strong>Crop Settings</strong>")
@@ -148,8 +182,11 @@ class SettingsWindow(QWidget):
         self.default_filename_checkbox = QCheckBox("Default Filename:")
         self.default_filename_input = QLineEdit()
         self.default_filename_input.setPlaceholderText("Don't include file extension")
+        self.filler_char_checkbox = QCheckBox("Replace spaces with:")
+        self.filler_char_input = QLineEdit()
         self.first_word_filename_checkbox = QCheckBox("Only retain first word")
         self.lowercase_filename_checkbox = QCheckBox("Force lowercase filename")
+        self.prevent_overwrite_checkbox = QCheckBox("Iterate filename to prevent overwriting existing files")
         self.prefix_suffix_checkbox = QCheckBox("Enable Prefix/Suffix Options")
 
         fn_hbox1 = QHBoxLayout()
@@ -163,13 +200,23 @@ class SettingsWindow(QWidget):
         self.default_filename_checkbox.setFixedWidth(125)
 
         fn_hbox3 = QHBoxLayout()
-        fn_hbox3.addWidget(self.first_word_filename_checkbox)
-        fn_hbox3.addWidget(self.lowercase_filename_checkbox)
+        fn_hbox3.addWidget(self.filler_char_checkbox)
+        fn_hbox3.addWidget(self.filler_char_input)
+        self.filler_char_checkbox.setFixedWidth(140)
         fn_hbox3.setAlignment(Qt.AlignCenter)
 
         fn_hbox4 = QHBoxLayout()
-        fn_hbox4.addWidget(self.prefix_suffix_checkbox)
+        fn_hbox4.addWidget(self.first_word_filename_checkbox)
+        fn_hbox4.addWidget(self.lowercase_filename_checkbox)
         fn_hbox4.setAlignment(Qt.AlignCenter)
+
+        fn_hbox5 = QHBoxLayout()
+        fn_hbox5.addWidget(self.prevent_overwrite_checkbox)
+        fn_hbox5.setAlignment(Qt.AlignCenter)
+
+        fn_hbox6 = QHBoxLayout()
+        fn_hbox6.addWidget(self.prefix_suffix_checkbox)
+        fn_hbox6.setAlignment(Qt.AlignCenter)
 
         main_fn_layout = QVBoxLayout()
         main_fn_layout.setAlignment(Qt.AlignCenter)
@@ -177,8 +224,11 @@ class SettingsWindow(QWidget):
         main_fn_layout.addLayout(fn_hbox2)
         main_fn_layout.addLayout(fn_hbox3)
         main_fn_layout.addLayout(fn_hbox4)
+        main_fn_layout.addLayout(fn_hbox5)
+        main_fn_layout.addLayout(fn_hbox6)
 
         self.default_filename_checkbox.toggled.connect(self.default_filename_checkbox_action)
+        self.filler_char_checkbox.toggled.connect(self.filler_char_checkbox_action)
         self.prefix_suffix_checkbox.toggled.connect(self.prefix_suffix_checkbox_action)
         
         ps_box_label = QLabel("<strong>Operation Prefixes/Suffixes:<strong>")
@@ -288,8 +338,9 @@ class SettingsWindow(QWidget):
         
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
-        scrollable_layout.addWidget(cc_box)
+        scrollable_layout.addWidget(ocr_box)
         scrollable_layout.addWidget(crop_box)
+        scrollable_layout.addWidget(cc_box)
         scrollable_layout.addWidget(filename_box)
 
         scroll_area = QScrollArea()
@@ -336,6 +387,12 @@ class SettingsWindow(QWidget):
         self.add_file_checkbox.setChecked(get_value("enable_add_file", True, type=bool))
         self.remember_window_checkbox.setChecked(get_value("enable_remember_window", False, type=bool))
 
+        #ocr
+        self.ocr_deskew_checkbox.setChecked(get_value("ocr_deskew", True, type=bool))
+        self.ocr_pdf_radio.setChecked(ocr_pdf_checked := get_value("ocr_pdf_checked", False, type=bool))
+        self.ocr_pdfa_radio.setChecked(not ocr_pdf_checked)
+        self.ocr_optimize_level.setValue(get_value("ocr_optimize_level", 0, type=int))
+
         #briss/crop
         self.auto_crop_radio.setChecked(auto_crop_checked := get_value("auto_crop_checked", False, type=bool))
         self.launch_briss_radio.setChecked(not auto_crop_checked)
@@ -352,8 +409,12 @@ class SettingsWindow(QWidget):
         self.default_filename_checkbox.setChecked(enable_default_filename := get_value("enable_default_filename", False, type=bool))
         self.default_filename_checkbox_action(enable_default_filename)
         self.default_filename_input.setText(get_value("default_filename", "", type=str))
+        self.filler_char_checkbox.setChecked(enable_filler_char := get_value("enable_filler_char", False, type=bool))
+        self.filler_char_checkbox_action(enable_filler_char)
+        self.filler_char_input.setText(get_value("filler_char", "", type=str))
         self.first_word_filename_checkbox.setChecked(get_value("enable_first_word_filename", False, type=bool))
         self.lowercase_filename_checkbox.setChecked(get_value("enable_lowercase_filename", False, type=bool))
+        self.prevent_overwrite_checkbox.setChecked(get_value("prevent_overwrite", True, type=bool))
         #   prefix/suffix
         self.prefix_suffix_checkbox.setChecked(get_value("enable_prefix_suffix", True, type=bool))
         self.prefix_radio.setChecked(prefix_checked := get_value("prefix_radio_checked", False, type=bool))
@@ -388,6 +449,11 @@ class SettingsWindow(QWidget):
         set_value("enable_add_file", self.add_file_checkbox.isChecked())
         set_value("enable_remember_window", self.remember_window_checkbox.isChecked())
 
+        #ocr
+        set_value("ocr_deskew", self.ocr_deskew_checkbox.isChecked())
+        set_value("ocr_pdf_checked", self.ocr_pdf_radio.isChecked())
+        set_value("ocr_optimize_level", self.ocr_optimize_level.value())
+
         #briss/crop
         set_value("auto_crop_checked", self.auto_crop_radio.isChecked())
         set_value("briss_location", self.briss_location_display.text())
@@ -400,8 +466,11 @@ class SettingsWindow(QWidget):
         #filename
         set_value("enable_default_filename", self.default_filename_checkbox.isChecked())
         set_value("default_filename", self.default_filename_input.text())
+        set_value("enable_filler_char", self.filler_char_checkbox.isChecked())
+        set_value("filler_char", self.filler_char_input.text())
         set_value("enable_first_word_filename", self.first_word_filename_checkbox.isChecked())
         set_value("enable_lowercase_filename", self.lowercase_filename_checkbox.isChecked())
+        set_value("prevent_overwrite", self.prevent_overwrite_checkbox.isChecked())
         #   prefix/suffix
         set_value("enable_prefix_suffix", self.prefix_suffix_checkbox.isChecked())
         set_value("prefix_radio_checked", self.prefix_radio.isChecked())
@@ -427,6 +496,16 @@ class SettingsWindow(QWidget):
         self.default_filename_input.setEnabled(checked)
         self.first_word_filename_checkbox.setEnabled(not checked)
         self.lowercase_filename_checkbox.setEnabled(not checked)
+        self.filler_char_checkbox.setEnabled(not checked)
+        # self.filler_char_input.setEnabled(not checked)
+
+    def filler_char_checkbox_action(self, checked):
+        """
+        Enable and disable filler_char widgets based on the checked status of filler_char_checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
+        self.filler_char_input.setEnabled(checked)
 
     def prefix_suffix_checkbox_action(self, checked):
         """

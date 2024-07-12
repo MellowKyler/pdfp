@@ -1,4 +1,5 @@
 import os
+import re
 from pdfp.settings_window import SettingsWindow
 
 def construct_filename(input_file, operation_ps_id):
@@ -40,6 +41,13 @@ def construct_filename(input_file, operation_ps_id):
                     break
             filename = alpha_string
 
+        if settings.filler_char_checkbox.isChecked():
+            char_rm = [' ', '-', '_']
+            new_char = settings.filler_char_input.text()
+            pattern = r'[' + re.escape(''.join(char_rm)) + r']+'
+            filename = re.sub(pattern, new_char, filename)
+            filename = filename.strip(new_char)
+
     ps_enabled = settings.prefix_suffix_checkbox.isChecked()
     disable_ps_ext = settings.disable_non_pdf_ps_checkbox.isChecked() and (operation_ps_id in ("png_ps", "cc_ps", "tts_ps")) # and input_file.endswith('.pdf') #txt files with cc could match output_file name
     if ps_enabled and not disable_ps_ext:
@@ -52,6 +60,9 @@ def construct_filename(input_file, operation_ps_id):
             else:
                 filename = f"{filename}{char_ps}{operation_ps}"
                 
+    if filename == "":
+        filename = "pdfp-output"
+
     output_file = os.path.join(dirpath, filename)
     if operation_ps_id == "cc_ps":
         output_file = f"{output_file}.txt"
@@ -62,13 +73,16 @@ def construct_filename(input_file, operation_ps_id):
     else:
         output_file = f"{output_file}.pdf"
 
-    #(make this a function?) and make it a setting
-    if os.path.exists(output_file):
+    if os.path.exists(output_file) and settings.prevent_overwrite_checkbox.isChecked():
         base, extension = os.path.splitext(output_file)
         counter = 1
         new_output_file = output_file
+        if settings.filler_char_checkbox.isChecked():
+            filler = settings.filler_char_input.text()
+        else:
+            filler = "_"
         while os.path.exists(new_output_file):
-            new_output_file = f"{base}_{counter}{extension}"
+            new_output_file = f"{base}{filler}{counter}{extension}"
             counter += 1
         output_file = new_output_file
 

@@ -103,10 +103,21 @@ class Converter(QObject):
 
         shared_state.total_parts = len(pymupdf.open(pdf))
 
+        output_file = construct_filename(pdf, "ocr_ps")
+
+        self.settings = SettingsWindow.instance()
+        deskew_toggle = self.settings.ocr_deskew_checkbox.isChecked()
+        print(f"deskew: {deskew_toggle}")
+        if self.settings.ocr_pdf_radio.isChecked():
+            ocr_filetype = 'pdf'
+        else:
+            ocr_filetype = 'pdfa'
+        print(f"filetype: {ocr_filetype}")
+        optimize_level = self.settings.ocr_optimize_level.value()
+        print(f"optimize: {optimize_level}")
+
         try:
-            self.settings = SettingsWindow.instance()
-            output_file = construct_filename(pdf, "ocr_ps")
-            ocrmypdf.ocr(pdf, output_file, force_ocr=True, output_type='pdf', optimize=0, progress_bar=False, deskew=True)
+            ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True)
             self.op_msgs.emit(f"OCR complete. Output: {output_file}")
             if self.settings.add_file_checkbox.isChecked():
                 file_tree.add_file(output_file)
