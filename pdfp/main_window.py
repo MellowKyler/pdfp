@@ -98,7 +98,6 @@ class MainWindow(QMainWindow):
                         print(f"Adding file: {file_path}")
                         self.file_tree_widget.add_file(file_path)
 
-
     def settings_popup(self):
         """Show the settings window."""
         self.settings_window.show()
@@ -119,11 +118,12 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """
-        Save the main_window geometry and close the main_window.
+        Save the main_window geometry and quit the entire application.
         Overrides the default closeEvent.
         """
         self.save_geometry()
         event.accept()
+        self.app.quit()
 
     def save_geometry(self):
         """Save main_window geometry, position, and size to the settings."""
@@ -143,4 +143,3 @@ class MainWindow(QMainWindow):
     def toggle_button_widget(self, toggle):
         """Enable or disable ButtonWidget."""
         self.button_widget.setEnabled(toggle)
-        #print(f"disabling buttons... {toggle}")

@@ -16,8 +16,8 @@ def main():
     os.chdir(os.path.dirname(__file__))
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(os.path.join(QDir.currentPath(), "images", "logo.ico")))
-    window = MainWindow(app)
-    window.show()
+    main_window = MainWindow(app)
+    main_window.show()
     app.exec()
 
 if __name__ == "__main__":
