@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
         """Show the About popup."""
         msg_box = QMessageBox()
         msg_box.setWindowTitle("PDF Processor")
-        msg_box.setText("<strong>Version 0.0.3</strong>")
+        msg_box.setText("<strong>Version 0.0.5</strong>")
         pdf_utils_icon = QPixmap(os.path.join(QDir.currentPath(), "images", "logo.ico"))
         msg_box.setIconPixmap(pdf_utils_icon)
         html_text = (

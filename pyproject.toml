@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pdfp"
-version = "0.0.3"
+version = "0.0.5"
 description = "PDF Processor - a GUI for some common PDF operations."
 authors = ["Dreary <drearywillowdev@gmail.com>"]
 license = "AGPL-3.0-only"
@@ -26,4 +26,3 @@ build-backend = "poetry.core.masonry.api"
 Source = "https://github.com/MellowKyler/pdfp"
 Issues = "https://github.com/MellowKyler/pdfp/issues"
 PyPi = "https://pypi.org/project/pdfp/"
-Bluesky = "https://bsky.app/profile/dreary.bsky.social"
