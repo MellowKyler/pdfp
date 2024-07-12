@@ -74,7 +74,10 @@ class FileTreeWidget(QTreeView):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     #print(f"dropEvent: file_path = '{file_path}'")
-                    self.add_file(file_path)
+                    if os.path.isdir(file_path):
+                        self.add_folder(file_path)
+                    else:
+                        self.add_file(file_path)
             event.acceptProposedAction()
 
     def contextMenuEvent(self, event):
@@ -163,6 +166,12 @@ class FileTreeWidget(QTreeView):
                 self.file_added.emit(f"{file_path} is already present.")
         else:
             self.file_added.emit(f"{file_path} is not a supported filetype: {self.allowed_extensions}")
+
+    def add_folder(self, folder):
+        for file_name in os.listdir(folder):
+            file_path = os.path.join(folder, file_name)
+            if os.path.isfile(file_path):
+                self.add_file(file_path)
 
     def open_file(self, index):
         """

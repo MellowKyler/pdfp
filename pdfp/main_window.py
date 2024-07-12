@@ -28,8 +28,11 @@ class MainWindow(QMainWindow):
 
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("&File")
-        select_file_action = file_menu.addAction("Select File")
-        select_file_action.triggered.connect(self.select_file)
+        import_files_menu = file_menu.addMenu("Import")
+        select_file_action = import_files_menu.addAction("Files")
+        select_file_action.triggered.connect(self.select_files)
+        select_folder_action = import_files_menu.addAction("Folder")
+        select_folder_action.triggered.connect(self.select_folder)
         settings_action = file_menu.addAction("Settings")
         settings_action.triggered.connect(self.settings_popup)
         about_action = file_menu.addAction("About")
@@ -62,18 +65,39 @@ class MainWindow(QMainWindow):
         """Close the pdfp application."""
         self.app.quit()
 
-    def select_file(self):
-        """Launch a file selector to select one file."""
+    def select_files(self):
+        """Launch a file selector to select multiple files and add them to file_tree_widget."""
         file_dialog = QFileDialog(self)
-        file_dialog.setWindowTitle("Select a File")
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setWindowTitle("Select Files")
+        file_dialog.setFileMode(QFileDialog.ExistingFiles)
         
         if file_dialog.exec():
             file_paths = file_dialog.selectedFiles()
-            if file_paths:
-                selected_file = file_paths[0]
-                print(f"Selected file: {selected_file}")
-                self.file_tree_widget.add_file(selected_file)
+            for file_path in file_paths:
+                print(f"Selected file: {file_path}")
+                self.file_tree_widget.add_file(file_path)
+
+    def select_folder(self):
+        """Open a file dialog to select a folder and add the contents to file_tree_widget."""
+        folder_dialog = QFileDialog(self)
+        folder_dialog.setWindowTitle("Select a Folder")
+        folder_dialog.setFileMode(QFileDialog.Directory)
+        folder_dialog.setOption(QFileDialog.ShowDirsOnly, True)
+        
+        if folder_dialog.exec():
+            folder_paths = folder_dialog.selectedFiles()
+            if folder_paths:
+                selected_folder = folder_paths[0]
+                print(f"Selected folder: {selected_folder}")
+                self.file_tree_widget.add_file(selected_folder)
+
+                #does not recursively look in folders
+                for file_name in os.listdir(selected_folder):
+                    file_path = os.path.join(selected_folder, file_name)
+                    if os.path.isfile(file_path):
+                        print(f"Adding file: {file_path}")
+                        self.file_tree_widget.add_file(file_path)
+
 
     def settings_popup(self):
         """Show the settings window."""
