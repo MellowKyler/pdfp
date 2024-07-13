@@ -33,7 +33,15 @@ class Converter(QObject):
         full_text = clean_text(pdf)
         if cc_file_checked:
             output_txt_path = construct_filename(pdf, "cc_ps")
-            tts_word_count(full_text, output_txt_path)
+            if self.settings.cc_split_txt_checkbox.isChecked():
+                output_paths = tts_word_count(full_text, output_txt_path, True)
+                if self.settings.add_file_checkbox.isChecked():
+                    for output_path in output_paths:
+                        file_tree.add_file(output_path)
+            else:
+                output_paths = tts_word_count(full_text, output_txt_path)
+                if self.settings.add_file_checkbox.isChecked():
+                    file_tree.add_file(output_paths[0])
         else:
             tts_word_count(full_text)
             pyperclip.copy(full_text)

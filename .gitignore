@@ -2,5 +2,6 @@
 /pdfp/operations/__pycache__/
 /pdfp/utils/__pycache__/
 /pdfp/config/
+/pdfp/temp/
 /dist/
 /.venv/

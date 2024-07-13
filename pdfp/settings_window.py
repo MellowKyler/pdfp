@@ -129,9 +129,6 @@ class SettingsWindow(QWidget):
 
         #clean_copy
         cc_settings_label = QLabel("<strong>Clean Copy Settings</strong>")
-        center_cc_settings_label = QHBoxLayout()
-        center_cc_settings_label.addWidget(cc_settings_label)
-        center_cc_settings_label.setAlignment(Qt.AlignCenter)
 
         cc_radio_label = QLabel("Default function: ")
         cc_radio_layout = QHBoxLayout()
@@ -142,32 +139,34 @@ class SettingsWindow(QWidget):
         cc_radio_layout.addWidget(self.cc_file_radio)
         cc_radio_layout.setAlignment(Qt.AlignCenter)
 
-        self.split_txt_checkbox = QCheckBox("If output too large for TTS, split .txt to multiple files")
-        self.split_txt_checkbox.toggled.connect(self.split_txt_checkbox_action)
-        center_split_txt_cb = QHBoxLayout()
-        center_split_txt_cb.addWidget(self.split_txt_checkbox)
-        center_split_txt_cb.setAlignment(Qt.AlignCenter)
+        self.cc_split_txt_checkbox = QCheckBox("If output too large for TTS, split .txt to multiple files")
 
+        cc_grid = QGridLayout()
+        cc_grid.addWidget(cc_settings_label,0,0,alignment=Qt.AlignCenter)
+        cc_grid.addLayout(cc_radio_layout,1,0,alignment=Qt.AlignCenter)
+        cc_grid.addWidget(self.cc_split_txt_checkbox,2,0,alignment=Qt.AlignCenter)
+        
+        cc_box = QGroupBox()
+        cc_box.setLayout(cc_grid)
+
+        #tts
+        tts_settings_label = QLabel("<strong>TTS Settings</strong>")
+        self.split_txt_checkbox = QCheckBox("If text is too large for TTS, split .mp3 to multiple files")
+        self.split_txt_checkbox.toggled.connect(self.split_txt_checkbox_action)
         self.wordcount_split_label = QLabel("Word count to split on:")
         self.wordcount_split_display = QLineEdit()
         self.wordcount_split_display.setPlaceholderText("Default: 100000")
 
-        self.wordcount_split_box = QHBoxLayout()
-        self.wordcount_split_box.addWidget(self.wordcount_split_label)
-        self.wordcount_split_box.addWidget(self.wordcount_split_display)
+        tts_grid = QGridLayout()
+        tts_grid.addWidget(tts_settings_label,0,0,1,2,alignment=Qt.AlignCenter)
+        tts_grid.addWidget(self.split_txt_checkbox,1,0,1,2,alignment=Qt.AlignCenter)
+        tts_grid.addWidget(self.wordcount_split_label,2,0,alignment=Qt.AlignRight)
+        tts_grid.addWidget(self.wordcount_split_display,2,1,alignment=Qt.AlignLeft)
         self.wordcount_split_label.setFixedWidth(150)
         self.wordcount_split_display.setFixedWidth(150)
-        self.wordcount_split_box.setAlignment(Qt.AlignCenter)
 
-        cc_box = QGroupBox()
-        cc_box_layout = QVBoxLayout()
-        cc_box_layout.addLayout(center_cc_settings_label)
-        cc_box_layout.addLayout(cc_radio_layout)
-        cc_box_layout.addLayout(center_split_txt_cb)
-        cc_box_layout.addLayout(self.wordcount_split_box)
-        cc_box.setLayout(cc_box_layout)
-
-        #tts
+        tts_box = QGroupBox()
+        tts_box.setLayout(tts_grid)
 
         #filename
         filename_settings_label = QLabel("<strong>Filename Settings</strong>")
@@ -324,6 +323,7 @@ class SettingsWindow(QWidget):
         scrollable_layout.addWidget(ocr_box)
         scrollable_layout.addWidget(crop_box)
         scrollable_layout.addWidget(cc_box)
+        scrollable_layout.addWidget(tts_box)
         scrollable_layout.addWidget(filename_box)
 
         scroll_area = QScrollArea()
@@ -385,11 +385,14 @@ class SettingsWindow(QWidget):
         self.briss_location_display.setText(get_value("briss_location", "", type=str))
 
         #clean copy
-        self.split_txt_checkbox.setChecked(enable_split_txt := get_value("enable_split_txt", False, type=bool))
-        self.split_txt_checkbox_action(enable_split_txt)
-        self.wordcount_split_display.setText(get_value("wordcount_split", "100000", type=str))
         self.cc_file_radio.setChecked(cc_file_checked := get_value("cc_file_radio_checked", False, type=bool))
         self.cc_copy_radio.setChecked(not cc_file_checked)
+        self.cc_split_txt_checkbox.setChecked(get_value("enable_cc_split_txt", False, type=bool))
+
+        #tts
+        self.split_txt_checkbox.setChecked(enable_split_txt := get_value("enable_split_txt", True, type=bool))
+        self.split_txt_checkbox_action(enable_split_txt)
+        self.wordcount_split_display.setText(get_value("wordcount_split", "100000", type=str))
 
         #filename
         self.default_filename_checkbox.setChecked(enable_default_filename := get_value("enable_default_filename", False, type=bool))
@@ -460,9 +463,12 @@ class SettingsWindow(QWidget):
         set_value("briss_location", self.briss_location_display.text())
 
         #clean copy
+        set_value("enable_cc_split_txt", self.cc_split_txt_checkbox.isChecked())
+        set_value("cc_file_radio_checked", self.cc_file_radio.isChecked())
+
+        #tts
         set_value("enable_split_txt", self.split_txt_checkbox.isChecked())
         set_value("wordcount_split", self.wordcount_split_display.text())
-        set_value("cc_file_radio_checked", self.cc_file_radio.isChecked())
 
         #filename
         set_value("enable_default_filename", self.default_filename_checkbox.isChecked())

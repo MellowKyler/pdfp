@@ -1,6 +1,7 @@
 import logging
 import re
-from PySide6.QtCore import QObject, Signal
+import os
+from PySide6.QtCore import QObject, Signal, QDir
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
@@ -90,14 +91,42 @@ class Converter(QObject):
         self.view_pb.emit(True)
         try:
             text = clean_text(pdf)
-            #implement option for file separation
-            tts = gTTS(text, lang='en', tld='us')
-            output_file = construct_filename(pdf, "tts_ps")
-            tts.save(output_file)
-            self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+            if self.settings.split_txt_checkbox.isChecked():
+                temp_file = os.path.join(self.get_temp_dir(), "tts-tempfile.txt")
+                output_paths = tts_word_count(text, temp_file, True)
+                output_count = len(output_paths)
+                count = 0
+                for output_path in output_paths:
+                    count += 1
+                    self.revise_pb_label.emit(f"TTS Progress ({count}/{output_count}):")
+                    with open(output_path, 'r', encoding='utf-8') as txt_file:
+                        text = txt_file.read()
+                    tts = gTTS(text, lang='en', tld='us')
+                    output_file = construct_filename(pdf, "tts_ps")
+                    tts.save(output_file)
+                    self.op_msgs.emit(f"Conversion {count}/{output_count} complete. Output: {output_file}")
+                    #reset progress bar
+                    self.update_pb.emit(0)
+                    shared_state.progress = 0
+                    shared_state.total_parts = 0 
+                    shared_state.progress_percentage = 0
+                    os.remove(output_path)
+            else:
+                tts = gTTS(text, lang='en', tld='us')
+                output_file = construct_filename(pdf, "tts_ps")
+                tts.save(output_file)
+                self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
         except Exception as e:
             error_msg = f"Error converting {pdf}: {str(e)}"
             self.op_msgs.emit(error_msg)
         self.view_pb.emit(False)
+
+    def get_temp_dir(self):
+        """Check if the temp directory exists. If not, create it. Return the temp directory path."""
+        project_root = QDir.currentPath()
+        temp_directory = os.path.join(project_root, "temp")
+        if not os.path.isdir(temp_directory):
+            os.mkdir(temp_directory)
+        return temp_directory
 
 tts = Converter()

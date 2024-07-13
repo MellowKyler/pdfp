@@ -22,12 +22,13 @@ def write_to_file(text, output_txt_path):
     ttsl.util_msgs.emit(f"Conversion complete. Output: {output_txt_path}")
     QApplication.processEvents()
 
-def tts_word_count(full_text, output_txt_path=""):
+def tts_word_count(full_text, output_txt_path="", enable_split=False):
     """
     Count the words in full_text. If output_txt_path is specified, handle text splitting if enabled and write to file(s).
     Args:
         full_text (str): Text to count and, if enabled, write to file.
         output_txt_path (str): Optional. Fullpath to txt output location.
+        enable_split (bool): Optional. Whether to split text into TTS-friendly pieces.
     """
 
     full_text_split = full_text.split()
@@ -40,7 +41,7 @@ def tts_word_count(full_text, output_txt_path=""):
 
     settings = SettingsWindow.instance()
     tts_limit = False
-    if settings.split_txt_checkbox.isChecked():
+    if enable_split:
         try:
             splitvalue = settings.wordcount_split_display.text()
             if splitvalue == "":
@@ -65,6 +66,7 @@ def tts_word_count(full_text, output_txt_path=""):
         else:
             filler = "-"
 
+        output_paths = []
         for i in range(1, txtcount + 1):
             startpoint = ((i - 1) * splitvalue) + 1
             if i == 1:
@@ -74,10 +76,9 @@ def tts_word_count(full_text, output_txt_path=""):
             else:
                 text = " ".join(full_text_split[startpoint:(i * splitvalue)])
             output_txt_path = f"{output_txt_fn}{filler}{i}.txt"
+            output_paths.append(output_txt_path)
             write_to_file(text, output_txt_path)
-            if settings.add_file_checkbox.isChecked():
-                file_tree.add_file(output_txt_path)
     else:
         write_to_file(full_text, output_txt_path)
-        if settings.add_file_checkbox.isChecked():
-            file_tree.add_file(output_txt_path)
+        return [output_txt_path]
+    return output_paths
