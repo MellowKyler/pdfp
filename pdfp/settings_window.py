@@ -69,52 +69,33 @@ class SettingsWindow(QWidget):
 
         #ocr
         ocr_settings_label = QLabel("<strong>OCR Settings</strong>")
-        center_ocr_settings_label = QHBoxLayout()
-        center_ocr_settings_label.addWidget(ocr_settings_label)
-        center_ocr_settings_label.setAlignment(Qt.AlignCenter)
-
         self.ocr_deskew_checkbox = QCheckBox("Deskew")
-        center_deskew_cb = QHBoxLayout()
-        center_deskew_cb.addWidget(self.ocr_deskew_checkbox)
-        center_deskew_cb.setAlignment(Qt.AlignCenter)
-
         ocr_radio_label = QLabel("Output format: ")
         self.ocr_pdf_radio = QRadioButton("PDF")
         self.ocr_pdfa_radio = QRadioButton("PDFA")
-        ocr_radio_layout = QHBoxLayout()
-        ocr_radio_layout.addWidget(ocr_radio_label)
-        ocr_radio_layout.addWidget(self.ocr_pdf_radio)
-        ocr_radio_layout.addWidget(self.ocr_pdfa_radio)
-        ocr_radio_layout.setAlignment(Qt.AlignCenter)
-
         ocr_optimize_label = QLabel("Optimization level: ")
         self.ocr_optimize_level = QSpinBox()
         self.ocr_optimize_level.setRange(0,3)
-        center_ocr_optimize_cb = QHBoxLayout()
-        center_ocr_optimize_cb.addWidget(ocr_optimize_label)
-        center_ocr_optimize_cb.addWidget(self.ocr_optimize_level)
-        center_ocr_optimize_cb.setAlignment(Qt.AlignCenter)
+
+        ocr_grid = QGridLayout()
+        ocr_grid.addWidget(ocr_settings_label,0,0,1,3,alignment=Qt.AlignCenter)
+        ocr_grid.addWidget(ocr_radio_label,1,0,alignment=Qt.AlignRight)
+        ocr_grid.addWidget(self.ocr_pdf_radio,1,1,alignment=Qt.AlignLeft)
+        ocr_grid.addWidget(self.ocr_pdfa_radio,1,2,alignment=Qt.AlignLeft)
+        ocr_grid.addWidget(ocr_optimize_label,2,0,alignment=Qt.AlignRight)
+        ocr_grid.addWidget(self.ocr_optimize_level,2,1,alignment=Qt.AlignLeft)
+        ocr_grid.addWidget(self.ocr_deskew_checkbox,3,0,1,3,alignment=Qt.AlignCenter)
+        ocr_grid.setColumnStretch(0,50)
+        ocr_grid.setColumnStretch(1,10)
+        ocr_grid.setColumnStretch(2,35)
 
         ocr_box = QGroupBox()
-        ocr_box_layout = QVBoxLayout()
-        ocr_box_layout.addLayout(center_ocr_settings_label)
-        ocr_box_layout.addLayout(center_deskew_cb)
-        ocr_box_layout.addLayout(ocr_radio_layout)
-        ocr_box_layout.addLayout(center_ocr_optimize_cb)
-        ocr_box.setLayout(ocr_box_layout)
+        ocr_box.setLayout(ocr_grid)
         
         #briss / crop
         crop_settings_label = QLabel("<strong>Crop Settings</strong>")
-        center_crop_settings_label = QHBoxLayout()
-        center_crop_settings_label.addWidget(crop_settings_label)
-        center_crop_settings_label.setAlignment(Qt.AlignCenter)
-
-        crop_radio_layout = QHBoxLayout()
         self.auto_crop_radio = QRadioButton("Automated")
         self.launch_briss_radio = QRadioButton("Launch Briss GUI")
-        crop_radio_layout.addWidget(self.auto_crop_radio)
-        crop_radio_layout.addWidget(self.launch_briss_radio)
-        crop_radio_layout.setAlignment(Qt.AlignCenter)
 
         self.briss_location_button = QPushButton("Briss location")
         self.briss_location_button.setFixedWidth(125)
@@ -126,12 +107,14 @@ class SettingsWindow(QWidget):
         briss_location_layout.addWidget(self.briss_location_button)
         briss_location_layout.addWidget(self.briss_location_display)
 
+        crop_grid = QGridLayout()
+        crop_grid.addWidget(crop_settings_label,0,0,1,2,alignment=Qt.AlignCenter)
+        crop_grid.addWidget(self.auto_crop_radio,1,0,alignment=Qt.AlignRight)
+        crop_grid.addWidget(self.launch_briss_radio,1,1,alignment=Qt.AlignLeft)
+        crop_grid.addLayout(briss_location_layout,2,0,1,2)
+
         crop_box = QGroupBox()
-        crop_box_layout = QVBoxLayout()
-        crop_box_layout.addLayout(center_crop_settings_label)
-        crop_box_layout.addLayout(crop_radio_layout)
-        crop_box_layout.addLayout(briss_location_layout)
-        crop_box.setLayout(crop_box_layout)
+        crop_box.setLayout(crop_grid)
 
         #trim
 
@@ -187,130 +170,121 @@ class SettingsWindow(QWidget):
         self.first_word_filename_checkbox = QCheckBox("Only retain first word")
         self.lowercase_filename_checkbox = QCheckBox("Force lowercase filename")
         self.prevent_overwrite_checkbox = QCheckBox("Iterate filename to prevent overwriting existing files")
+
+        main_fn_grid = QGridLayout()
+        main_fn_grid.addWidget(filename_settings_label,0,0,1,3,alignment=Qt.AlignCenter)
+        main_fn_grid.addWidget(self.default_filename_checkbox,1,0)
+        main_fn_grid.addWidget(self.default_filename_input,1,1,1,2)
+        main_fn_grid.addWidget(self.filler_char_checkbox,2,0)
+        main_fn_grid.addWidget(self.filler_char_input,2,1,1,2)
+        main_fn_grid.addWidget(self.first_word_filename_checkbox,3,0,1,2,alignment=Qt.AlignCenter)
+        main_fn_grid.addWidget(self.lowercase_filename_checkbox,3,2,alignment=Qt.AlignCenter)
+        main_fn_grid.addWidget(self.prevent_overwrite_checkbox,4,0,1,3,alignment=Qt.AlignCenter)
+        main_fn_grid.setContentsMargins(10,0,10,0)
+        main_fn_grid.setColumnStretch(0,35)
+        main_fn_grid.setColumnStretch(1,15)
+        main_fn_grid.setColumnStretch(2,50)
+
+        #pgnum options
+        self.page_number_checkbox = QCheckBox("Enable Page Number Options")
+        enable_pgnum_layout = QHBoxLayout()
+        enable_pgnum_layout.addWidget(self.page_number_checkbox)
+        enable_pgnum_layout.setAlignment(Qt.AlignCenter)
+
+        pgnum_box_label = QLabel("<strong>Page Number Options:<strong>")
+        pgnum_box_label.setAlignment(Qt.AlignCenter)
+
+        self.png_pagenum_checkbox = QCheckBox("Include PNG page number")
+        self.trim_pagenum_checkbox = QCheckBox("Include trim page numbers")
+        self.pgnum_wrap_checkbox = QCheckBox("Wrap Chars:")
+        self.pgnum_wrap_input = QLineEdit()
+        self.pgnum_wrap_input.setMaxLength(2)
+        self.pgnum_prefix_checkbox = QCheckBox("Prefix:")
+        self.pgnum_prefix_input = QLineEdit()
+
+        pgnum_grid = QGridLayout()
+        pgnum_grid.addWidget(pgnum_box_label,0,0,1,4)
+        pgnum_grid.addWidget(self.png_pagenum_checkbox,1,0,1,2)
+        pgnum_grid.addWidget(self.trim_pagenum_checkbox,1,2,1,2)
+        pgnum_grid.addWidget(self.pgnum_prefix_checkbox,2,0)
+        pgnum_grid.addWidget(self.pgnum_prefix_input,2,1)
+        pgnum_grid.addWidget(self.pgnum_wrap_checkbox,2,2)
+        pgnum_grid.addWidget(self.pgnum_wrap_input,2,3)
+
+        self.pgnum_box = QGroupBox()
+        self.pgnum_box.setLayout(pgnum_grid)
+
+        #prefix/suffix options
         self.prefix_suffix_checkbox = QCheckBox("Enable Prefix/Suffix Options")
+        enable_ps_layout = QHBoxLayout()
+        enable_ps_layout.addWidget(self.prefix_suffix_checkbox)
+        enable_ps_layout.setAlignment(Qt.AlignCenter)
 
-        fn_hbox1 = QHBoxLayout()
-        fn_hbox1.addWidget(filename_settings_label)
-        fn_hbox1.setAlignment(Qt.AlignCenter)
-        fn_hbox1.setContentsMargins(0,0,0,0)
+        ps_box_label = QLabel("<strong>Operation Prefix/Suffix Options:<strong>")
+        self.prefix_radio = QRadioButton("Prefix")
+        self.suffix_radio = QRadioButton("Suffix")
 
-        fn_hbox2 = QHBoxLayout()
-        fn_hbox2.addWidget(self.default_filename_checkbox)
-        fn_hbox2.addWidget(self.default_filename_input)
-        self.default_filename_checkbox.setFixedWidth(125)
+        f2pdf_ps_label = QLabel("file2pdf: ")
+        png_ps_label = QLabel("png: ")
+        ocr_ps_label = QLabel("ocr: ")
+        crop_ps_label = QLabel("crop: ")
+        trim_ps_label = QLabel("trim pages: ")
+        cc_ps_label = QLabel("clean copy: ")
+        tts_ps_label = QLabel("tts: ")
+        self.f2pdf_ps_input = QLineEdit()
+        self.png_ps_input = QLineEdit()
+        self.ocr_ps_input = QLineEdit()
+        self.crop_ps_input = QLineEdit()
+        self.trim_ps_input = QLineEdit()
+        self.cc_ps_input = QLineEdit()
+        self.tts_ps_input = QLineEdit()
+        char_ps_label = QLabel("Prefix/Suffix Character:")
+        self.char_ps_input = QLineEdit()
+        self.char_ps_input.setFixedWidth(150)
+        self.disable_non_pdf_ps_checkbox = QCheckBox("Disable Prefix/Suffix for Non-PDF outputs")
 
-        fn_hbox3 = QHBoxLayout()
-        fn_hbox3.addWidget(self.filler_char_checkbox)
-        fn_hbox3.addWidget(self.filler_char_input)
-        self.filler_char_checkbox.setFixedWidth(140)
-        fn_hbox3.setAlignment(Qt.AlignCenter)
+        ps_grid = QGridLayout()
+        ps_grid.addWidget(ps_box_label,0,0,1,4,alignment=Qt.AlignCenter)
+        ps_grid.addWidget(self.prefix_radio,1,0,1,2,alignment=Qt.AlignRight)
+        ps_grid.addWidget(self.suffix_radio,1,2,1,2,alignment=Qt.AlignLeft)
+        ps_grid.addWidget(char_ps_label,2,0,1,2,alignment=Qt.AlignRight)
+        ps_grid.addWidget(self.char_ps_input,2,2,1,2,alignment=Qt.AlignLeft)
+        ps_grid.addWidget(f2pdf_ps_label,3,0)
+        ps_grid.addWidget(self.f2pdf_ps_input,3,1)
+        ps_grid.addWidget(trim_ps_label,3,2)
+        ps_grid.addWidget(self.trim_ps_input,3,3)
+        ps_grid.addWidget(png_ps_label,4,0)
+        ps_grid.addWidget(self.png_ps_input,4,1)
+        ps_grid.addWidget(cc_ps_label,4,2)
+        ps_grid.addWidget(self.cc_ps_input,4,3)
+        ps_grid.addWidget(ocr_ps_label,5,0)
+        ps_grid.addWidget(self.ocr_ps_input,5,1)
+        ps_grid.addWidget(tts_ps_label,5,2)
+        ps_grid.addWidget(self.tts_ps_input,5,3)
+        ps_grid.addWidget(crop_ps_label,6,0)
+        ps_grid.addWidget(self.crop_ps_input,6,1)
+        ps_grid.addWidget(self.disable_non_pdf_ps_checkbox,7,0,1,4,alignment=Qt.AlignCenter)
 
-        fn_hbox4 = QHBoxLayout()
-        fn_hbox4.addWidget(self.first_word_filename_checkbox)
-        fn_hbox4.addWidget(self.lowercase_filename_checkbox)
-        fn_hbox4.setAlignment(Qt.AlignCenter)
+        self.ps_box = QGroupBox()
+        self.ps_box.setLayout(ps_grid)
 
-        fn_hbox5 = QHBoxLayout()
-        fn_hbox5.addWidget(self.prevent_overwrite_checkbox)
-        fn_hbox5.setAlignment(Qt.AlignCenter)
-
-        fn_hbox6 = QHBoxLayout()
-        fn_hbox6.addWidget(self.prefix_suffix_checkbox)
-        fn_hbox6.setAlignment(Qt.AlignCenter)
-
-        main_fn_layout = QVBoxLayout()
-        main_fn_layout.setAlignment(Qt.AlignCenter)
-        main_fn_layout.addLayout(fn_hbox1)
-        main_fn_layout.addLayout(fn_hbox2)
-        main_fn_layout.addLayout(fn_hbox3)
-        main_fn_layout.addLayout(fn_hbox4)
-        main_fn_layout.addLayout(fn_hbox5)
-        main_fn_layout.addLayout(fn_hbox6)
+        filename_layout = QVBoxLayout()
+        filename_layout.addLayout(main_fn_grid)
+        filename_layout.addLayout(enable_pgnum_layout)
+        filename_layout.addWidget(self.pgnum_box)
+        filename_layout.addLayout(enable_ps_layout)
+        filename_layout.addWidget(self.ps_box)
+        filename_box = QGroupBox()
+        filename_box.setLayout(filename_layout)
 
         self.default_filename_checkbox.toggled.connect(self.default_filename_checkbox_action)
         self.filler_char_checkbox.toggled.connect(self.filler_char_checkbox_action)
         self.prefix_suffix_checkbox.toggled.connect(self.prefix_suffix_checkbox_action)
-        
-        ps_box_label = QLabel("<strong>Operation Prefixes/Suffixes:<strong>")
-        ps_box_label.setAlignment(Qt.AlignCenter)
-
-        ps_radio_layout = QHBoxLayout()
-        self.prefix_radio = QRadioButton("Prefix")
-        self.suffix_radio = QRadioButton("Suffix")
-        ps_radio_layout.addWidget(self.prefix_radio)
-        ps_radio_layout.addWidget(self.suffix_radio)
-        ps_radio_layout.setAlignment(Qt.AlignCenter)
-
-        ps_grid = QGridLayout()
-
-        f2pdf_ps_label = QLabel("file2pdf: ")
-        f2pdf_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(f2pdf_ps_label,0,0)
-        png_ps_label = QLabel("png: ")
-        png_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(png_ps_label,1,0)
-        ocr_ps_label = QLabel("ocr: ")
-        ocr_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(ocr_ps_label,2,0)
-        crop_ps_label = QLabel("crop: ")
-        crop_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(crop_ps_label,3,0)
-
-        self.f2pdf_ps_input = QLineEdit()
-        ps_grid.addWidget(self.f2pdf_ps_input,0,1)
-        self.png_ps_input = QLineEdit()
-        ps_grid.addWidget(self.png_ps_input,1,1)
-        self.ocr_ps_input = QLineEdit()
-        ps_grid.addWidget(self.ocr_ps_input,2,1)
-        self.crop_ps_input = QLineEdit()
-        ps_grid.addWidget(self.crop_ps_input,3,1)
-
-        trim_ps_label = QLabel("trim pages: ")
-        trim_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(trim_ps_label,0,2)
-        cc_ps_label = QLabel("clean copy: ")
-        cc_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(cc_ps_label,1,2)
-        tts_ps_label = QLabel("tts: ")
-        tts_ps_label.setAlignment(Qt.AlignCenter)
-        ps_grid.addWidget(tts_ps_label,2,2)
-        
-        self.trim_ps_input = QLineEdit()
-        ps_grid.addWidget(self.trim_ps_input,0,3)
-        self.cc_ps_input = QLineEdit()
-        ps_grid.addWidget(self.cc_ps_input,1,3)
-        self.tts_ps_input = QLineEdit()
-        ps_grid.addWidget(self.tts_ps_input,2,3)
-
-        char_ps_layout = QHBoxLayout()
-        char_ps_layout.setAlignment(Qt.AlignCenter)
-        char_ps_label = QLabel("Prefix/Suffix Character: ")
-        char_ps_label.setAlignment(Qt.AlignCenter)
-        char_ps_label.setFixedWidth(150)
-        self.char_ps_input = QLineEdit()
-        self.char_ps_input.setFixedWidth(150)
-        char_ps_layout.addWidget(char_ps_label)
-        char_ps_layout.addWidget(self.char_ps_input)
-
-        disable_non_pdf_ps_layout = QVBoxLayout()
-        self.disable_non_pdf_ps_checkbox = QCheckBox("Disable Prefix/Suffix for Non-PDF outputs")
-        disable_non_pdf_ps_layout.addWidget(self.disable_non_pdf_ps_checkbox)
-        disable_non_pdf_ps_layout.setAlignment(Qt.AlignCenter)
-
-        ps_box_layout = QVBoxLayout()
-        ps_box_layout.addWidget(ps_box_label)
-        ps_box_layout.addLayout(ps_radio_layout)
-        ps_box_layout.addLayout(char_ps_layout)
-        ps_box_layout.addLayout(ps_grid)
-        ps_box_layout.addLayout(disable_non_pdf_ps_layout)
-        self.ps_box = QGroupBox()
-        self.ps_box.setLayout(ps_box_layout)
-
-        filename_layout = QVBoxLayout()
-        filename_layout.addLayout(main_fn_layout)
-        filename_layout.addWidget(self.ps_box)
-        filename_box = QGroupBox()
-        filename_box.setLayout(filename_layout)
+        self.page_number_checkbox.toggled.connect(self.page_number_checkbox_action)
+        self.png_pagenum_checkbox.toggled.connect(self.pgnum_enable_action)
+        self.trim_pagenum_checkbox.toggled.connect(self.pgnum_enable_action)
+        self.pgnum_prefix_checkbox.toggled.connect(self.pgnum_prefix_checkbox_action)
+        self.pgnum_wrap_checkbox.toggled.connect(self.pgnum_wrap_checkbox_action)
 
         #button box
         self.button_box = QDialogButtonBox(QDialogButtonBox.Reset | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -414,6 +388,18 @@ class SettingsWindow(QWidget):
         self.first_word_filename_checkbox.setChecked(get_value("enable_first_word_filename", False, type=bool))
         self.lowercase_filename_checkbox.setChecked(get_value("enable_lowercase_filename", False, type=bool))
         self.prevent_overwrite_checkbox.setChecked(get_value("prevent_overwrite", True, type=bool))
+        #   pgnum
+        self.page_number_checkbox.setChecked(enable_pgnum := get_value("enable_pgnum", False, type=bool))
+        self.page_number_checkbox_action(enable_pgnum)
+        self.png_pagenum_checkbox.setChecked(get_value("enable_png_pgnum", False, type=bool))
+        self.trim_pagenum_checkbox.setChecked(get_value("enable_trim_pgnum", False, type=bool))
+        self.pgnum_wrap_checkbox.setChecked(enable_pgnum_wrap := get_value("enable_pgnum_wrap", False, type=bool))
+        self.pgnum_wrap_input.setText(get_value("pgnum_wrap", "()", type=str))
+        self.pgnum_wrap_checkbox_action(enable_pgnum_wrap)
+        self.pgnum_prefix_checkbox.setChecked(enable_pgnum_prefix := get_value("enable_pgnum_prefix", False, type=bool))
+        self.pgnum_prefix_input.setText(get_value("pgnum_prefix", "Pages ", type=str))
+        self.pgnum_prefix_checkbox_action(enable_pgnum_prefix)
+        self.pgnum_enable_action()
         #   prefix/suffix
         self.prefix_suffix_checkbox.setChecked(get_value("enable_prefix_suffix", True, type=bool))
         self.prefix_radio.setChecked(prefix_checked := get_value("prefix_radio_checked", False, type=bool))
@@ -470,6 +456,14 @@ class SettingsWindow(QWidget):
         set_value("enable_first_word_filename", self.first_word_filename_checkbox.isChecked())
         set_value("enable_lowercase_filename", self.lowercase_filename_checkbox.isChecked())
         set_value("prevent_overwrite", self.prevent_overwrite_checkbox.isChecked())
+        #   pgnum
+        set_value("enable_pgnum", self.page_number_checkbox.isChecked())
+        set_value("enable_png_pgnum", self.png_pagenum_checkbox.isChecked())
+        set_value("enable_trim_pgnum", self.trim_pagenum_checkbox.isChecked())
+        set_value("enable_pgnum_wrap", self.pgnum_wrap_checkbox.isChecked())
+        set_value("pgnum_wrap", self.pgnum_wrap_input.text())
+        set_value("enable_pgnum_prefix", self.pgnum_prefix_checkbox.isChecked())
+        set_value("pgnum_prefix", self.pgnum_prefix_input.text())
         #   prefix/suffix
         set_value("enable_prefix_suffix", self.prefix_suffix_checkbox.isChecked())
         set_value("prefix_radio_checked", self.prefix_radio.isChecked())
@@ -522,6 +516,45 @@ class SettingsWindow(QWidget):
         """
         self.wordcount_split_label.setEnabled(checked)
         self.wordcount_split_display.setEnabled(checked)
+
+    def page_number_checkbox_action(self, checked):
+        """
+        Handle action for page number checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
+        self.pgnum_box.setEnabled(checked)
+
+    def pgnum_enable_action(self):
+        """
+        Handle action for png page number checkbox and trim page number checkbox.
+        """
+        if self.trim_pagenum_checkbox.isChecked() or self.png_pagenum_checkbox.isChecked():
+            self.pgnum_prefix_checkbox.setEnabled(True)
+            self.pgnum_prefix_checkbox_action(self.pgnum_prefix_checkbox.isChecked())
+            self.pgnum_wrap_checkbox.setEnabled(True)
+            self.pgnum_wrap_checkbox_action(self.pgnum_wrap_checkbox.isChecked())
+        else:
+            self.pgnum_prefix_checkbox.setEnabled(False)
+            self.pgnum_prefix_input.setEnabled(False)
+            self.pgnum_wrap_checkbox.setEnabled(False)
+            self.pgnum_wrap_input.setEnabled(False)
+
+    def pgnum_prefix_checkbox_action(self, checked):
+        """
+        Handle action for page number prefix checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
+        self.pgnum_prefix_input.setEnabled(checked)
+
+    def pgnum_wrap_checkbox_action(self, checked):
+        """
+        Handle action for page number wrap checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
+        self.pgnum_wrap_input.setEnabled(checked)
 
     def select_briss_file(self):
         """Open a file dialog to select Briss executable and set its location in the UI."""

@@ -64,7 +64,7 @@ class Converter(QObject):
                 page = input_pdf.load_page(page_num)
                 output_pdf.insert_pdf(input_pdf, from_page=page_num, to_page=page_num)
 
-        output_file = construct_filename(pdf, "trim_ps")
+        output_file = construct_filename(pdf, "trim_ps", keep_pgs)
         output_pdf.save(output_file)
         self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
         if self.settings.add_file_checkbox.isChecked():

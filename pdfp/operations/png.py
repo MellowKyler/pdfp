@@ -39,14 +39,12 @@ class Converter(QObject):
         self.op_msgs.emit(f"Converting {pdf} to PNG...")
         QApplication.processEvents()
 
-        filename = construct_filename(pdf, "png_ps")
-
         doc = pymupdf.open(pdf)
         if pg < 1 or pg > len(doc):
             raise ValueError("Invalid page number")
         page = doc.load_page(pg - 1)
         pix = page.get_pixmap()
-        output_file = construct_filename(pdf, "png_ps")
+        output_file = construct_filename(pdf, "png_ps", str(pg))
         pix.save(output_file)
 
         self.op_msgs.emit(f"Conversion complete. Output: {output_file}")

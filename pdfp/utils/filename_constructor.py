@@ -2,17 +2,18 @@ import os
 import re
 from pdfp.settings_window import SettingsWindow
 
-def construct_filename(input_file, operation_ps_id):
+def construct_filename(input_file, operation_ps_id, pgnum=""):
     """
     Construct a filename based on user settings and operation specifics.
     Args:
         input_file (str): The path of the input file.
         operation_ps_id (str): The operation-specific prefix or suffix identifier.
+        pgnum (str): Optional. Relevant page numbers for the operation.
     Returns:
         str: The constructed output filename including the appropriate file extension based on the operation.
     Notes:
         - Uses settings from SettingsWindow instance to determine filename modifications.
-        - Supports default filename, lowercase conversion, first-word extraction, and prefix/suffix addition.
+        - Supports default filename, lowercase conversion, first-word extraction, prefix/suffix addition, page number appending, and iterating filesnames to prevent overwriting.
         - Appends specific extensions based on the operation ('cc_ps', 'tts_ps', 'png_ps', default 'pdf').
     """
     settings = SettingsWindow.instance()
@@ -60,6 +61,21 @@ def construct_filename(input_file, operation_ps_id):
             else:
                 filename = f"{filename}{char_ps}{operation_ps}"
                 
+    pgnum_enabled = settings.page_number_checkbox.isChecked()
+    if pgnum_enabled and ((operation_ps_id == "png_ps" and settings.png_pagenum_checkbox.isChecked()) or (operation_ps_id == "trim_ps" and settings.trim_pagenum_checkbox.isChecked())):
+        if settings.pgnum_prefix_checkbox.isChecked():
+            pgnum_prefix = settings.pgnum_prefix_input.text()
+            pgnum = f"{pgnum_prefix}{pgnum}"
+        if settings.pgnum_wrap_checkbox.isChecked():
+            wrap = settings.pgnum_wrap_input.text()
+            try:
+                opener = wrap[0]
+                closer = wrap[1]
+                pgnum = f"{opener}{pgnum}{closer}"
+            except IndexError:
+                print("Not enough wrap characters. Enter 2 in settings.")
+        filename = f"{filename} {pgnum}"
+
     if filename == "":
         filename = "pdfp-output"
 
