@@ -327,7 +327,6 @@ class SettingsWindow(QWidget):
         self.load_settings()
         # if i want to reference settings values explicitly elsewhere, we should save settings after load.
         # this is really only an issue when default values have not been overwritten by the user.
-        # this is also only an issue so far for filename_constructor
         self.save_settings()
 
         if self.remember_window_checkbox.isChecked():

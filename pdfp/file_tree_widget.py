@@ -19,6 +19,26 @@ class FileTreeWidget(QTreeView):
         file_paths (set of str): Set of file paths currently added to the widget.
     """
 
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        """
+        Override __new__ method to ensure only one instance of SettingsWindow exists.
+        If no existing instance, create one and return it. If an instance exists, return that instance.
+        """
+        if not cls._instance:
+            cls._instance = super(FileTreeWidget, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+    @classmethod
+    def instance(cls):
+        """
+        Returns the single instance of SettingsWindow.
+        If no instance exists, creates one and returns it.
+        Call this function when referencing SettingsWindow values.
+        """
+        if cls._instance is None:
+            cls._instance = FileTreeWidget()
+        return cls._instance
+
     file_added = Signal(str)
     button_toggle = Signal(bool)
 

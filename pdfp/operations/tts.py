@@ -4,6 +4,8 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
+from pdfp.utils.clean_text import clean_text
+from pdfp.utils.tts_limit import tts_word_count
 from gtts import gTTS
 import pymupdf
 
@@ -12,9 +14,6 @@ class SharedState:
     Stores shared state information for text-to-speech (TTS) conversion progress tracking.
     """
     def __init__(self):
-        # self.text_part_digit = None
-        # self.part_digit = None
-        # to implement later: progress bar
         self.progress = 0
         self.total_parts = 0 
         self.progress_percentage = 0
@@ -87,18 +86,11 @@ class Converter(QObject):
         handler = QueueHandler(shared_state, self.op_msgs, self.update_pb, self.revise_pb_label)
         logger.addHandler(handler)
 
-
         self.revise_pb_label.emit(f"TTS Progress:")
         self.view_pb.emit(True)
-        #eventually call clean_copy to retreive text (or at least the option to do so)
-        #probably make the cleaning operation a .utils function
         try:
-            if pdf.endswith('.pdf'):
-                with pymupdf.open(pdf) as doc:
-                    text = "\n".join([page.get_text() for page in doc])
-            elif pdf.endswith('.txt'):
-                with open(pdf, "r", encoding="utf-8") as txt_file:
-                    text = txt_file.read()
+            text = clean_text(pdf)
+            #implement option for file separation
             tts = gTTS(text, lang='en', tld='us')
             output_file = construct_filename(pdf, "tts_ps")
             tts.save(output_file)

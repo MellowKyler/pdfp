@@ -8,6 +8,8 @@ from pdfp.operations.crop import crop
 from pdfp.operations.trim import trim
 from pdfp.operations.clean_copy import clean_copy
 from pdfp.operations.tts import tts
+from pdfp.utils.tts_limit import ttsl
+from pdfp.utils.clean_text import ct
 from pdfp.button_widget import ButtonWidget
 
 class LogWidget(QWidget):
@@ -36,6 +38,8 @@ class LogWidget(QWidget):
         button_widget = ButtonWidget(file_tree_widget, main_window)
         button_widget.button_msgs.connect(self.add_log_message)
         file_tree_widget.file_added.connect(self.add_log_message)
+        ttsl.util_msgs.connect(self.add_log_message)
+        ct.util_msgs.connect(self.add_log_message)
 
         #progress bar connections
         tts.update_pb.connect(self.update_progress_bar)
