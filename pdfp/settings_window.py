@@ -64,6 +64,15 @@ class SettingsWindow(QWidget):
         gen_box.setLayout(gen_box_layout)
 
         #f2pdf
+        f2p_settings_label = QLabel("<strong>File to PDF Settings</strong>")
+        self.f2p_cover_checkbox = QCheckBox("Use images named 'cover' as first page")
+
+        f2p_grid = QGridLayout()
+        f2p_grid.addWidget(f2p_settings_label,0,0,alignment=Qt.AlignCenter)
+        f2p_grid.addWidget(self.f2p_cover_checkbox,1,0,alignment=Qt.AlignCenter)
+
+        f2p_box = QGroupBox()
+        f2p_box.setLayout(f2p_grid)
 
         #png
 
@@ -311,6 +320,7 @@ class SettingsWindow(QWidget):
         
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
+        scrollable_layout.addWidget(f2p_box)
         scrollable_layout.addWidget(ocr_box)
         scrollable_layout.addWidget(crop_box)
         scrollable_layout.addWidget(cc_box)
@@ -359,6 +369,9 @@ class SettingsWindow(QWidget):
         #general
         self.add_file_checkbox.setChecked(get_value("enable_add_file", True, type=bool))
         self.remember_window_checkbox.setChecked(get_value("enable_remember_window", False, type=bool))
+
+        #file2pdf
+        self.f2p_cover_checkbox.setChecked(get_value("f2p_cover", True, type=bool))
 
         #ocr
         self.ocr_deskew_checkbox.setChecked(get_value("ocr_deskew", True, type=bool))
@@ -433,6 +446,9 @@ class SettingsWindow(QWidget):
         #general
         set_value("enable_add_file", self.add_file_checkbox.isChecked())
         set_value("enable_remember_window", self.remember_window_checkbox.isChecked())
+
+        #file2pdf
+        set_value("f2p_cover", self.f2p_cover_checkbox.isChecked())
 
         #ocr
         set_value("ocr_deskew", self.ocr_deskew_checkbox.isChecked())
@@ -607,13 +623,8 @@ class SettingsWindow(QWidget):
                 
     def save_ini_file(self):
         """Open a file dialog to select or create an INI file and return its path."""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        
         config_directory = self.get_config_dir()
-
-        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create INI File",config_directory,"INI Files (*.ini);;All Files (*)",options=options)
-
+        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create INI File",config_directory,"INI Files (*.ini);;All Files (*)")
         if file_path:
             if not file_path.endswith(".ini"):
                 file_path += ".ini"

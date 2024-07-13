@@ -17,8 +17,8 @@ PDF Processor - a GUI for some common PDF operations.
 
 ## Pre-Installation
 - Download [Briss](https://github.com/mbaeuerle/Briss-2.0)
-  - Specify the location of the jar file in pdfp's settings.
-- You might need to install [ocrmypdf's requirements](https://github.com/ocrmypdf/OCRmyPDF?tab=readme-ov-file#requirements) if you don't have them already.
+  - Requires [Java](https://www.oracle.com/java/technologies/downloads) 8 or above
+- Install [Tesseract and Ghostscript](https://ocrmypdf.readthedocs.io/en/latest/installation.html#installing-on-windows) (requirements for ocrmypdf)
 
 ## Installation and Running
 

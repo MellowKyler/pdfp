@@ -57,6 +57,6 @@ class Converter(QObject):
             try:
                 subprocess.Popen([briss_location, pdf], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             except:
-                self.op_msgs.emit(f"Launching Balabolka failed")
+                self.op_msgs.emit(f"Launching Briss failed")
 
 crop = Converter()

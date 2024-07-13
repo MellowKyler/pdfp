@@ -74,16 +74,18 @@ class Converter(QObject):
                     continue
                 page_out.insert_link(l)
 
-        #add a settings option to opt-into this
-        cover_image = self.check_for_cover_image(input_file)
-        pdf = self.set_cover_image(cover_image, pdf)
+        self.settings = SettingsWindow.instance()
+
+        if self.settings.f2p_cover_checkbox.isChecked():
+            cover_image = self.check_for_cover_image(input_file)
+            if cover_image:
+                pdf = self.set_cover_image(cover_image, pdf)
 
         output_file = construct_filename(input_file, "f2pdf_ps")
         pdf.save(output_file, garbage=4, deflate=True)
         self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
         QApplication.processEvents()
 
-        self.settings = SettingsWindow.instance()
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
 
