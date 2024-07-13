@@ -38,6 +38,11 @@ class Converter(QObject):
         if not os.path.exists(briss_location):
             self.op_msgs.emit(f"Briss location invalid. Configure in settings.")
             return
+        try:
+            subprocess.run(["java", "--version"], check=True)
+        except subprocess.CalledProcessError:
+            self.op_msgs.emit(f"Java is not installed.")
+            return
 
         automation_enabled = self.settings.auto_crop_radio.isChecked()
         if automation_enabled:
@@ -45,7 +50,7 @@ class Converter(QObject):
             QApplication.processEvents()
             output_file = construct_filename(pdf, "crop_ps")
             try:
-                subprocess.run([f"{briss_location}", "-s", pdf, "-d", output_file], check=True)
+                subprocess.run(["java", "-jar", briss_location, "-s", pdf, "-d", output_file], check=True)
                 self.op_msgs.emit(f"Crop complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
                     file_tree.add_file(output_file)
@@ -55,7 +60,7 @@ class Converter(QObject):
             self.op_msgs.emit(f"Launching Briss...")
             QApplication.processEvents()
             try:
-                subprocess.Popen([briss_location, pdf], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.Popen(["java", "-jar", briss_location, pdf], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             except:
                 self.op_msgs.emit(f"Launching Briss failed")
 
