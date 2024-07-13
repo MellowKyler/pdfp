@@ -11,6 +11,7 @@ from pdfp.operations.tts import tts
 from pdfp.utils.tts_limit import ttsl
 from pdfp.utils.clean_text import ct
 from pdfp.button_widget import ButtonWidget
+from pdfp.file_tree_widget import FileTreeWidget
 
 class LogWidget(QWidget):
     """
@@ -25,7 +26,7 @@ class LogWidget(QWidget):
         pb_scroll_area (QScrollArea): A scroll area containing the progress bar and label.
         layout (QHBoxLayout): The main layout of the widget.
     """
-    def __init__(self, file_tree_widget, main_window):
+    def __init__(self):
         super().__init__()
         #logbox connections
         file2pdf.op_msgs.connect(self.add_log_message)
@@ -35,8 +36,9 @@ class LogWidget(QWidget):
         trim.op_msgs.connect(self.add_log_message)
         clean_copy.op_msgs.connect(self.add_log_message)
         tts.op_msgs.connect(self.add_log_message)
-        button_widget = ButtonWidget(file_tree_widget, main_window)
+        button_widget = ButtonWidget.instance()
         button_widget.button_msgs.connect(self.add_log_message)
+        file_tree_widget = FileTreeWidget.instance()
         file_tree_widget.file_added.connect(self.add_log_message)
         ttsl.util_msgs.connect(self.add_log_message)
         ct.util_msgs.connect(self.add_log_message)

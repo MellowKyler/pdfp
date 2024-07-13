@@ -2,6 +2,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from pdfp.settings_window import SettingsWindow
+from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.operations.file2pdf import file2pdf
 from pdfp.operations.png import pdf2png
 from pdfp.operations.ocr import ocr
@@ -27,14 +28,33 @@ class ButtonWidget(QWidget):
         keep_pgs (QLineEdit): Input field for specifying the pages to keep for trimming.
         cc_file (QRadioButton): Radio button for selecting file option in clean copy.
     """
+
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        """
+        Override __new__ method to ensure only one instance of SettingsWindow exists.
+        If no existing instance, create one and return it. If an instance exists, return that instance.
+        """
+        if not cls._instance:
+            cls._instance = super(ButtonWidget, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+    @classmethod
+    def instance(cls):
+        """
+        Returns the single instance of SettingsWindow.
+        If no instance exists, creates one and returns it.
+        Call this function when referencing SettingsWindow values.
+        """
+        if cls._instance is None:
+            cls._instance = ButtonWidget()
+        return cls._instance
+
     button_msgs = Signal(str)
-    def __init__(self, file_tree_widget, main_window):
+    def __init__(self):
         super().__init__()
-        self.main_window = main_window
         self.app = QApplication.instance()
         self.settings = SettingsWindow.instance()
-
-        self.file_tree_widget = file_tree_widget
+        self.file_tree_widget = FileTreeWidget.instance()
 
         f2pdf_button = QPushButton("Convert to PDF")
         f2pdf_button.clicked.connect(self.f2pdf_clicked)
@@ -54,9 +74,9 @@ class ButtonWidget(QWidget):
         png_box = QGroupBox()
         png_box_layout = QVBoxLayout()
         png_box_layout.setSpacing(5)
-        png_box_layout.addWidget(png_button)
         png_box_layout.addWidget(png_page_label)
         png_box_layout.addWidget(self.png_page)
+        png_box_layout.addWidget(png_button)
         png_box.setLayout(png_box_layout)
         png_box.setMaximumHeight(100)
 
@@ -82,14 +102,14 @@ class ButtonWidget(QWidget):
         trim_label.setMaximumHeight(15)
         self.keep_pgs = QLineEdit()
         self.keep_pgs.setPlaceholderText("Ex: \"12-16 32-end\"")
-        trim_button = QPushButton("Trim Pages")
+        trim_button = QPushButton("Trim")
         trim_button.clicked.connect(self.trim_clicked)
         trim_box = QGroupBox()
         trim_box_layout = QVBoxLayout()
         trim_box_layout.setSpacing(5)
-        trim_box_layout.addWidget(trim_button)
         trim_box_layout.addWidget(trim_label)
         trim_box_layout.addWidget(self.keep_pgs)
+        trim_box_layout.addWidget(trim_button)
         trim_box.setLayout(trim_box_layout)
         trim_box.setMaximumHeight(100)
 
@@ -104,12 +124,15 @@ class ButtonWidget(QWidget):
         cc_radio_layout.setAlignment(Qt.AlignCenter)
         clean_copy_button = QPushButton("Clean Copy Contents")
         clean_copy_button.clicked.connect(self.clean_copy_clicked)
+        cc_grid = QGridLayout()
+        cc_grid.addLayout(cc_radio_layout,0,0,alignment=Qt.AlignCenter)
+        cc_grid.addWidget(clean_copy_button,1,0)
+        cc_grid.setHorizontalSpacing(0)
+        cc_grid.setVerticalSpacing(0)
+        cc_grid.setContentsMargins(10,0,10,10)
         cc_box = QGroupBox()
-        cc_box_layout = QVBoxLayout()
-        cc_box_layout.addWidget(clean_copy_button)
-        cc_box_layout.addLayout(cc_radio_layout)
-        cc_box.setLayout(cc_box_layout)
-        cc_box.setMaximumHeight(100)
+        cc_box.setLayout(cc_grid)
+        cc_box.setMaximumHeight(80)
 
         tts_button = QPushButton("Text to Speech")
         tts_button.clicked.connect(self.tts_clicked)

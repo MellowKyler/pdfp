@@ -42,8 +42,8 @@ class MainWindow(QMainWindow):
         
         self.file_tree_widget = FileTreeWidget()
         self.file_tree_widget.button_toggle.connect(self.toggle_button_widget)
-        self.log_widget = LogWidget(self.file_tree_widget, self)
-        self.button_widget = ButtonWidget(self.file_tree_widget, self)
+        self.log_widget = LogWidget()
+        self.button_widget = ButtonWidget.instance()
         self.button_widget.setEnabled(False)
 
         hsplitter = QSplitter(Qt.Horizontal)

@@ -51,8 +51,10 @@ class Converter(QObject):
         """
         if input_file.lower().endswith('.pdf'):
             self.op_msgs.emit(f"File is already a PDF!")
+            return
         elif not any(input_file.lower().endswith(ext) for ext in file_tree.allowed_extensions):
             self.op_msgs.emit(f"{input_file} is not a supported filetype: {file_tree.allowed_extensions}")
+            return
 
         self.op_msgs.emit(f"Converting {input_file} to PDF...")
         QApplication.processEvents()
