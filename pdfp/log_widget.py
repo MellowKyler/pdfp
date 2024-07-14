@@ -12,6 +12,7 @@ from pdfp.utils.tts_limit import ttsl
 from pdfp.utils.clean_text import ct
 from pdfp.button_widget import ButtonWidget
 from pdfp.file_tree_widget import FileTreeWidget
+from pdfp.progress_widget import ProgressWidget
 
 class LogWidget(QWidget):
     """
@@ -43,81 +44,23 @@ class LogWidget(QWidget):
         ttsl.util_msgs.connect(self.add_log_message)
         ct.util_msgs.connect(self.add_log_message)
 
-        #progress bar connections
-        tts.update_pb.connect(self.update_progress_bar)
-        tts.view_pb.connect(self.view_progress_bar)
-        tts.revise_pb_label.connect(self.revise_pb_label)
-        ocr.update_pb.connect(self.update_progress_bar)
-        ocr.view_pb.connect(self.view_progress_bar)
-        ocr.revise_pb_label.connect(self.revise_pb_label)
-        crop.update_pb.connect(self.update_progress_bar)
-        crop.view_pb.connect(self.view_progress_bar)
-        crop.revise_pb_label.connect(self.revise_pb_label)
-
         #logbox
         self.log_widget = QTextEdit()
         self.log_widget.setReadOnly(True)
 
         #progress bar
-        self.pb_label = QLabel('Progress:')
-        self.pb_label.setFixedHeight(15)
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
-        self.progress_bar.setFixedHeight(20)
-        pb_module1 = QVBoxLayout()
-        pb_module1.addWidget(self.pb_label)
-        pb_module1.addWidget(self.progress_bar)
-        pb_module1.setSpacing(10)
-
-        pb_layout = QVBoxLayout()
-        pb_layout.addLayout(pb_module1)
-        pb_layout.setContentsMargins(10,0,10,30)
-        pb_layout.setSpacing(30)
-
-        self.pb_scroll_area = QScrollArea()
-        self.pb_scroll_area.setWidgetResizable(True)
-        self.pb_scroll_area.setMinimumWidth(200)
-        self.pb_scroll_area.setLayout(pb_layout)
+        self.progress_widget = ProgressWidget()
 
         #layout
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.log_widget)
-        self.layout.addWidget(self.pb_scroll_area)
+        self.layout.addWidget(self.progress_widget)
         self.layout.setContentsMargins(10,2,10,10)
         self.layout.setSpacing(10)
         self.layout.setStretch(0, 600)
         self.layout.setStretch(1, 200)
-        self.pb_scroll_area.setVisible(False)
+        self.progress_widget.setVisible(False)
         self.setLayout(self.layout)
-
-    def view_progress_bar(self, toggle):
-        """
-        Toggle the visibility status of the progress bar widget.
-        Args:
-            toggle (bool): If True, show the progress bar. If False, hide it and reset the progress and label.
-        """
-        self.pb_scroll_area.setVisible(toggle)
-        # not sure if i should handle cleanup here or within each operation
-        if toggle == False:
-            self.update_progress_bar(0)
-            self.pb_label.setText("Progress:")
-
-    def update_progress_bar(self, value):
-        """
-        Set the value of the progress bar.
-        Args:
-            value (int): The progress value to set (0-100).
-        """
-        self.progress_bar.setValue(value)
-
-    def revise_pb_label(self, string):
-        """
-        Set the text of the progress bar label.
-        Args:
-            string (str): The text to set on the progress bar label.
-        """
-        self.pb_label.setText(string)
 
     def add_log_message(self, message):
         """

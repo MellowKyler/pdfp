@@ -58,9 +58,7 @@ class Converter(QObject):
             try:
                 process = subprocess.Popen(["java", "-jar", briss_location, "-s", pdf, "-d", output_file], stdout=subprocess.PIPE)
                 progress = 0
-                # while True:
                 for stdout_line in iter(process.stdout.readline, ''):
-                    #if i include stderr everything breaks :)
                     output = process.stdout.readline()
                     if output:
                         progress += 1
