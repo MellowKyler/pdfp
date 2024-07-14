@@ -12,20 +12,16 @@ from pdfp.utils.tts_limit import ttsl
 from pdfp.utils.clean_text import ct
 from pdfp.button_widget import ButtonWidget
 from pdfp.file_tree_widget import FileTreeWidget
-from pdfp.progress_widget import ProgressWidget
+# from pdfp.progress_widget import ProgressWidget
 
-class LogWidget(QWidget):
+class LogWidget(QTextEdit):
     """
     Display logs and progress bars for pdfp operations.
-
     This widget connects to various signals from different operations and displays log messages and progress.
-    
     Attributes:
-        log_widget (QTextEdit): A text edit widget for displaying log messages.
         pb_label (QLabel): A label for the progress bar.
         progress_bar (QProgressBar): A progress bar to show operation progress.
         pb_scroll_area (QScrollArea): A scroll area containing the progress bar and label.
-        layout (QHBoxLayout): The main layout of the widget.
     """
     def __init__(self):
         super().__init__()
@@ -45,25 +41,9 @@ class LogWidget(QWidget):
         ct.util_msgs.connect(self.add_log_message)
 
         #logbox
-        self.log_widget = QTextEdit()
-        self.log_widget.setReadOnly(True)
-
-        self.log_widget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.log_widget.customContextMenuRequested.connect(self.show_context_menu)
-
-        #progress bar
-        self.progress_widget = ProgressWidget()
-
-        #layout
-        self.layout = QHBoxLayout()
-        self.layout.addWidget(self.log_widget)
-        self.layout.addWidget(self.progress_widget)
-        self.layout.setContentsMargins(10,2,10,10)
-        self.layout.setSpacing(10)
-        self.layout.setStretch(0, 600)
-        self.layout.setStretch(1, 200)
-        self.progress_widget.setVisible(False)
-        self.setLayout(self.layout)
+        self.setReadOnly(True)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
 
     def add_log_message(self, message):
         """
@@ -71,7 +51,7 @@ class LogWidget(QWidget):
         Args:
             message (str): The log message to append.
         """
-        self.log_widget.append(message)
+        self.append(message)
 
     def show_context_menu(self, position):
         """
@@ -93,21 +73,21 @@ class LogWidget(QWidget):
         menu.addAction(copy_action)
         menu.addAction(select_all_action)
         menu.addAction(save_as_action)
-        has_text = bool(self.log_widget.toPlainText())
-        has_selection = self.log_widget.textCursor().selectedText() != ""
+        has_text = bool(self.toPlainText())
+        has_selection = self.textCursor().selectedText() != ""
         select_all_action.setEnabled(has_text)
         save_as_action.setEnabled(has_text)
         copy_action.setEnabled(False)
         if has_text and has_selection:
             copy_action.setEnabled(True)
-        menu.exec(self.log_widget.viewport().mapToGlobal(position))
+        menu.exec(self.viewport().mapToGlobal(position))
 
     def copy(self):
-        if (selected_text := self.log_widget.textCursor().selectedText()):
+        if (selected_text := self.textCursor().selectedText()):
             QApplication.clipboard().setText(selected_text)
 
     def select_all(self):
-        self.log_widget.selectAll()
+        self.selectAll()
 
     def save_txt_file(self):
         """Open a file dialog to select or create an TXT file and write the log to that file."""
@@ -116,7 +96,7 @@ class LogWidget(QWidget):
         if file_path:
             if not file_path.endswith(".txt"):
                 file_path += ".txt"
-            text = self.log_widget.toPlainText()
+            text = self.toPlainText()
             with open(file_path, 'w', encoding='utf-8') as output_txt_file:
                 output_txt_file.write(text)
         return

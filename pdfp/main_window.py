@@ -6,6 +6,7 @@ from pdfp.settings_window import SettingsWindow
 from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.button_widget import ButtonWidget
 from pdfp.log_widget import LogWidget
+from pdfp.progress_widget import ProgressWidget
 
 class MainWindow(QMainWindow):
     """
@@ -43,9 +44,12 @@ class MainWindow(QMainWindow):
         self.file_tree_widget = FileTreeWidget()
         self.file_tree_widget.button_toggle.connect(self.toggle_button_widget)
         self.log_widget = LogWidget()
+        self.log_widget.setMinimumWidth(450)
         self.button_widget = ButtonWidget.instance()
         self.button_widget.button_toggle.connect(self.toggle_button_widget)
         self.button_widget.setEnabled(False)
+        self.progress_widget = ProgressWidget()
+        self.progress_widget.setVisible(False)
 
         hsplitter = QSplitter(Qt.Horizontal)
         hsplitter.addWidget(self.file_tree_widget)
@@ -54,9 +58,16 @@ class MainWindow(QMainWindow):
         hsplitter.setHandleWidth(8)
         hsplitter.setContentsMargins(10,10,10,2)
 
+        hsplitter2 = QSplitter(Qt.Horizontal)
+        hsplitter2.addWidget(self.log_widget)
+        hsplitter2.addWidget(self.progress_widget)
+        hsplitter2.setContentsMargins(10,2,10,10)
+        hsplitter2.setSizes([600,200])
+        hsplitter2.setHandleWidth(8)
+
         vsplitter = QSplitter(Qt.Vertical)
         vsplitter.addWidget(hsplitter)
-        vsplitter.addWidget(self.log_widget)
+        vsplitter.addWidget(hsplitter2)
         vsplitter.setHandleWidth(8)
         vsplitter.setSizes([400, 150])
 
