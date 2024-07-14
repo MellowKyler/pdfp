@@ -50,6 +50,9 @@ class LogWidget(QWidget):
         ocr.update_pb.connect(self.update_progress_bar)
         ocr.view_pb.connect(self.view_progress_bar)
         ocr.revise_pb_label.connect(self.revise_pb_label)
+        crop.update_pb.connect(self.update_progress_bar)
+        crop.view_pb.connect(self.view_progress_bar)
+        crop.revise_pb_label.connect(self.revise_pb_label)
 
         #logbox
         self.log_widget = QTextEdit()

@@ -1,5 +1,6 @@
 
 import os
+import sys
 import subprocess
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
@@ -14,6 +15,9 @@ class Converter(QObject):
         op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
     """
     op_msgs = Signal(str)
+    view_pb = Signal(bool)
+    update_pb = Signal(int)
+    revise_pb_label = Signal(str)
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf):
@@ -46,16 +50,32 @@ class Converter(QObject):
 
         automation_enabled = self.settings.auto_crop_radio.isChecked()
         if automation_enabled:
+            self.revise_pb_label.emit(f"Crop Progress:")
+            self.view_pb.emit(True)
             self.op_msgs.emit(f"Cropping {pdf}...")
             QApplication.processEvents()
             output_file = construct_filename(pdf, "crop_ps")
             try:
-                subprocess.run(["java", "-jar", briss_location, "-s", pdf, "-d", output_file], check=True) #, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                process = subprocess.Popen(["java", "-jar", briss_location, "-s", pdf, "-d", output_file], stdout=subprocess.PIPE)
+                progress = 0
+                # while True:
+                for stdout_line in iter(process.stdout.readline, ''):
+                    #if i include stderr everything breaks :)
+                    output = process.stdout.readline()
+                    if output:
+                        progress += 1
+                        progress_percentage = (progress / 6) * 100
+                        self.update_pb.emit(progress_percentage)
+                        QApplication.processEvents()
+                    if process.poll() is not None:
+                        break
+
                 self.op_msgs.emit(f"Crop complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
                     file_tree.add_file(output_file)
             except subprocess.CalledProcessError as e:
                 self.op_msgs.emit(f"Conversion failed with exit code {e.returncode}.")
+            self.view_pb.emit(False)
         else:
             self.op_msgs.emit(f"Launching Briss...")
             QApplication.processEvents()
