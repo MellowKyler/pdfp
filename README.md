@@ -11,7 +11,7 @@ PDF Processor - a GUI for some common PDF operations.
 - Optical character recognition
 - Crops PDF dimensions
 - Removes pages and keeps specified pages
-- Copies contents without line breaks or trailing em-dashes
+- Copies contents without line breaks or trailing hypens
 - Converts text to speech
 - Drag, drop, and convert multiple files at a time
 
@@ -22,14 +22,14 @@ PDF Processor - a GUI for some common PDF operations.
 
 ## Installation and Running
 
-### Install with [PyPI](https://pypi.org/project/pdfp/)
+### Install with [pip](https://pypi.org/project/pdfp/)
 
 ```bash
 $ pip install pdfp
 $ pdfp
 ```
 
-Or install from git (if I haven't published an update):
+Or install from git (if I haven't published an update to PyPI):
 
 ```bash
 $ pip install git+https://github.com/MellowKyler/pdfp.git
@@ -38,10 +38,10 @@ $ pdfp
 
 ### Run from source
 
-1. Have Python version 3.10-3.13 installed, and [poetry](https://python-poetry.org/)
+1. Have Python version 3.10-3.12 installed, and [poetry](https://python-poetry.org/)
 2. Download the source code
 3. Install required Python modules with `poetry install`
 4. Run the program with `poetry run pdfp`
 
 ## Notes
-Tested in Linux. I cannot confirm that everything will work in Windows, but most things should.
+Tested in Linux and Windows. Mac should work as well, but I don't own one so I can't confirm compatibility.

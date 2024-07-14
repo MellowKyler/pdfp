@@ -7,7 +7,6 @@ from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 from pdfp.utils.clean_text import clean_text
 from pdfp.utils.tts_limit import tts_word_count
-import pyperclip
 import pymupdf
 
 class Converter(QObject):
@@ -44,7 +43,7 @@ class Converter(QObject):
                     file_tree.add_file(output_paths[0])
         else:
             tts_word_count(full_text)
-            pyperclip.copy(full_text)
+            QApplication.clipboard().setText(full_text)
             self.op_msgs.emit(f"PDF contents copied to clipboard.")
 
     def convert(self, file_tree, pdf, cc_file_checked):

@@ -7,8 +7,6 @@ class SettingsWindow(QWidget):
     A settings window for the pdfp application; manages general, operation-specific, and filename settings.
     Configuration can be saved to and loaded from an INI file.
     """
-
-    #if i don't put this here, multiple qwidgets get loaded for SettingsWindow on startup.
     _instance = None
     def __new__(cls, *args, **kwargs):
         """

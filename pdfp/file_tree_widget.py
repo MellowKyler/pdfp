@@ -1,4 +1,6 @@
 import os
+import subprocess
+import platform
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
@@ -22,7 +24,7 @@ class FileTreeWidget(QTreeView):
     _instance = None
     def __new__(cls, *args, **kwargs):
         """
-        Override __new__ method to ensure only one instance of SettingsWindow exists.
+        Override __new__ method to ensure only one instance of FileTreeWidget exists.
         If no existing instance, create one and return it. If an instance exists, return that instance.
         """
         if not cls._instance:
@@ -31,9 +33,9 @@ class FileTreeWidget(QTreeView):
     @classmethod
     def instance(cls):
         """
-        Returns the single instance of SettingsWindow.
+        Returns the single instance of FileTreeWidget.
         If no instance exists, creates one and returns it.
-        Call this function when referencing SettingsWindow values.
+        Call this function when referencing FileTreeWidget values.
         """
         if cls._instance is None:
             cls._instance = FileTreeWidget()
@@ -103,17 +105,65 @@ class FileTreeWidget(QTreeView):
     def contextMenuEvent(self, event):
         """
         Handle context menu events.
-
-        Provides an option to delete selected items.
-
         Args:
             event (QContextMenuEvent): The context menu event.
         """
-        menu = QMenu(self)
-        delete_action = QAction("Delete", self)
+        delete_icon = (QIcon.fromTheme("list-remove"))
+
+        delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", self)
         delete_action.triggered.connect(self.delete_selected_items)
-        menu.addAction(delete_action)
+        delete_action.setShortcut(QKeySequence("Del"))
+        delete_all_action = QAction(QIcon.fromTheme("edit-delete"), "Delete All", self)
+        delete_all_action.triggered.connect(self.delete_all_items)
+        delete_all_action.setShortcut(QKeySequence("Ctrl+Del"))
+        open_files_action = QAction(QIcon.fromTheme("document-open"), "Open Files", self)
+        open_files_action.triggered.connect(self.open_files)
+        open_files_action.setShortcut(QKeySequence("Ctrl+O"))
+        parent_dir_action = QAction(QIcon.fromTheme("folder"), "Open Folders", self)
+        parent_dir_action.triggered.connect(self.open_parent_dir)
+        parent_dir_action.setShortcut(QKeySequence("Ctrl+E"))
+        select_all_action = QAction(QIcon.fromTheme("edit-select-all"), "Select All", self)
+        select_all_action.triggered.connect(self.select_all)
+        select_all_action.setShortcut(QKeySequence("Ctrl+A"))
+        deselect_all_action = QAction(QIcon.fromTheme("edit-select-all"), "Deselect All", self)
+        deselect_all_action.triggered.connect(self.deselect_all)
+        deselect_all_action.setShortcut(QKeySequence("Ctrl+Shift+A"))
+
+        has_files = bool(len(self.file_paths))
+
+        menu = QMenu(self)
+        selected_count = len(self.selectedIndexes())
+        if selected_count == 0:
+            menu.addAction(select_all_action)
+            menu.addAction(delete_all_action)
+            select_all_action.setEnabled(has_files)
+            delete_all_action.setEnabled(has_files)
+        if selected_count > 1:
+            menu.addAction(open_files_action)
+            menu.addAction(parent_dir_action)
+        elif selected_count == 1:
+            menu.addAction(open_files_action)
+            open_files_action.setText("Open File")
+            menu.addAction(parent_dir_action)
+            parent_dir_action.setText("Open Folder")
+        if selected_count > 0:
+            menu.addAction(deselect_all_action)
+            menu.addAction(delete_action)
+            
         menu.exec_(event.globalPos())
+
+    def select_all(self):
+        self.selectAll()
+
+    def deselect_all(self):
+        self.clearSelection()
+
+    def delete_all_items(self):
+        """
+        Delete all items from the widget.
+        """
+        self.model.clear()
+        self.file_paths.clear()
     
     def delete_selected_items(self):
         """
@@ -121,10 +171,8 @@ class FileTreeWidget(QTreeView):
 
         Removes the selected items from the model and the set of file paths.
         """
-        indexes = self.selectedIndexes()
-        if not indexes:
+        if not (indexes := self.selectedIndexes()):
             return
-
         # Collect items to delete in reverse order to avoid index shifting issues
         items_to_delete = []
         for index in sorted(indexes, reverse=True):
@@ -150,16 +198,19 @@ class FileTreeWidget(QTreeView):
     def keyPressEvent(self, event):
         """
         Handle key press events.
-
-        Deletes selected items if the Delete key is pressed.
-
         Args:
             event (QKeyEvent): The key press event.
         """
-        if event.key() == Qt.Key_Delete:
-            self.delete_selected_items()
+        if event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ControlModifier):
+            self.delete_all_items()
         elif event.key() == Qt.Key_A and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
-            self.clearSelection()
+            self.deselect_all()
+        elif event.key() == Qt.Key_Delete:
+            self.delete_selected_items()
+        elif event.key() == Qt.Key_E and event.modifiers() == (Qt.ControlModifier):
+            self.open_parent_dir()
+        elif event.key() == Qt.Key_O and event.modifiers() == (Qt.ControlModifier):
+            self.open_files()
         else:
             super().keyPressEvent(event)
 
@@ -193,6 +244,15 @@ class FileTreeWidget(QTreeView):
             if os.path.isfile(file_path):
                 self.add_file(file_path)
 
+    def open_files(self):
+        """
+        Open one or more selected files in the default application.
+        """
+        if not (indexes := self.selectedIndexes()):
+            return
+        for index in sorted(indexes, reverse=True):
+            self.open_file(index)
+
     def open_file(self, index):
         """
         Open the file at the given index in the default application.
@@ -217,6 +277,33 @@ class FileTreeWidget(QTreeView):
             QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
         #else:
             #print(f"File does not exist: '{file_path}'")
+
+    def open_parent_dir(self):
+        """
+        Open the parent directory one or more selected files in the default application.
+        """
+        if not (indexes := self.selectedIndexes()):
+            return
+        system_platform = platform.system()
+        for index in sorted(indexes, reverse=True):
+            if not index.isValid():
+                continue
+            item = self.model.itemFromIndex(index)
+            if not item:
+                continue
+            file_path = item.text()
+            if not file_path:
+                continue
+
+            parent_dir = os.path.dirname(file_path)
+            if system_platform == "Windows":
+                subprocess.Popen(f'explorer /select,"{parent_dir}"')
+            elif system_platform == "Darwin":  # macOS
+                subprocess.Popen(["open", parent_dir])
+            elif system_platform == "Linux":
+                subprocess.Popen(["xdg-open", parent_dir])
+            else:
+                raise OSError(f"Unsupported operating system: {system_platform}")
 
     def on_selection_changed(self, selected, deselected):
         """

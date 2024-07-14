@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QTreeView, QLineEdit, QGroupBox, QRadioButton, QLabel, QFrame, QTextEdit, QProgressBar, QScrollArea
-from PySide6.QtCore import QSize, Qt, Slot, Signal
-from PySide6.QtGui import QAction, QIcon, QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
 from pdfp.operations.file2pdf import file2pdf
 from pdfp.operations.png import pdf2png
 from pdfp.operations.ocr import ocr
@@ -48,6 +48,9 @@ class LogWidget(QWidget):
         self.log_widget = QTextEdit()
         self.log_widget.setReadOnly(True)
 
+        self.log_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.log_widget.customContextMenuRequested.connect(self.show_context_menu)
+
         #progress bar
         self.progress_widget = ProgressWidget()
 
@@ -69,3 +72,62 @@ class LogWidget(QWidget):
             message (str): The log message to append.
         """
         self.log_widget.append(message)
+
+    def show_context_menu(self, position):
+        """
+        Handle context menu events.
+        Args:
+            event (QContextMenuEvent): The context menu event.
+        """
+        copy_action = QAction(QIcon.fromTheme("edit-copy"), "Copy", self)
+        copy_action.triggered.connect(self.copy)
+        copy_action.setShortcut(QKeySequence("Ctrl+C"))
+        select_all_action = QAction(QIcon.fromTheme("edit-select-all"), "Select All", self)
+        select_all_action.triggered.connect(self.select_all)
+        select_all_action.setShortcut(QKeySequence("Ctrl+A"))
+        save_as_action = QAction(QIcon.fromTheme("document-save"), "Save to File", self)
+        save_as_action.triggered.connect(self.save_txt_file)
+        save_as_action.setShortcut(QKeySequence("Ctrl+S"))
+
+        menu = QMenu(self)
+        menu.addAction(copy_action)
+        menu.addAction(select_all_action)
+        menu.addAction(save_as_action)
+        has_text = bool(self.log_widget.toPlainText())
+        has_selection = self.log_widget.textCursor().selectedText() != ""
+        select_all_action.setEnabled(has_text)
+        save_as_action.setEnabled(has_text)
+        copy_action.setEnabled(False)
+        if has_text and has_selection:
+            copy_action.setEnabled(True)
+        menu.exec(self.log_widget.viewport().mapToGlobal(position))
+
+    def copy(self):
+        if (selected_text := self.log_widget.textCursor().selectedText()):
+            QApplication.clipboard().setText(selected_text)
+
+    def select_all(self):
+        self.log_widget.selectAll()
+
+    def save_txt_file(self):
+        """Open a file dialog to select or create an TXT file and write the log to that file."""
+        project_root = QDir.currentPath()
+        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create TXT File",project_root,"TXT Files (*.txt);;All Files (*)")
+        if file_path:
+            if not file_path.endswith(".txt"):
+                file_path += ".txt"
+            text = self.log_widget.toPlainText()
+            with open(file_path, 'w', encoding='utf-8') as output_txt_file:
+                output_txt_file.write(text)
+        return
+
+    def keyPressEvent(self, event):
+        """
+        Handle key press events.
+        Args:
+            event (QKeyEvent): The key press event.
+        """
+        if event.key() == Qt.Key_S and event.modifiers() == (Qt.ControlModifier):
+            self.save_txt_file()
+        else:
+            super().keyPressEvent(event)

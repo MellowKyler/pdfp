@@ -20,6 +20,7 @@ class ButtonWidget(QWidget):
 
     Attributes:
         button_msgs (Signal): Signal emitted with a string message when a button is clicked.
+        button_toggle (Signal): Disables and enables button_widget when an operation begins and ends. 
         main_window (QMainWindow): The main application window.
         app (QApplication): The application instance.
         settings (SettingsWindow): The settings window instance.
@@ -50,6 +51,7 @@ class ButtonWidget(QWidget):
         return cls._instance
 
     button_msgs = Signal(str)
+    button_toggle = Signal(bool)
     def __init__(self):
         super().__init__()
         self.app = QApplication.instance()
@@ -173,7 +175,9 @@ class ButtonWidget(QWidget):
         """
         self.button_msgs.emit(f"Attempting to convert file to PDF...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(file2pdf.convert)
+        self.button_toggle.emit(True)
 
     def png_clicked(self):
         """
@@ -183,7 +187,9 @@ class ButtonWidget(QWidget):
         page = self.png_page.text()
         self.button_msgs.emit(f"Attempting to convert PDF to PNG...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(pdf2png.convert, page)
+        self.button_toggle.emit(True)
 
     def ocr_clicked(self):
         """
@@ -192,7 +198,9 @@ class ButtonWidget(QWidget):
         """
         self.button_msgs.emit(f"Attempting to OCR PDF...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(ocr.convert)
+        self.button_toggle.emit(True)
 
     def crop_clicked(self):
         """
@@ -201,7 +209,9 @@ class ButtonWidget(QWidget):
         """
         self.button_msgs.emit(f"Attempting to crop PDF...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(crop.convert)
+        self.button_toggle.emit(True)
 
     def trim_clicked(self):
         """
@@ -211,7 +221,9 @@ class ButtonWidget(QWidget):
         keep_pgs_input = self.keep_pgs.text()
         self.button_msgs.emit(f"Attempting to trim PDF...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(trim.convert, keep_pgs_input)
+        self.button_toggle.emit(True)
 
     def clean_copy_clicked(self):
         """
@@ -221,7 +233,9 @@ class ButtonWidget(QWidget):
         cc_file_checked = self.cc_file.isChecked()
         self.button_msgs.emit(f"Attempting to clean copy PDF...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(clean_copy.convert, cc_file_checked)
+        self.button_toggle.emit(True)
 
     def tts_clicked(self):
         """
@@ -230,7 +244,9 @@ class ButtonWidget(QWidget):
         """
         self.button_msgs.emit(f"Attempting to TTS PDF...")
         QApplication.processEvents()
+        self.button_toggle.emit(False)
         self.call_selected_function(tts.convert)
+        self.button_toggle.emit(True)
 
     def call_selected_function(self, function, *args, **kwargs):
         """
