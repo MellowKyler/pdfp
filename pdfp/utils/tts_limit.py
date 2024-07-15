@@ -4,11 +4,9 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Signal, QObject
 import os
 import math
+import logging
 
-class TTSLimitUtilMessages(QObject):
-    util_msgs = Signal(str)
-
-ttsl = TTSLimitUtilMessages()
+logger = logging.getLogger("pdfp")
 
 def write_to_file(text, output_txt_path):
     """
@@ -19,7 +17,7 @@ def write_to_file(text, output_txt_path):
     """
     with open(output_txt_path, 'w', encoding='utf-8') as output_txt_file:
         output_txt_file.write(text)
-    ttsl.util_msgs.emit(f"Conversion complete. Output: {output_txt_path}")
+    logger.info(f"Conversion complete. Output: {output_txt_path}")
     QApplication.processEvents()
 
 def tts_word_count(full_text, output_txt_path="", enable_split=False):
@@ -33,7 +31,7 @@ def tts_word_count(full_text, output_txt_path="", enable_split=False):
 
     full_text_split = full_text.split()
     wordcount = len(full_text_split)
-    ttsl.util_msgs.emit(f"Word count: {wordcount}")
+    logger.info(f"Word count: {wordcount}")
     QApplication.processEvents()
 
     if output_txt_path == "":
@@ -49,11 +47,11 @@ def tts_word_count(full_text, output_txt_path="", enable_split=False):
             else:
                 splitvalue = int(splitvalue)
             if wordcount > splitvalue:
-                ttsl.util_msgs.emit(f"Word count greater than split value: {splitvalue}.")
+                logger.info(f"Word count greater than split value: {splitvalue}.")
                 QApplication.processEvents()
                 tts_limit = True
         except ValueError:
-            ttsl.util_msgs.emit(f"Error: Word count split value configured in settings is not an integer. Continuing without splitting...")
+            logger.error(f"Error: Word count split value configured in settings is not an integer. Continuing without splitting...")
             QApplication.processEvents()
 
     file_tree = FileTreeWidget.instance()

@@ -8,15 +8,15 @@ from pdfp.utils.filename_constructor import construct_filename
 from pdfp.utils.clean_text import clean_text
 from pdfp.utils.tts_limit import tts_word_count
 import pymupdf
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class Converter(QObject):
     """
     Converter class to extract text from a PDF, transform it, and either write it to files
     or copy it to the clipboard based on user settings.
-    Attributes:
-        op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
     """
-    op_msgs = Signal(str)
     def __init__(self):
         super().__init__()
 
@@ -44,7 +44,7 @@ class Converter(QObject):
         else:
             tts_word_count(full_text)
             QApplication.clipboard().setText(full_text)
-            self.op_msgs.emit(f"PDF contents copied to clipboard.")
+            logger.info(f"PDF contents copied to clipboard.")
 
     def convert(self, file_tree, pdf, cc_file_checked):
         """
@@ -55,7 +55,7 @@ class Converter(QObject):
             cc_file_checked (bool): Indicates whether to split text into multiple files or copy to clipboard.
         """
         self.settings = SettingsWindow.instance()
-        self.op_msgs.emit(f"Converting {pdf}...")
+        logger.success(f"Converting {pdf}...")
         QApplication.processEvents()
         self.copy_pdf(file_tree, pdf, cc_file_checked)
         

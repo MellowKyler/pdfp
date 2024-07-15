@@ -5,6 +5,9 @@ from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 import ocrmypdf
 import pymupdf
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class SharedState:
     """
@@ -24,15 +27,13 @@ class QueueHandler(logging.Handler):
     Custom logging handler to process log messages and update shared state and UI elements accordingly.
     Args:
         shared_state (SharedState): Instance of SharedState to track operation progress.
-        op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
         worker_progress (Signal): Signal to emit progress updates with worker name and percentage. Connects to progress_widget.
         revise_worker_label (Signal): Signal to update worker labels. Connects to progress_widget.
         worker_name (str): Name of the worker for logging purposes. Connects to progress_widget.
     """
-    def __init__(self, shared_state, op_msgs, worker_progress, revise_worker_label, worker_name):
+    def __init__(self, shared_state, worker_progress, revise_worker_label, worker_name):
         super().__init__()
         self.shared_state = shared_state
-        self.op_msgs = op_msgs
         self.worker_progress = worker_progress
         self.revise_worker_label = revise_worker_label
         self.worker_name = worker_name
@@ -67,16 +68,14 @@ class Converter(QObject):
     Uses ocrmypdf and PyMuPDF to perform OCR on a specified PDF file and emits signals to update progress.
 
     Signals:
-        op_msgs: Emits messages about the status of the OCR process. Connects to log_widget.
         worker_progress: Updates the value of the progress bar during OCR. Connects to progress_widget.
         revise_worker_label: Updates the label of the progress bar during OCR. Connects to progress_widget.
         worker_done: Signals the completion of the OCR process. Connects to progress_widget.
     """
-
-    op_msgs = Signal(str)
     worker_progress = Signal(str, int)
     revise_worker_label = Signal(str, str)
     worker_done = Signal(str)
+
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf):
@@ -95,7 +94,7 @@ class Converter(QObject):
             self.util_msgs.emit(f"File is not a PDF.")
             return
 
-        self.op_msgs.emit(f"OCRing {pdf}...")
+        logger.info(f"OCRing {pdf}...")
         QApplication.processEvents()
 
         shared_state = SharedState()
@@ -103,10 +102,10 @@ class Converter(QObject):
         worker_name = f"OCR_{pdf}"
         self.worker_progress.emit(worker_name, 0)
 
-        logger = logging.getLogger('ocrmypdf')
-        logger.setLevel(logging.DEBUG)
-        handler = QueueHandler(shared_state, self.op_msgs, self.worker_progress, self.revise_worker_label, worker_name)
-        logger.addHandler(handler)
+        ocr_logger = logging.getLogger('ocrmypdf')
+        ocr_logger.setLevel(logging.DEBUG)
+        handler = QueueHandler(shared_state, self.worker_progress, self.revise_worker_label, worker_name)
+        ocr_logger.addHandler(handler)
 
         shared_state.total_parts = len(pymupdf.open(pdf))
 
@@ -114,27 +113,27 @@ class Converter(QObject):
 
         self.settings = SettingsWindow.instance()
         deskew_toggle = self.settings.ocr_deskew_checkbox.isChecked()
-        # print(f"deskew: {deskew_toggle}")
+        logger.debug(f"deskew: {deskew_toggle}")
         if self.settings.ocr_pdf_radio.isChecked():
             ocr_filetype = 'pdf'
         else:
             ocr_filetype = 'pdfa'
-        # print(f"filetype: {ocr_filetype}")
+        logger.debug(f"filetype: {ocr_filetype}")
         optimize_level = self.settings.ocr_optimize_level.value()
-        # print(f"optimize: {optimize_level}")
+        logger.debug(f"optimize: {optimize_level}")
 
         try:
             ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True)
-            self.op_msgs.emit(f"OCR complete. Output: {output_file}")
+            logger.success(f"OCR complete. Output: {output_file}")
             if self.settings.add_file_checkbox.isChecked():
                 file_tree.add_file(output_file)
         except Exception as e:
             error_msg = f"Error converting {pdf}: {str(e)}"
-            self.op_msgs.emit(error_msg)
+            logger.error(error_msg)
 
         self.worker_done.emit(worker_name)
-        logger.disabled = True
-        logger.removeHandler(handler)
+        ocr_logger.disabled = True
+        ocr_logger.removeHandler(handler)
         handler.close()
 
 ocr = Converter()

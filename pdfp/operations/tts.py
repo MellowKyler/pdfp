@@ -9,6 +9,9 @@ from pdfp.utils.clean_text import clean_text
 from pdfp.utils.tts_limit import tts_word_count
 from gtts import gTTS
 import pymupdf
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class SharedState:
     """
@@ -29,15 +32,13 @@ class QueueHandler(logging.Handler):
 
     Args:
         shared_state (SharedState): Shared state object for tracking conversion progress.
-        op_msgs (Signal): Signal to emit operation messages. Connects to progress_widget.
         worker_progress (Signal): Signal to update the progress bar. Connects to progress_widget.
         revise_worker_label (Signal): Signal to revise the progress bar label. Connects to progress_widget.
         worker_name (str): Name of the worker for logging purposes.
     """
-    def __init__(self, shared_state, op_msgs, worker_progress, revise_worker_label, worker_name):
+    def __init__(self, shared_state, worker_progress, revise_worker_label, worker_name):
         super().__init__()
         self.shared_state = shared_state
-        self.op_msgs = op_msgs
         self.worker_progress = worker_progress
         self.revise_worker_label = revise_worker_label
         self.worker_name = worker_name
@@ -74,12 +75,10 @@ class Converter(QObject):
     """
     Handles the text-to-speech (TTS) conversion process for PDF and text files.
     Signals:
-        op_msgs: Emits messages about the status of the TTS process. Connects to log_widget.
         worker_progress: Updates the value of the progress bar during TTS. Connects to progress_widget.
         revise_worker_label: Updates the label of the progress bar during TTS. Connects to progress_widget.
         worker_done: Signals the completion of the TTS process. Connects to progress_widget.
     """
-    op_msgs = Signal(str)
     worker_progress = Signal(str, int)
     revise_worker_label = Signal(str, str)
     worker_done = Signal(str)
@@ -98,20 +97,20 @@ class Converter(QObject):
             - Emits progress updates and completion signals during the TTS process.
         """
         if not any(pdf.lower().endswith(ext) for ext in ['.pdf', '.txt']):
-            self.op_msgs.emit(f"Cannot TTS. Filetype is not TXT or PDF.")
+            logger.error(f"Cannot TTS. Filetype is not TXT or PDF.")
             return
         self.settings = SettingsWindow.instance()
-        self.op_msgs.emit(f"Converting {pdf}")
+        logger.info(f"Converting {pdf}")
 
         shared_state = SharedState()
 
         worker_name = f"TTS_{pdf}"
         self.worker_progress.emit(worker_name, 0)
 
-        logger = logging.getLogger('gtts.tts')
-        logger.setLevel(logging.DEBUG)
-        handler = QueueHandler(shared_state, self.op_msgs, self.worker_progress, self.revise_worker_label, worker_name)
-        logger.addHandler(handler)
+        tts_logger = logging.getLogger('gtts.tts')
+        tts_logger.setLevel(logging.DEBUG)
+        handler = QueueHandler(shared_state, self.worker_progress, self.revise_worker_label, worker_name)
+        tts_logger.addHandler(handler)
 
         try:
             text = clean_text(pdf)
@@ -128,7 +127,7 @@ class Converter(QObject):
                     tts = gTTS(text, lang='en', tld='us')
                     output_file = construct_filename(pdf, "tts_ps")
                     tts.save(output_file)
-                    self.op_msgs.emit(f"Conversion {count}/{output_count} complete. Output: {output_file}")
+                    logger.success(f"Conversion {count}/{output_count} complete. Output: {output_file}")
                     self.worker_progress.emit(worker_name, 0)
                     shared_state.progress = 0
                     shared_state.total_parts = 0 
@@ -138,13 +137,12 @@ class Converter(QObject):
                 tts = gTTS(text, lang='en', tld='us')
                 output_file = construct_filename(pdf, "tts_ps")
                 tts.save(output_file)
-                self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+                logger.success(f"Conversion complete. Output: {output_file}")
         except Exception as e:
-            error_msg = f"Error converting {pdf}: {str(e)}"
-            self.op_msgs.emit(error_msg)
+            logger.error(f"Error converting {pdf}: {str(e)}")
         self.worker_done.emit(worker_name)
-        logger.disabled = True
-        logger.removeHandler(handler)
+        tts_logger.disabled = True
+        tts_logger.removeHandler(handler)
         handler.close()
 
     def get_temp_dir(self):

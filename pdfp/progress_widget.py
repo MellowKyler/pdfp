@@ -1,10 +1,13 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QTreeView, QLineEdit, QGroupBox, QRadioButton, QLabel, QFrame, QTextEdit, QProgressBar, QScrollArea, QApplication
-from PySide6.QtCore import QSize, Qt, Slot, Signal, QEvent
+from PySide6.QtCore import QSize, Qt, Slot, QEvent
 from PySide6.QtGui import QAction, QIcon, QStandardItem, QStandardItemModel
 from pdfp.operations.ocr import ocr
 from pdfp.operations.crop import crop
 from pdfp.operations.tts import tts
 import os
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class WorkerProgress(QWidget):
     """

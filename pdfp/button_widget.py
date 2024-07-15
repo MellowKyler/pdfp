@@ -10,6 +10,9 @@ from pdfp.operations.crop import crop
 from pdfp.operations.trim import trim
 from pdfp.operations.clean_copy import clean_copy
 from pdfp.operations.tts import tts
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class ButtonWidget(QWidget):
     """
@@ -19,7 +22,6 @@ class ButtonWidget(QWidget):
     It connects each button to its corresponding function and emits messages when buttons are clicked.
 
     Attributes:
-        button_msgs (Signal): Signal emitted with a string message when a button is clicked.
         button_toggle (Signal): Disables and enables button_widget when an operation begins and ends. 
         main_window (QMainWindow): The main application window.
         app (QApplication): The application instance.
@@ -50,7 +52,6 @@ class ButtonWidget(QWidget):
             cls._instance = ButtonWidget()
         return cls._instance
 
-    button_msgs = Signal(str)
     button_toggle = Signal(bool)
     def __init__(self):
         super().__init__()
@@ -173,7 +174,7 @@ class ButtonWidget(QWidget):
         Handle the Convert to PDF button click event.
         Emits a message and calls the file2pdf conversion function.
         """
-        self.button_msgs.emit(f"Attempting to convert file to PDF...")
+        logger.info(f"Attempting to convert file to PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(file2pdf.convert)
@@ -185,7 +186,7 @@ class ButtonWidget(QWidget):
         Emits a message and calls the pdf2png conversion function with the specified page number.
         """
         page = self.png_page.text()
-        self.button_msgs.emit(f"Attempting to convert PDF to PNG...")
+        logger.info(f"Attempting to convert PDF to PNG...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(pdf2png.convert, page)
@@ -196,7 +197,7 @@ class ButtonWidget(QWidget):
         Handle the OCR button click event.
         Emits a message and calls the OCR conversion function.
         """
-        self.button_msgs.emit(f"Attempting to OCR PDF...")
+        logger.info(f"Attempting to OCR PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(ocr.convert)
@@ -207,7 +208,7 @@ class ButtonWidget(QWidget):
         Handle the Crop button click event.
         Emits a message and calls the crop conversion function.
         """
-        self.button_msgs.emit(f"Attempting to crop PDF...")
+        logger.info(f"Attempting to crop PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(crop.convert)
@@ -219,7 +220,7 @@ class ButtonWidget(QWidget):
         Emits a message and calls the trim conversion function with the specified pages to keep.
         """
         keep_pgs_input = self.keep_pgs.text()
-        self.button_msgs.emit(f"Attempting to trim PDF...")
+        logger.info(f"Attempting to trim PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(trim.convert, keep_pgs_input)
@@ -231,7 +232,7 @@ class ButtonWidget(QWidget):
         Emits a message and calls the clean copy conversion function with the selected option.
         """
         cc_file_checked = self.cc_file.isChecked()
-        self.button_msgs.emit(f"Attempting to clean copy PDF...")
+        logger.info(f"Attempting to clean copy PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(clean_copy.convert, cc_file_checked)
@@ -242,7 +243,7 @@ class ButtonWidget(QWidget):
         Handle the Text to Speech button click event.
         Emits a message and calls the TTS conversion function.
         """
-        self.button_msgs.emit(f"Attempting to TTS PDF...")
+        logger.info(f"Attempting to TTS PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(tts.convert)
@@ -259,15 +260,15 @@ class ButtonWidget(QWidget):
         """
         indexes = self.file_tree_widget.selectedIndexes()
         if not indexes:
-            self.button_msgs.emit(f"No items selected")
+            logger.warning(f"No items selected")
             return
         for index in indexes:
             if not index.isValid():
-                self.button_msgs.emit(f"Selection is not valid")
+                logger.warning
                 continue
             item = self.file_tree_widget.model.itemFromIndex(index)
             if not item:
-                self.button_msgs.emit(f"No item in index: {index}")
+                logger.warning(f"No item in index: {index}")
                 continue
             file_path = item.text()
             self.call_generic_function(file_path, function, *args, **kwargs)

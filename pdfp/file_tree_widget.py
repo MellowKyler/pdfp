@@ -1,20 +1,21 @@
 import os
 import subprocess
 import platform
+import logging
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
-"""Display files ready for operations. Drag and dropping files is accepted."""
+
+logger = logging.getLogger("pdfp")
+
 class FileTreeWidget(QTreeView):
     """
     A custom QTreeView widget for displaying and managing a list of files.
 
     This widget supports drag-and-drop functionality for adding files, 
-    context menu operations for deleting files, and keyboard shortcuts. 
-    It emits a signal when files are added.
+    context menu operations for deleting files, and keyboard shortcuts.
 
     Attributes:
-        file_added (Signal): A signal emitted when a file is added to the widget. Connects to log_widget.
         button_toggle (Signal): A signal emitted when selections have been made or are cleared. Connects to main_window.
         model (QStandardItemModel): The data model used to store the file items.
         allowed_extensions (list of str): List of file extensions allowed to be added.
@@ -41,7 +42,6 @@ class FileTreeWidget(QTreeView):
             cls._instance = FileTreeWidget()
         return cls._instance
 
-    file_added = Signal(str)
     button_toggle = Signal(bool)
 
     def __init__(self):
@@ -95,7 +95,6 @@ class FileTreeWidget(QTreeView):
             for url in urls:
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
-                    #print(f"dropEvent: file_path = '{file_path}'")
                     if os.path.isdir(file_path):
                         self.add_folder(file_path)
                     else:
@@ -183,17 +182,13 @@ class FileTreeWidget(QTreeView):
                 continue
             file_path = item.text()
             if not file_path:
-                #print("Empty file path, skipping...")
                 continue
             items_to_delete.append((index, file_path))
 
         for index, file_path in items_to_delete:
-            #print(f"Deleting: file_path: '{file_path}'")
             if file_path in self.file_paths:
                 self.model.removeRow(index.row())
                 self.file_paths.remove(file_path)
-            #else:
-                #print(f"file_path '{file_path}' not found in self.file_paths, skipping...")
 
     def keyPressEvent(self, event):
         """
@@ -217,28 +212,31 @@ class FileTreeWidget(QTreeView):
     def add_file(self, file_path):
         """
         Add a file to the widget.
-
         Checks if the file exists, has an allowed extension, and is not already present in the widget.
-
         Args:
             file_path (str): The path of the file to be added.
         """
         if not os.path.exists(file_path):
-            self.file_added.emit(f"{file_path} does not exist.")
+            logger.warning(f"Added file: {file_path}")
             return
         if any(file_path.lower().endswith(ext) for ext in self.allowed_extensions):
             if file_path not in self.file_paths:
                 file_item = QStandardItem(file_path)
                 self.model.appendRow(file_item)
                 self.file_paths.add(file_path)
-                self.file_added.emit(f"Added file: {file_path}")
-                #print(f"add_file: added '{file_path}'")
+                logger.info(f"Added file: {file_path}")
             else:
-                self.file_added.emit(f"{file_path} is already present.")
+                logger.warning(f"{file_path} is already present.")
         else:
-            self.file_added.emit(f"{file_path} is not a supported filetype: {self.allowed_extensions}")
+            logger.warning(f"{file_path} is not a supported filetype: {self.allowed_extensions}")
 
     def add_folder(self, folder):
+        """
+        Add the contents of a folder to the widget.
+        Args:
+            folder (str): The path of the folder to be added.
+        """
+        logger.debug(f"add_folder folder: {folder}")
         for file_name in os.listdir(folder):
             file_path = os.path.join(folder, file_name)
             if os.path.isfile(file_path):
@@ -256,27 +254,21 @@ class FileTreeWidget(QTreeView):
     def open_file(self, index):
         """
         Open the file at the given index in the default application.
-
         Args:
             index (QModelIndex): The index of the item to open.
         """
         if not index.isValid():
             return
-
         item = self.model.itemFromIndex(index)
         if not item:
             return
-
         file_path = item.text()
-        #print(f"open_file: '{file_path}'")  # Debug print to check the file path
         if not file_path:
-            #print("Empty file path, skipping open file operation...")
             return
-
+        logger.debug(f"open_file file: {file_path}")
         if os.path.exists(file_path):
             QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
-        #else:
-            #print(f"File does not exist: '{file_path}'")
+            logger.info(f"Opened file: {file_path}")
 
     def open_parent_dir(self):
         """
@@ -285,6 +277,7 @@ class FileTreeWidget(QTreeView):
         if not (indexes := self.selectedIndexes()):
             return
         system_platform = platform.system()
+        logger.debug(f"Operating System: {system_platform}")
         for index in sorted(indexes, reverse=True):
             if not index.isValid():
                 continue
@@ -294,8 +287,10 @@ class FileTreeWidget(QTreeView):
             file_path = item.text()
             if not file_path:
                 continue
+            logger.debug(f"open_parent_dir file_path: {file_path}")
 
             parent_dir = os.path.dirname(file_path)
+            logger.debug(f"open_parent_dir parent_dir: {parent_dir}")
             if system_platform == "Windows":
                 subprocess.Popen(f'explorer /select,"{parent_dir}"')
             elif system_platform == "Darwin":  # macOS
@@ -303,28 +298,21 @@ class FileTreeWidget(QTreeView):
             elif system_platform == "Linux":
                 subprocess.Popen(["xdg-open", parent_dir])
             else:
-                raise OSError(f"Unsupported operating system: {system_platform}")
+                logger.error(f"Unsupported operating system: {system_platform}")
 
     def on_selection_changed(self, selected, deselected):
         """
         Handle selection changes.
-
         Emit a signal to toggle ButtonWidget when the total number of selections changes from 0 to >0 or from >0 to 0.
-
         Args:
             selected (QItemSelection): Newly selected items.
             deselected (QItemSelection): Newly deselected items.
         """
         current_selection_count = len(self.selectionModel().selectedIndexes())
-
         if not hasattr(self, '_previous_selection_count'):
             self._previous_selection_count = 0
-
         if self._previous_selection_count == 0 and current_selection_count > 0:
             self.button_toggle.emit(True)
-            # print("Selections made")
         elif self._previous_selection_count > 0 and current_selection_count == 0:
             self.button_toggle.emit(False)
-            # print("Selections cleared")
-
         self._previous_selection_count = current_selection_count

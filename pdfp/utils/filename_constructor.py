@@ -1,6 +1,9 @@
 import os
 import re
 from pdfp.settings_window import SettingsWindow
+import logging
+
+logger = logging.getLogger("pdfp")
 
 def construct_filename(input_file, operation_ps_id, pgnum=""):
     """
@@ -73,7 +76,7 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
                 closer = wrap[1]
                 pgnum = f"{opener}{pgnum}{closer}"
             except IndexError:
-                print("Not enough wrap characters. Enter 2 in settings.")
+                logger.error("Not enough wrap characters. Enter 2 in settings.")
         filename = f"{filename} {pgnum}"
 
     if filename == "":

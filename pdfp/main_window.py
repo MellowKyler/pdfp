@@ -7,6 +7,9 @@ from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.button_widget import ButtonWidget
 from pdfp.log_widget import LogWidget
 from pdfp.progress_widget import ProgressWidget
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class MainWindow(QMainWindow):
     """
@@ -69,7 +72,7 @@ class MainWindow(QMainWindow):
         vsplitter.addWidget(hsplitter)
         vsplitter.addWidget(hsplitter2)
         vsplitter.setHandleWidth(8)
-        vsplitter.setSizes([400, 150])
+        vsplitter.setSizes([370, 180])
 
         self.setCentralWidget(vsplitter)
 
@@ -86,7 +89,7 @@ class MainWindow(QMainWindow):
         if file_dialog.exec():
             file_paths = file_dialog.selectedFiles()
             for file_path in file_paths:
-                print(f"Selected file: {file_path}")
+                logger.debug(f"Selected file: {file_path}")
                 self.file_tree_widget.add_file(file_path)
 
     def select_folder(self):
@@ -100,14 +103,14 @@ class MainWindow(QMainWindow):
             folder_paths = folder_dialog.selectedFiles()
             if folder_paths:
                 selected_folder = folder_paths[0]
-                print(f"Selected folder: {selected_folder}")
+                logger.debug(f"Selected folder: {selected_folder}")
                 self.file_tree_widget.add_file(selected_folder)
 
                 #does not recursively look in folders
                 for file_name in os.listdir(selected_folder):
                     file_path = os.path.join(selected_folder, file_name)
                     if os.path.isfile(file_path):
-                        print(f"Adding file: {file_path}")
+                        logger.debug(f"Adding file: {file_path}")
                         self.file_tree_widget.add_file(file_path)
 
     def settings_popup(self):

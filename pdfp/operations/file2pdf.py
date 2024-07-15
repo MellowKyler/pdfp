@@ -4,15 +4,14 @@ from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 import pymupdf
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class Converter(QObject):
     """
     Converter class for converting various file formats to PDF.
-    Attributes:
-        op_msgs (Signal): Signal to emit operation messages. Connects to log_widget.
     """
-    op_msgs = Signal(str)
-
     def __init__(self):
         super().__init__()
 
@@ -50,13 +49,13 @@ class Converter(QObject):
                 - Optionally adds the converted file to the file_tree widget if specified in settings.
         """
         if input_file.lower().endswith('.pdf'):
-            self.op_msgs.emit(f"File is already a PDF!")
+            logger.error(f"File is already a PDF.")
             return
         elif not any(input_file.lower().endswith(ext) for ext in file_tree.allowed_extensions):
-            self.op_msgs.emit(f"{input_file} is not a supported filetype: {file_tree.allowed_extensions}")
+            logger.error(f"{input_file} is not a supported filetype: {file_tree.allowed_extensions}")
             return
 
-        self.op_msgs.emit(f"Converting {input_file} to PDF...")
+        logger.info(f"Converting {input_file} to PDF...")
         QApplication.processEvents()
 
         doc = pymupdf.open(input_file)
@@ -85,7 +84,7 @@ class Converter(QObject):
 
         output_file = construct_filename(input_file, "f2pdf_ps")
         pdf.save(output_file, garbage=4, deflate=True)
-        self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+        logger.success(f"Conversion complete. Output: {output_file}")
         QApplication.processEvents()
 
         if self.settings.add_file_checkbox.isChecked():

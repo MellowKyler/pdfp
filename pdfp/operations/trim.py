@@ -4,14 +4,14 @@ from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 import pymupdf
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class Converter(QObject):
     """
     Handles PDF trimming operations based on specified page ranges.
-    Signals:
-        op_msgs: Emits messages about the status of the conversion process. Connects to log_widget.
     """
-    op_msgs = Signal(str)
     def __init__(self):
         super().__init__()
     def convert(self, file_tree, pdf, keep_pgs):
@@ -23,14 +23,14 @@ class Converter(QObject):
             keep_pgs (str): Page ranges or numbers to keep in the PDF.
         """
         if keep_pgs == "":
-            self.op_msgs.emit(f"Enter pages to keep!")
+            logger.error(f"No pages entered")
             return
 
         if not pdf.endswith('.pdf'):
             self.util_msgs.emit(f"File is not a PDF.")
             return
 
-        self.op_msgs.emit(f"Converting {pdf}")
+        logger.info(f"Converting {pdf}")
         QApplication.processEvents()
         self.settings = SettingsWindow.instance()
 
@@ -50,23 +50,23 @@ class Converter(QObject):
                 elif match := (re.fullmatch(r"(\d+)-end", pg_pair)):
                     page_ranges.append((int(match.group(1)), pdf_length))
                 else:
-                    self.op_msgs.emit(f"Invalid page number entry.")
+                    logger.error(f"Invalid page number entry.")
                     return
         except ValueError:
-            self.op_msgs.emit(f"Invalid page number entry.")
+            logger.error(f"Invalid page number entry.")
             return
                     
         for start, end in page_ranges:
             for page_num in range(start-1, end):
                 if page_num < 0 or page_num > pdf_length:
-                    self.op_msgs.emit(f"Invalid page number entry. Out of range")
+                    logger.error(f"Invalid page number entry. Out of range.")
                     return
                 page = input_pdf.load_page(page_num)
                 output_pdf.insert_pdf(input_pdf, from_page=page_num, to_page=page_num)
 
         output_file = construct_filename(pdf, "trim_ps", keep_pgs)
         output_pdf.save(output_file)
-        self.op_msgs.emit(f"Conversion complete. Output: {output_file}")
+        logger.success(f"Conversion complete. Output: {output_file}")
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
 

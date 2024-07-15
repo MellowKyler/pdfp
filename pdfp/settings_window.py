@@ -1,6 +1,9 @@
 import os
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
+import logging
+
+logger = logging.getLogger("pdfp")
 
 class SettingsWindow(QWidget):
     """
@@ -40,26 +43,25 @@ class SettingsWindow(QWidget):
 
         #general
         gen_settings_label = QLabel("<strong>General Settings</strong>")
-        center_gen_settings_label = QHBoxLayout()
-        center_gen_settings_label.addWidget(gen_settings_label)
-        center_gen_settings_label.setAlignment(Qt.AlignCenter)
-
         self.add_file_checkbox = QCheckBox("Add created files to tree")
-        center_af_cb = QHBoxLayout()
-        center_af_cb.addWidget(self.add_file_checkbox)
-        center_af_cb.setAlignment(Qt.AlignCenter)
-
         self.remember_window_checkbox = QCheckBox("Remember window placement")
-        center_rw_cb = QHBoxLayout()
-        center_rw_cb.addWidget(self.remember_window_checkbox)
-        center_rw_cb.setAlignment(Qt.AlignCenter)
+        log_level_label = QLabel("Logging level:")
+        self.log_level = QComboBox()
+        self.log_level.addItem("DEBUG")
+        self.log_level.addItem("INFO")
+        self.log_level.addItem("WARNING")
+        self.log_level.addItem("ERROR")
+        self.log_level.addItem("SUCCESS")
+
+        gen_grid = QGridLayout()
+        gen_grid.addWidget(gen_settings_label, 0, 0, 1, 2, alignment=Qt.AlignCenter)
+        gen_grid.addWidget(self.add_file_checkbox, 1, 0, 1, 2, alignment=Qt.AlignCenter)
+        gen_grid.addWidget(self.remember_window_checkbox, 2, 0, 1, 2, alignment=Qt.AlignCenter)
+        gen_grid.addWidget(log_level_label, 3, 0, alignment=Qt.AlignRight)
+        gen_grid.addWidget(self.log_level, 3, 1, alignment=Qt.AlignLeft)
 
         gen_box = QGroupBox()
-        gen_box_layout = QVBoxLayout()
-        gen_box_layout.addLayout(center_gen_settings_label)
-        gen_box_layout.addLayout(center_af_cb)
-        gen_box_layout.addLayout(center_rw_cb)
-        gen_box.setLayout(gen_box_layout)
+        gen_box.setLayout(gen_grid)
 
         #f2pdf
         f2p_settings_label = QLabel("<strong>File to PDF Settings</strong>")
@@ -304,10 +306,7 @@ class SettingsWindow(QWidget):
         load_preset_button.clicked.connect(self.load_as_settings)
         save_preset_button.clicked.connect(self.save_as_settings)
 
-        self.load_settings()
-        # if i want to reference settings values explicitly elsewhere, we should save settings after load.
-        # this is really only an issue when default values have not been overwritten by the user.
-        self.save_settings()
+        self.populate_settings()
 
         if self.remember_window_checkbox.isChecked():
             self.restore_geometry()
@@ -367,6 +366,7 @@ class SettingsWindow(QWidget):
         #general
         self.add_file_checkbox.setChecked(get_value("enable_add_file", True, type=bool))
         self.remember_window_checkbox.setChecked(get_value("enable_remember_window", False, type=bool))
+        self.log_level.setCurrentText(get_value("logging_level", "INFO", type=str))
 
         #file2pdf
         self.f2p_cover_checkbox.setChecked(get_value("f2p_cover", True, type=bool))
@@ -426,7 +426,7 @@ class SettingsWindow(QWidget):
         self.cc_ps_input.setText(get_value("cc_ps", "copy", type=str))
         self.tts_ps_input.setText(get_value("tts_ps", "tts", type=str))
         self.char_ps_input.setText(get_value("char_ps", "-", type=str))
-        self.disable_non_pdf_ps_checkbox.setChecked(get_value("disable_non_pdf_ps", True, type=bool))
+        self.disable_non_pdf_ps_checkbox.setChecked(get_value("disable_non_pdf_ps", False, type=bool))
 
         if not remain_open:
             self.close()
@@ -438,7 +438,6 @@ class SettingsWindow(QWidget):
             remain_open (bool): If True, keep SettingsWindow open after saving settings.
             ini_file (QSettings or str): Optional. QSettings object or INI file path to save settings to.
         """
-
         if ini_file != "":
             set_value = ini_file.setValue
         else:
@@ -447,6 +446,7 @@ class SettingsWindow(QWidget):
         #general
         set_value("enable_add_file", self.add_file_checkbox.isChecked())
         set_value("enable_remember_window", self.remember_window_checkbox.isChecked())
+        set_value("logging_level", self.log_level.currentText())
 
         #file2pdf
         set_value("f2p_cover", self.f2p_cover_checkbox.isChecked())
@@ -499,6 +499,24 @@ class SettingsWindow(QWidget):
 
         if not remain_open:
             self.close()
+
+    def populate_settings(self):
+        """
+        Load saved settings into the settings window. If the save file is corrupted, delete it and reset settings.
+        """
+        ini_file_path = self.settings.fileName()
+        try:
+            self.load_settings()
+        except Exception as e:
+            logger.error(f"Error loading settings: {e}")
+            try:
+                os.remove(ini_file_path)
+                logger.info(f"Corrupt settings file deleted.")
+            except OSError as e:
+                logger.error(f"Error deleting corrupt settings file: {e}")
+            logger.info(f"Resetting settings...")
+            self.reset_settings()
+        self.save_settings()
 
     def default_filename_checkbox_action(self, checked):
         """

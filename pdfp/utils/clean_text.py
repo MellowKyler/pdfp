@@ -1,10 +1,8 @@
 import pymupdf
 from PySide6.QtCore import Signal, QObject
+import logging
 
-class CleanTextUtilMessages(QObject):
-    util_msgs = Signal(str)
-
-ct = CleanTextUtilMessages()
+logger = logging.getLogger("pdfp")
 
 def clean_text(file):
     """
@@ -23,7 +21,7 @@ def clean_text(file):
         with open(file, 'r', encoding='utf-8') as txt_file:
             text = txt_file.read()
     else:
-        ct.util_msgs.emit(f"Filetype is not PDF or TXT.")
+        logger.warning(f"Filetype is not PDF or TXT.")
         return
 
     text = ' '.join(text.splitlines())

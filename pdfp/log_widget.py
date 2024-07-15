@@ -1,18 +1,62 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from pdfp.operations.file2pdf import file2pdf
-from pdfp.operations.png import pdf2png
-from pdfp.operations.ocr import ocr
-from pdfp.operations.crop import crop
-from pdfp.operations.trim import trim
-from pdfp.operations.clean_copy import clean_copy
-from pdfp.operations.tts import tts
-from pdfp.utils.tts_limit import ttsl
-from pdfp.utils.clean_text import ct
-from pdfp.button_widget import ButtonWidget
-from pdfp.file_tree_widget import FileTreeWidget
-# from pdfp.progress_widget import ProgressWidget
+import logging
+import sys
+import traceback
+
+def addLoggingLevel(levelName, levelNum, methodName=None):
+    """
+    https://stackoverflow.com/a/35804945
+    http://stackoverflow.com/q/2183233/2988730
+    http://stackoverflow.com/a/13638084/2988730
+    https://github.com/7x11x13/songs-to-youtube/blob/0f862da73cddb0e2209f3b96c6515cee168bd10c/songs_to_youtube/log.py
+    """
+    if not methodName:
+        methodName = levelName.lower()
+    if hasattr(logging, levelName):
+        raise AttributeError("{} already defined in logging module".format(levelName))
+    if hasattr(logging, methodName):
+        raise AttributeError("{} already defined in logging module".format(methodName))
+    if hasattr(logging.getLoggerClass(), methodName):
+        raise AttributeError("{} already defined in logger class".format(methodName))
+    def logForLevel(self, message, *args, **kwargs):
+        if self.isEnabledFor(levelNum):
+            self._log(levelNum, message, args, **kwargs)
+    def logToRoot(message, *args, **kwargs):
+        logging.log(levelNum, message, *args, **kwargs)
+    logging.addLevelName(levelNum, levelName)
+    setattr(logging, levelName, levelNum)
+    setattr(logging.getLoggerClass(), methodName, logForLevel)
+    setattr(logging, methodName, logToRoot)
+
+class LogWidgetFormatter(logging.Formatter):
+    def __init__(self, *args):
+        logging.Formatter.__init__(self, *args)
+
+    def format(self, record):
+        return super().format(record).strip()
+
+class LogWidgetLogger(logging.Handler):
+    COLORS = {
+        "DEBUG": QColor("blue"),
+        "INFO": QColor("black"),
+        "WARNING": QColor("orange"),
+        "ERROR": QColor("red"),
+        "CRITICAL": QColor("red"),
+        "SUCCESS": QColor("green"),
+    }
+    def __init__(self, parent: QTextEdit):
+        super().__init__()
+        self.widget = parent
+
+    def emit(self, record):
+        color = self.COLORS[record.levelname]
+        self.widget.setTextColor(color)
+        self.widget.append(self.format(record))
+        self.widget.verticalScrollBar().setValue(
+            self.widget.verticalScrollBar().maximum()
+        )
 
 class LogWidget(QTextEdit):
     """
@@ -25,33 +69,22 @@ class LogWidget(QTextEdit):
     """
     def __init__(self):
         super().__init__()
-        #logbox connections
-        file2pdf.op_msgs.connect(self.add_log_message)
-        pdf2png.op_msgs.connect(self.add_log_message)
-        ocr.op_msgs.connect(self.add_log_message)
-        crop.op_msgs.connect(self.add_log_message)
-        trim.op_msgs.connect(self.add_log_message)
-        clean_copy.op_msgs.connect(self.add_log_message)
-        tts.op_msgs.connect(self.add_log_message)
-        button_widget = ButtonWidget.instance()
-        button_widget.button_msgs.connect(self.add_log_message)
-        file_tree_widget = FileTreeWidget.instance()
-        file_tree_widget.file_added.connect(self.add_log_message)
-        ttsl.util_msgs.connect(self.add_log_message)
-        ct.util_msgs.connect(self.add_log_message)
-
         #logbox
         self.setReadOnly(True)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
+        #logger
+        self.logger = logging.getLogger("pdfp")
+        log_handler = LogWidgetLogger(self)
+        log_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S"))
+        self.logger.addHandler(log_handler)
+        self.logger.setLevel(logging.INFO)
+        sys.excepthook = self.exception_handler
 
-    def add_log_message(self, message):
-        """
-        Append a log message to the log widget display.
-        Args:
-            message (str): The log message to append.
-        """
-        self.append(message)
+    def exception_handler(self, type, value, trace):
+        self.logger.error("".join(traceback.format_tb(trace)))
+        self.logger.error(f"{type} {value}")
+        sys.__excepthook__(type, value, trace)
 
     def show_context_menu(self, position):
         """
