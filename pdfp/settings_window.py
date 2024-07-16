@@ -31,6 +31,7 @@ class SettingsWindow(QWidget):
         return cls._instance
 
     restart_logger = Signal()
+    log_signal = Signal(str)
 
     def __init__(self):
         if hasattr(self, '_initialized'):
@@ -290,12 +291,12 @@ class SettingsWindow(QWidget):
         #logging
         logging_settings_label = QLabel("<strong>Logging Settings</strong>")
         log_level_label = QLabel("Logging level:")
-        self.log_level = NoScrollComboBox()
-        self.log_level.addItem("DEBUG")
-        self.log_level.addItem("INFO")
-        self.log_level.addItem("WARNING")
-        self.log_level.addItem("ERROR")
-        self.log_level.addItem("SUCCESS")
+        self.log_level_combobox = NoScrollComboBox()
+        self.log_level_combobox.addItem("DEBUG")
+        self.log_level_combobox.addItem("INFO")
+        self.log_level_combobox.addItem("WARNING")
+        self.log_level_combobox.addItem("ERROR")
+        self.log_level_combobox.addItem("SUCCESS")
         self.log_file_checkbox = QCheckBox("Enable logging to file")
         self.log_file_radio = QRadioButton("TXT")
         self.json_file_radio = QRadioButton("JSON")
@@ -304,22 +305,15 @@ class SettingsWindow(QWidget):
         log_grid = QGridLayout()
         log_grid.addWidget(logging_settings_label, 0, 0, 1, 2, alignment=Qt.AlignCenter)
         log_grid.addWidget(log_level_label, 1, 0, alignment=Qt.AlignRight)
-        log_grid.addWidget(self.log_level, 1, 1, alignment=Qt.AlignLeft)
+        log_grid.addWidget(self.log_level_combobox, 1, 1, alignment=Qt.AlignLeft)
         log_grid.addWidget(self.log_file_checkbox, 2, 0, 1, 2, alignment=Qt.AlignCenter)
         log_grid.addWidget(self.log_file_radio, 3, 0, alignment=Qt.AlignRight)
         log_grid.addWidget(self.json_file_radio, 3, 1, alignment=Qt.AlignLeft)
         log_grid.addWidget(restart_logger_button, 4, 0, 1, 2, alignment=Qt.AlignCenter)
-        # log_grid.addWidget(logging_settings_label, 0, 0, 1, 3, alignment=Qt.AlignCenter)
-        # log_grid.addWidget(log_level_label, 1, 0, alignment=Qt.AlignRight)
-        # log_grid.addWidget(self.log_level, 1, 1, 1, 2, alignment=Qt.AlignLeft)
-        # log_grid.addWidget(self.log_file_checkbox, 2, 0, alignment=Qt.AlignRight)
-        # log_grid.addWidget(self.log_file_radio, 2, 1, alignment=Qt.AlignLeft)
-        # log_grid.addWidget(self.json_file_radio, 2, 2, alignment=Qt.AlignLeft)
-        # log_grid.addWidget(restart_logger_button, 3, 0, 1, 3, alignment=Qt.AlignCenter)
-        # log_grid.setColumnStretch(0,50)
-        # log_grid.setColumnStretch(1,10)
-        # log_grid.setColumnStretch(2,35)
+
+        self.log_level_combobox.currentIndexChanged.connect(self.update_log_level_action)
         self.log_file_checkbox.toggled.connect(self.log_file_checkbox_action)
+        self.json_file_radio.toggled.connect(self.update_log_file_action)
         restart_logger_button.clicked.connect(self.restart_logger_action)
 
         log_box = QGroupBox()
@@ -459,7 +453,7 @@ class SettingsWindow(QWidget):
         self.disable_non_pdf_ps_checkbox.setChecked(get_value("disable_non_pdf_ps", False, type=bool))
 
         #logging
-        self.log_level.setCurrentText(get_value("logging_level", "INFO", type=str))
+        self.log_level_combobox.setCurrentText(get_value("logging_level", "INFO", type=str))
         self.log_file_checkbox.setChecked(enable_log_file := get_value("enable_log_file", True, type=bool))
         self.log_file_checkbox_action(enable_log_file)
         self.json_file_radio.setChecked(json_log_checked := get_value("json_log_checked", True, type=bool))
@@ -534,7 +528,7 @@ class SettingsWindow(QWidget):
         set_value("disable_non_pdf_ps", self.disable_non_pdf_ps_checkbox.isChecked())
 
         #logging
-        set_value("logging_level", self.log_level.currentText())
+        set_value("logging_level", self.log_level_combobox.currentText())
         set_value("enable_log_file", self.log_file_checkbox.isChecked())
         set_value("json_log_checked", self.json_file_radio.isChecked())
 
@@ -567,10 +561,19 @@ class SettingsWindow(QWidget):
         """
         self.log_file_radio.setEnabled(checked)
         self.json_file_radio.setEnabled(checked)
+        self.update_log_file_action()
+
+    def update_log_file_action(self):
+        self.log_signal.emit("update_log_file")
+        logger.debug("Log file settings updated")
+
+    def update_log_level_action(self):
+        self.log_signal.emit("update_log_level")
+        logger.debug("Log level updated")
 
     def restart_logger_action(self):
-        self.restart_logger.emit()
-        logger.info("Logger restarted")
+        self.log_signal.emit("restart_logger")
+        logger.debug("Logger restarted")
 
     def default_filename_checkbox_action(self, checked):
         """

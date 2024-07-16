@@ -7,6 +7,8 @@ import sys
 import traceback
 import os
 import json
+import platform
+import subprocess
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
     """
@@ -82,29 +84,21 @@ class LogWidget(QTextEdit):
     def __init__(self):
         super().__init__()
         self.settings = SettingsWindow.instance()
-        self.settings.restart_logger.connect(self.restart_logger)
-        #logbox
+        self.settings.log_signal.connect(self.logging_signal_manager)
+
         self.setReadOnly(True)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
-        #logger
         self.start_logger()
 
     def start_logger(self):
         self.logger = logging.getLogger("pdfp")
-        self.logger.setLevel(logging.INFO)
-        log_handler = LogWidgetLogger(self)
-        log_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S"))
-        self.logger.addHandler(log_handler)
-        if self.settings.log_file_checkbox.isChecked():
-            log_file = self.get_log_dir()
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(logging.DEBUG)
-            if self.settings.log_file_radio.isChecked():
-                file_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] [%(filename)s] [%(funcName)s] %(message)s", "%Y-%m-%d %H:%M:%S"))
-            else:
-                file_handler.setFormatter(JsonFormatter())
-            self.logger.addHandler(file_handler)
+        self.logger.setLevel(logging.DEBUG)
+        self.log_handler = LogWidgetLogger(self)
+        self.log_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S"))
+        self.logger.addHandler(self.log_handler)
+        self.log_handler.setLevel(self.get_log_level())
+        self.start_log_file()
         sys.excepthook = self.exception_handler
 
     def restart_logger(self):
@@ -114,6 +108,44 @@ class LogWidget(QTextEdit):
             handler.close()
         self.start_logger()
         self.logger.disabled = False
+
+    def get_log_level(self):
+        try:
+            level = getattr(logging, self.settings.log_level_combobox.currentText())
+        except:
+            level = logging.INFO
+        return level
+
+    def update_log_level(self):
+        try:
+            new_level = getattr(logging, self.settings.log_level_combobox.currentText())
+        except:
+            new_level = logging.INFO
+        self.log_handler.setLevel(new_level)
+        # print(f"Log handler level changed to: {logging.getLevelName(new_level)}")
+    
+    def update_log_file(self):
+        self.logger.removeHandler(self.file_handler)
+        self.start_log_file()
+        
+    def logging_signal_manager(self, func):
+        if func == "restart_logger":
+            self.restart_logger()
+        elif func == "update_log_level":
+            self.update_log_level()
+        elif func == "update_log_file":
+            self.update_log_file()
+
+    def start_log_file(self):
+        if self.settings.log_file_checkbox.isChecked():
+            log_file = self.get_log_dir(True)
+            self.file_handler = logging.FileHandler(log_file)
+            self.file_handler.setLevel(logging.DEBUG)
+            if self.settings.log_file_radio.isChecked():
+                self.file_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] [%(filename)s] [%(funcName)s] %(message)s", "%Y-%m-%d %H:%M:%S"))
+            else:
+                self.file_handler.setFormatter(JsonFormatter())
+            self.logger.addHandler(self.file_handler)
 
     def exception_handler(self, type, value, trace):
         self.logger.error("".join(traceback.format_tb(trace)))
@@ -133,13 +165,17 @@ class LogWidget(QTextEdit):
         select_all_action.triggered.connect(self.select_all)
         select_all_action.setShortcut(QKeySequence("Ctrl+A"))
         save_as_action = QAction(QIcon.fromTheme("document-save"), "Save to File", self)
-        save_as_action.triggered.connect(self.save_txt_file)
+        save_as_action.triggered.connect(self.save_log_file)
         save_as_action.setShortcut(QKeySequence("Ctrl+S"))
+        open_log_dir_action = QAction(QIcon.fromTheme("folder"), "Open Log Folder", self)
+        open_log_dir_action.triggered.connect(self.open_log_dir)
+        open_log_dir_action.setShortcut(QKeySequence("Ctrl+E"))
 
         menu = QMenu(self)
         menu.addAction(copy_action)
         menu.addAction(select_all_action)
         menu.addAction(save_as_action)
+        menu.addAction(open_log_dir_action)
         has_text = bool(self.toPlainText())
         has_selection = self.textCursor().selectedText() != ""
         select_all_action.setEnabled(has_text)
@@ -156,16 +192,17 @@ class LogWidget(QTextEdit):
     def select_all(self):
         self.selectAll()
 
-    def save_txt_file(self):
-        """Open a file dialog to select or create an TXT file and write the log to that file."""
-        project_root = QDir.currentPath()
-        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create TXT File",project_root,"TXT Files (*.txt);;All Files (*)")
+    def save_log_file(self):
+        """Open a file dialog to select or create an LOG file and write the log to that file."""
+        # project_root = QDir.currentPath()
+        log_dir = self.get_log_dir()
+        file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create LOG File",log_dir,"LOG Files (*.log);;All Files (*)")
         if file_path:
-            if not file_path.endswith(".txt"):
-                file_path += ".txt"
+            if not file_path.endswith(".log"):
+                file_path += ".log"
             text = self.toPlainText()
-            with open(file_path, 'w', encoding='utf-8') as output_txt_file:
-                output_txt_file.write(text)
+            with open(file_path, 'w', encoding='utf-8') as output_log_file:
+                output_log_file.write(text)
         return
 
     def keyPressEvent(self, event):
@@ -175,17 +212,32 @@ class LogWidget(QTextEdit):
             event (QKeyEvent): The key press event.
         """
         if event.key() == Qt.Key_S and event.modifiers() == (Qt.ControlModifier):
-            self.save_txt_file()
+            self.save_log_file()
+        if event.key() == Qt.Key_E and event.modifiers() == (Qt.ControlModifier):
+            self.open_log_dir()
         else:
             super().keyPressEvent(event)
 
-    def get_log_dir(self):
+    def get_log_dir(self, file_mode=False):
         project_root = QDir.currentPath()
         log_directory = os.path.join(project_root, "logs")
         if not os.path.isdir(log_directory):
             os.mkdir(log_directory)
-        if self.settings.log_file_radio.isChecked():
-            log_file = os.path.join(log_directory, f"log.log")
+        if file_mode:
+            if self.settings.log_file_radio.isChecked():
+                log_directory = os.path.join(log_directory, f"log.log")
+            else:
+                log_directory = os.path.join(log_directory, "log.jsonl")
+        return log_directory
+
+    def open_log_dir(self):
+        log_dir = self.get_log_dir()
+        system_platform = platform.system()
+        if system_platform == "Windows":
+            subprocess.Popen(f'explorer /select,"{log_dir}"')
+        elif system_platform == "Darwin":  # macOS
+            subprocess.Popen(["open", log_dir])
+        elif system_platform == "Linux":
+            subprocess.Popen(["xdg-open", log_dir])
         else:
-            log_file = os.path.join(log_directory, "log.jsonl")
-        return log_file
+            logger.error(f"Unsupported operating system: {system_platform}")

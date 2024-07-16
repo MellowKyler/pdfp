@@ -287,10 +287,10 @@ class FileTreeWidget(QTreeView):
             file_path = item.text()
             if not file_path:
                 continue
-            logger.debug(f"open_parent_dir file_path: {file_path}")
+            logger.debug(f"file_path: {file_path}")
 
             parent_dir = os.path.dirname(file_path)
-            logger.debug(f"open_parent_dir parent_dir: {parent_dir}")
+            logger.debug(f"parent_dir: {parent_dir}")
             if system_platform == "Windows":
                 subprocess.Popen(f'explorer /select,"{parent_dir}"')
             elif system_platform == "Darwin":  # macOS
