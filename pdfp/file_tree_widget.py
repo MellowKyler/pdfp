@@ -272,7 +272,7 @@ class FileTreeWidget(QTreeView):
 
     def open_parent_dir(self):
         """
-        Open the parent directory one or more selected files in the default application.
+        Open the parent directory of one or more selected files in the default application.
         """
         if not (indexes := self.selectedIndexes()):
             return

@@ -564,14 +564,17 @@ class SettingsWindow(QWidget):
         self.update_log_file_action()
 
     def update_log_file_action(self):
+        """Update the log file handler with new settings."""
         self.log_signal.emit("update_log_file")
         logger.debug("Log file settings updated")
 
     def update_log_level_action(self):
+        """Update the log level of the log handler with new settings."""
         self.log_signal.emit("update_log_level")
         logger.debug("Log level updated")
 
     def restart_logger_action(self):
+        """Restart the logger. Disable, remove all handlers, and re-initialize."""
         self.log_signal.emit("restart_logger")
         logger.debug("Logger restarted")
 
@@ -734,10 +737,12 @@ class SettingsWindow(QWidget):
             self.resize(size)
 
 class NoScrollComboBox(QComboBox):
+    """A custom QComboBox that does ignores scrolling input."""
     def wheelEvent(self, event):
         event.ignore()
 
 class NoScrollSpinBox(QSpinBox):
+    """A custom QSpinBox that does ignores scrolling input."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFocusPolicy(Qt.StrongFocus)

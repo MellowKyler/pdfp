@@ -36,6 +36,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
     setattr(logging, methodName, logToRoot)
 
 class LogWidgetFormatter(logging.Formatter):
+    """A custom formatter for logging that trims leading and trailing whitespace from log messages."""
     def __init__(self, *args):
         logging.Formatter.__init__(self, *args)
 
@@ -43,6 +44,7 @@ class LogWidgetFormatter(logging.Formatter):
         return super().format(record).strip()
 
 class LogWidgetLogger(logging.Handler):
+    """Log displayed in the log widget."""
     COLORS = {
         "DEBUG": QColor("blue"),
         "INFO": QColor("black"),
@@ -62,6 +64,7 @@ class LogWidgetLogger(logging.Handler):
         self.widget.verticalScrollBar().setValue(self.widget.verticalScrollBar().maximum())
 
 class JsonFormatter(logging.Formatter):
+    """Format log messages in JSON."""
     def format(self, record):
         log_record = {
             'time': self.formatTime(record, "%Y-%m-%d %H:%M:%S"),
@@ -92,6 +95,7 @@ class LogWidget(QTextEdit):
         self.start_logger()
 
     def start_logger(self):
+        """Initialize the logger and its handlers."""
         self.logger = logging.getLogger("pdfp")
         self.logger.setLevel(logging.DEBUG)
         self.log_handler = LogWidgetLogger(self)
@@ -102,6 +106,7 @@ class LogWidget(QTextEdit):
         sys.excepthook = self.exception_handler
 
     def restart_logger(self):
+        """Restart the logger. Disable, remove all handlers, and re-initialize."""
         self.logger.disabled = True
         for handler in self.logger.handlers[:]:
             self.logger.removeHandler(handler)
@@ -110,6 +115,7 @@ class LogWidget(QTextEdit):
         self.logger.disabled = False
 
     def get_log_level(self):
+        """Return the log level specified in settings."""
         try:
             level = getattr(logging, self.settings.log_level_combobox.currentText())
         except:
@@ -117,18 +123,22 @@ class LogWidget(QTextEdit):
         return level
 
     def update_log_level(self):
-        try:
-            new_level = getattr(logging, self.settings.log_level_combobox.currentText())
-        except:
-            new_level = logging.INFO
+        """Set the level of the log handler to the value specified in settings."""
+        new_level = self.get_log_level()
         self.log_handler.setLevel(new_level)
         # print(f"Log handler level changed to: {logging.getLevelName(new_level)}")
     
     def update_log_file(self):
+        """Remove the file handler and re-initialize."""
         self.logger.removeHandler(self.file_handler)
         self.start_log_file()
         
     def logging_signal_manager(self, func):
+        """
+        Receive signals and direct to appropriate log function.
+        Args:
+            func (str): The log function to perform.
+        """
         if func == "restart_logger":
             self.restart_logger()
         elif func == "update_log_level":
@@ -137,6 +147,7 @@ class LogWidget(QTextEdit):
             self.update_log_file()
 
     def start_log_file(self):
+        """Initialize the log file with specified settings."""
         if self.settings.log_file_checkbox.isChecked():
             log_file = self.get_log_dir(True)
             self.file_handler = logging.FileHandler(log_file)
@@ -148,6 +159,7 @@ class LogWidget(QTextEdit):
             self.logger.addHandler(self.file_handler)
 
     def exception_handler(self, type, value, trace):
+        """Log exceptions to the logger."""
         self.logger.error("".join(traceback.format_tb(trace)))
         self.logger.error(f"{type} {value}")
         sys.__excepthook__(type, value, trace)
@@ -156,7 +168,8 @@ class LogWidget(QTextEdit):
         """
         Handle context menu events.
         Args:
-            event (QContextMenuEvent): The context menu event.
+            position: QPoint object representing the position within the widget where the
+                context menu should be displayed.
         """
         copy_action = QAction(QIcon.fromTheme("edit-copy"), "Copy", self)
         copy_action.triggered.connect(self.copy)
@@ -186,15 +199,16 @@ class LogWidget(QTextEdit):
         menu.exec(self.viewport().mapToGlobal(position))
 
     def copy(self):
+        """Copy selected text in the log widget."""
         if (selected_text := self.textCursor().selectedText()):
             QApplication.clipboard().setText(selected_text)
 
     def select_all(self):
+        """Select all log widget text."""
         self.selectAll()
 
     def save_log_file(self):
         """Open a file dialog to select or create an LOG file and write the log to that file."""
-        # project_root = QDir.currentPath()
         log_dir = self.get_log_dir()
         file_path, _ = QFileDialog.getSaveFileName(self,"Select or Create LOG File",log_dir,"LOG Files (*.log);;All Files (*)")
         if file_path:
@@ -219,6 +233,7 @@ class LogWidget(QTextEdit):
             super().keyPressEvent(event)
 
     def get_log_dir(self, file_mode=False):
+        """Return log directory. Create if it does not exist."""
         project_root = QDir.currentPath()
         log_directory = os.path.join(project_root, "logs")
         if not os.path.isdir(log_directory):
@@ -231,6 +246,7 @@ class LogWidget(QTextEdit):
         return log_directory
 
     def open_log_dir(self):
+        """Open log directory in the platform-specific application."""
         log_dir = self.get_log_dir()
         system_platform = platform.system()
         if system_platform == "Windows":
