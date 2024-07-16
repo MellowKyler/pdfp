@@ -30,6 +30,8 @@ class SettingsWindow(QWidget):
             cls._instance = SettingsWindow()
         return cls._instance
 
+    restart_logger = Signal()
+
     def __init__(self):
         if hasattr(self, '_initialized'):
             return
@@ -45,20 +47,11 @@ class SettingsWindow(QWidget):
         gen_settings_label = QLabel("<strong>General Settings</strong>")
         self.add_file_checkbox = QCheckBox("Add created files to tree")
         self.remember_window_checkbox = QCheckBox("Remember window placement")
-        log_level_label = QLabel("Logging level:")
-        self.log_level = QComboBox()
-        self.log_level.addItem("DEBUG")
-        self.log_level.addItem("INFO")
-        self.log_level.addItem("WARNING")
-        self.log_level.addItem("ERROR")
-        self.log_level.addItem("SUCCESS")
 
         gen_grid = QGridLayout()
         gen_grid.addWidget(gen_settings_label, 0, 0, 1, 2, alignment=Qt.AlignCenter)
         gen_grid.addWidget(self.add_file_checkbox, 1, 0, 1, 2, alignment=Qt.AlignCenter)
         gen_grid.addWidget(self.remember_window_checkbox, 2, 0, 1, 2, alignment=Qt.AlignCenter)
-        gen_grid.addWidget(log_level_label, 3, 0, alignment=Qt.AlignRight)
-        gen_grid.addWidget(self.log_level, 3, 1, alignment=Qt.AlignLeft)
 
         gen_box = QGroupBox()
         gen_box.setLayout(gen_grid)
@@ -83,7 +76,7 @@ class SettingsWindow(QWidget):
         self.ocr_pdf_radio = QRadioButton("PDF")
         self.ocr_pdfa_radio = QRadioButton("PDFA")
         ocr_optimize_label = QLabel("Optimization level: ")
-        self.ocr_optimize_level = QSpinBox()
+        self.ocr_optimize_level = NoScrollSpinBox()
         self.ocr_optimize_level.setRange(0,3)
 
         ocr_grid = QGridLayout()
@@ -191,7 +184,7 @@ class SettingsWindow(QWidget):
         main_fn_grid.setContentsMargins(10,0,10,0)
         main_fn_grid.setColumnStretch(0,35)
         main_fn_grid.setColumnStretch(1,15)
-        main_fn_grid.setColumnStretch(2,50)
+        main_fn_grid.setColumnStretch(2,45)
 
         #pgnum options
         self.page_number_checkbox = QCheckBox("Enable Page Number Options")
@@ -246,10 +239,10 @@ class SettingsWindow(QWidget):
         self.trim_ps_input = QLineEdit()
         self.cc_ps_input = QLineEdit()
         self.tts_ps_input = QLineEdit()
-        char_ps_label = QLabel("Prefix/Suffix Character:")
+        char_ps_label = QLabel("Prefix/Suffix character:")
         self.char_ps_input = QLineEdit()
         self.char_ps_input.setFixedWidth(150)
-        self.disable_non_pdf_ps_checkbox = QCheckBox("Disable Prefix/Suffix for Non-PDF outputs")
+        self.disable_non_pdf_ps_checkbox = QCheckBox("Disable Prefix/Suffix for non-PDF outputs")
 
         ps_grid = QGridLayout()
         ps_grid.addWidget(ps_box_label,0,0,1,4,alignment=Qt.AlignCenter)
@@ -294,6 +287,44 @@ class SettingsWindow(QWidget):
         self.pgnum_prefix_checkbox.toggled.connect(self.pgnum_prefix_checkbox_action)
         self.pgnum_wrap_checkbox.toggled.connect(self.pgnum_wrap_checkbox_action)
 
+        #logging
+        logging_settings_label = QLabel("<strong>Logging Settings</strong>")
+        log_level_label = QLabel("Logging level:")
+        self.log_level = NoScrollComboBox()
+        self.log_level.addItem("DEBUG")
+        self.log_level.addItem("INFO")
+        self.log_level.addItem("WARNING")
+        self.log_level.addItem("ERROR")
+        self.log_level.addItem("SUCCESS")
+        self.log_file_checkbox = QCheckBox("Enable logging to file")
+        self.log_file_radio = QRadioButton("TXT")
+        self.json_file_radio = QRadioButton("JSON")
+        restart_logger_button = QPushButton("Restart Logger")
+
+        log_grid = QGridLayout()
+        log_grid.addWidget(logging_settings_label, 0, 0, 1, 2, alignment=Qt.AlignCenter)
+        log_grid.addWidget(log_level_label, 1, 0, alignment=Qt.AlignRight)
+        log_grid.addWidget(self.log_level, 1, 1, alignment=Qt.AlignLeft)
+        log_grid.addWidget(self.log_file_checkbox, 2, 0, 1, 2, alignment=Qt.AlignCenter)
+        log_grid.addWidget(self.log_file_radio, 3, 0, alignment=Qt.AlignRight)
+        log_grid.addWidget(self.json_file_radio, 3, 1, alignment=Qt.AlignLeft)
+        log_grid.addWidget(restart_logger_button, 4, 0, 1, 2, alignment=Qt.AlignCenter)
+        # log_grid.addWidget(logging_settings_label, 0, 0, 1, 3, alignment=Qt.AlignCenter)
+        # log_grid.addWidget(log_level_label, 1, 0, alignment=Qt.AlignRight)
+        # log_grid.addWidget(self.log_level, 1, 1, 1, 2, alignment=Qt.AlignLeft)
+        # log_grid.addWidget(self.log_file_checkbox, 2, 0, alignment=Qt.AlignRight)
+        # log_grid.addWidget(self.log_file_radio, 2, 1, alignment=Qt.AlignLeft)
+        # log_grid.addWidget(self.json_file_radio, 2, 2, alignment=Qt.AlignLeft)
+        # log_grid.addWidget(restart_logger_button, 3, 0, 1, 3, alignment=Qt.AlignCenter)
+        # log_grid.setColumnStretch(0,50)
+        # log_grid.setColumnStretch(1,10)
+        # log_grid.setColumnStretch(2,35)
+        self.log_file_checkbox.toggled.connect(self.log_file_checkbox_action)
+        restart_logger_button.clicked.connect(self.restart_logger_action)
+
+        log_box = QGroupBox()
+        log_box.setLayout(log_grid)
+
         #button box
         self.button_box = QDialogButtonBox(QDialogButtonBox.Reset | QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.save_settings)
@@ -313,7 +344,6 @@ class SettingsWindow(QWidget):
 
         #layout
         scrollable_content = QWidget()
-        
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
         scrollable_layout.addWidget(f2p_box)
@@ -322,6 +352,7 @@ class SettingsWindow(QWidget):
         scrollable_layout.addWidget(cc_box)
         scrollable_layout.addWidget(tts_box)
         scrollable_layout.addWidget(filename_box)
+        scrollable_layout.addWidget(log_box)
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -366,7 +397,6 @@ class SettingsWindow(QWidget):
         #general
         self.add_file_checkbox.setChecked(get_value("enable_add_file", True, type=bool))
         self.remember_window_checkbox.setChecked(get_value("enable_remember_window", False, type=bool))
-        self.log_level.setCurrentText(get_value("logging_level", "INFO", type=str))
 
         #file2pdf
         self.f2p_cover_checkbox.setChecked(get_value("f2p_cover", True, type=bool))
@@ -428,6 +458,13 @@ class SettingsWindow(QWidget):
         self.char_ps_input.setText(get_value("char_ps", "-", type=str))
         self.disable_non_pdf_ps_checkbox.setChecked(get_value("disable_non_pdf_ps", False, type=bool))
 
+        #logging
+        self.log_level.setCurrentText(get_value("logging_level", "INFO", type=str))
+        self.log_file_checkbox.setChecked(enable_log_file := get_value("enable_log_file", True, type=bool))
+        self.log_file_checkbox_action(enable_log_file)
+        self.json_file_radio.setChecked(json_log_checked := get_value("json_log_checked", True, type=bool))
+        self.log_file_radio.setChecked(not json_log_checked)
+
         if not remain_open:
             self.close()
     
@@ -446,7 +483,6 @@ class SettingsWindow(QWidget):
         #general
         set_value("enable_add_file", self.add_file_checkbox.isChecked())
         set_value("enable_remember_window", self.remember_window_checkbox.isChecked())
-        set_value("logging_level", self.log_level.currentText())
 
         #file2pdf
         set_value("f2p_cover", self.f2p_cover_checkbox.isChecked())
@@ -497,6 +533,11 @@ class SettingsWindow(QWidget):
         set_value("char_ps", self.char_ps_input.text())
         set_value("disable_non_pdf_ps", self.disable_non_pdf_ps_checkbox.isChecked())
 
+        #logging
+        set_value("logging_level", self.log_level.currentText())
+        set_value("enable_log_file", self.log_file_checkbox.isChecked())
+        set_value("json_log_checked", self.json_file_radio.isChecked())
+
         if not remain_open:
             self.close()
 
@@ -517,6 +558,19 @@ class SettingsWindow(QWidget):
             logger.info(f"Resetting settings...")
             self.reset_settings()
         self.save_settings()
+
+    def log_file_checkbox_action(self, checked):
+        """
+        Handle action for log file checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
+        self.log_file_radio.setEnabled(checked)
+        self.json_file_radio.setEnabled(checked)
+
+    def restart_logger_action(self):
+        self.restart_logger.emit()
+        logger.info("Logger restarted")
 
     def default_filename_checkbox_action(self, checked):
         """
@@ -675,3 +729,14 @@ class SettingsWindow(QWidget):
             self.move(pos)
         if size := self.settings.value("settings-size"):
             self.resize(size)
+
+class NoScrollComboBox(QComboBox):
+    def wheelEvent(self, event):
+        event.ignore()
+
+class NoScrollSpinBox(QSpinBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setFocusPolicy(Qt.StrongFocus)
+    def wheelEvent(self, event):
+        event.ignore()

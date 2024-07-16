@@ -1,9 +1,12 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
+from pdfp.settings_window import SettingsWindow
 import logging
 import sys
 import traceback
+import os
+import json
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
     """
@@ -54,9 +57,18 @@ class LogWidgetLogger(logging.Handler):
         color = self.COLORS[record.levelname]
         self.widget.setTextColor(color)
         self.widget.append(self.format(record))
-        self.widget.verticalScrollBar().setValue(
-            self.widget.verticalScrollBar().maximum()
-        )
+        self.widget.verticalScrollBar().setValue(self.widget.verticalScrollBar().maximum())
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            'time': self.formatTime(record, "%Y-%m-%d %H:%M:%S"),
+            'level': record.levelname,
+            'filename': record.filename,
+            'function': record.funcName,
+            'message': record.getMessage()
+        }
+        return json.dumps(log_record)
 
 class LogWidget(QTextEdit):
     """
@@ -69,17 +81,39 @@ class LogWidget(QTextEdit):
     """
     def __init__(self):
         super().__init__()
+        self.settings = SettingsWindow.instance()
+        self.settings.restart_logger.connect(self.restart_logger)
         #logbox
         self.setReadOnly(True)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
         #logger
+        self.start_logger()
+
+    def start_logger(self):
         self.logger = logging.getLogger("pdfp")
+        self.logger.setLevel(logging.INFO)
         log_handler = LogWidgetLogger(self)
         log_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S"))
         self.logger.addHandler(log_handler)
-        self.logger.setLevel(logging.INFO)
+        if self.settings.log_file_checkbox.isChecked():
+            log_file = self.get_log_dir()
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(logging.DEBUG)
+            if self.settings.log_file_radio.isChecked():
+                file_handler.setFormatter(LogWidgetFormatter("[%(asctime)s] [%(levelname)s] [%(filename)s] [%(funcName)s] %(message)s", "%Y-%m-%d %H:%M:%S"))
+            else:
+                file_handler.setFormatter(JsonFormatter())
+            self.logger.addHandler(file_handler)
         sys.excepthook = self.exception_handler
+
+    def restart_logger(self):
+        self.logger.disabled = True
+        for handler in self.logger.handlers[:]:
+            self.logger.removeHandler(handler)
+            handler.close()
+        self.start_logger()
+        self.logger.disabled = False
 
     def exception_handler(self, type, value, trace):
         self.logger.error("".join(traceback.format_tb(trace)))
@@ -144,3 +178,14 @@ class LogWidget(QTextEdit):
             self.save_txt_file()
         else:
             super().keyPressEvent(event)
+
+    def get_log_dir(self):
+        project_root = QDir.currentPath()
+        log_directory = os.path.join(project_root, "logs")
+        if not os.path.isdir(log_directory):
+            os.mkdir(log_directory)
+        if self.settings.log_file_radio.isChecked():
+            log_file = os.path.join(log_directory, f"log.log")
+        else:
+            log_file = os.path.join(log_directory, "log.jsonl")
+        return log_file
