@@ -41,7 +41,7 @@ class Converter(QObject):
                 output_paths = tts_word_count(full_text, output_txt_path)
                 if self.settings.add_file_checkbox.isChecked():
                     output_file = output_paths[0]
-                    file_tree.add_file()
+                    file_tree.add_file(output_file)
                 return output_file
         else:
             tts_word_count(full_text)
