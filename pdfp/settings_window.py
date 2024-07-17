@@ -69,6 +69,15 @@ class SettingsWindow(QWidget):
         f2p_box.setLayout(f2p_grid)
 
         #png
+        png_settings_label = QLabel("<strong>PNG Settings</strong>")
+        self.png_cover_checkbox = QCheckBox("Always output to cover.png")
+
+        png_grid = QGridLayout()
+        png_grid.addWidget(png_settings_label,0,0,alignment=Qt.AlignCenter)
+        png_grid.addWidget(self.png_cover_checkbox,1,0,alignment=Qt.AlignCenter)
+
+        png_box = QGroupBox()
+        png_box.setLayout(png_grid)
 
         #ocr
         ocr_settings_label = QLabel("<strong>OCR Settings</strong>")
@@ -341,6 +350,7 @@ class SettingsWindow(QWidget):
         scrollable_layout = QVBoxLayout(scrollable_content)
         scrollable_layout.addWidget(gen_box)
         scrollable_layout.addWidget(f2p_box)
+        scrollable_layout.addWidget(png_box)
         scrollable_layout.addWidget(ocr_box)
         scrollable_layout.addWidget(crop_box)
         scrollable_layout.addWidget(cc_box)
@@ -394,6 +404,9 @@ class SettingsWindow(QWidget):
 
         #file2pdf
         self.f2p_cover_checkbox.setChecked(get_value("f2p_cover", True, type=bool))
+
+        #png
+        self.png_cover_checkbox.setChecked(get_value("png_cover", False, type=bool))
 
         #ocr
         self.ocr_deskew_checkbox.setChecked(get_value("ocr_deskew", True, type=bool))
@@ -480,6 +493,9 @@ class SettingsWindow(QWidget):
 
         #file2pdf
         set_value("f2p_cover", self.f2p_cover_checkbox.isChecked())
+
+        #png
+        set_value("png_cover", self.png_cover_checkbox.isChecked())
 
         #ocr
         set_value("ocr_deskew", self.ocr_deskew_checkbox.isChecked())

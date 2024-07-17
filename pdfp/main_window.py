@@ -14,7 +14,7 @@ logger = logging.getLogger("pdfp")
 class MainWindow(QMainWindow):
     """
     Main window for the pdfp application. Holds file_tree_widget, button_widget, log_widget, and menu_bar.
-    The menu_bar contains the File menu with actions: Select File, Settings, About, and Quit.
+    The menu_bar contains the File menu with actions: Import File, Import Folder, Settings, About, and Quit.
     file_tree_widget and button_widget are housed in a horizontal splitter within a vertical splitter with log_widget.
     """
 

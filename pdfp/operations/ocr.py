@@ -135,5 +135,6 @@ class Converter(QObject):
         ocr_logger.disabled = True
         ocr_logger.removeHandler(handler)
         handler.close()
+        return output_file
 
 ocr = Converter()

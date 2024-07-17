@@ -19,9 +19,10 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
         - Supports default filename, lowercase conversion, first-word extraction, prefix/suffix addition, page number appending, and iterating filesnames to prevent overwriting.
         - Appends specific extensions based on the operation ('cc_ps', 'tts_ps', 'png_ps', default 'pdf').
     """
-    settings = SettingsWindow.instance()
-    dirpath = os.path.dirname(input_file)
+    return prevent_overwrite(add_extension(blank_check(add_pgnum(add_ps(basename(input_file), operation_ps_id), operation_ps_id, pgnum)), input_file, operation_ps_id))
 
+def basename(input_file):
+    settings = SettingsWindow.instance()
     if settings.default_filename_checkbox.isChecked():
         filename = settings.default_filename_input.currentText()
     else:
@@ -51,7 +52,10 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
             pattern = r'[' + re.escape(''.join(char_rm)) + r']+'
             filename = re.sub(pattern, new_char, filename)
             filename = filename.strip(new_char)
+    return filename
 
+def add_ps(filename, operation_ps_id):
+    settings = SettingsWindow.instance()
     ps_enabled = settings.prefix_suffix_checkbox.isChecked()
     disable_ps_ext = settings.disable_non_pdf_ps_checkbox.isChecked() and (operation_ps_id in ("png_ps", "cc_ps", "tts_ps")) # and input_file.endswith('.pdf') #txt files with cc could match output_file name
     if ps_enabled and not disable_ps_ext:
@@ -63,7 +67,10 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
                 filename = f"{operation_ps}{char_ps}{filename}"
             else:
                 filename = f"{filename}{char_ps}{operation_ps}"
+    return filename
                 
+def add_pgnum(filename, operation_ps_id, pgnum):
+    settings = SettingsWindow.instance()
     pgnum_enabled = settings.page_number_checkbox.isChecked()
     if pgnum_enabled and ((operation_ps_id == "png_ps" and settings.png_pagenum_checkbox.isChecked()) or (operation_ps_id == "trim_ps" and settings.trim_pagenum_checkbox.isChecked())):
         if settings.pgnum_prefix_checkbox.isChecked():
@@ -78,10 +85,15 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
             except IndexError:
                 logger.error("Not enough wrap characters. Enter 2 in settings.")
         filename = f"{filename} {pgnum}"
+    return filename
 
+def blank_check(filename):
     if filename == "":
         filename = "pdfp-output"
+    return filename
 
+def add_extension(filename, input_file, operation_ps_id):
+    dirpath = os.path.dirname(input_file)
     output_file = os.path.join(dirpath, filename)
     if operation_ps_id == "cc_ps":
         output_file = f"{output_file}.txt"
@@ -91,7 +103,10 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
         output_file = f"{output_file}.png"
     else:
         output_file = f"{output_file}.pdf"
+    return output_file
 
+def prevent_overwrite(output_file):
+    settings = SettingsWindow.instance()
     if os.path.exists(output_file) and settings.prevent_overwrite_checkbox.isChecked():
         base, extension = os.path.splitext(output_file)
         counter = 1
@@ -104,5 +119,4 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
             new_output_file = f"{base}{filler}{counter}{extension}"
             counter += 1
         output_file = new_output_file
-
     return output_file

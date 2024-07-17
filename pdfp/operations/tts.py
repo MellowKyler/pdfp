@@ -144,6 +144,7 @@ class Converter(QObject):
         tts_logger.disabled = True
         tts_logger.removeHandler(handler)
         handler.close()
+        return output_file
 
     def get_temp_dir(self):
         """

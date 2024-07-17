@@ -282,7 +282,7 @@ class ButtonWidget(QWidget):
             *args: Additional arguments to pass to the function.
             **kwargs: Additional keyword arguments to pass to the function.
         """
-        function(self.file_tree_widget, file_path, *args, **kwargs)
+        return function(self.file_tree_widget, file_path, *args, **kwargs)
 
     def toggle_cc_file_line_edit(self, checked):
         """
@@ -292,3 +292,25 @@ class ButtonWidget(QWidget):
         """
         self.cc_file_line_edit.setEnabled(checked)
         self.cc_file_label.setEnabled(checked)
+
+    #potentially standardize so that prefix/suffix, chain operations, and button_clicked can all use the same mapping
+    #could also simplify button_clicked methods by this
+    # operation_map = {
+    #     "file2pdf": file2pdf.convert,
+    #     "pdf2png": pdf2png.convert,
+    #     "ocr": ocr.convert,
+    #     "crop": crop.convert,
+    #     "trim": trim.convert,
+    #     "cc": clean_copy.convert,
+    #     "tts": tts.convert
+    # }
+
+    # def chain_operations(operation_list):
+    #     self.button_toggle.emit(False)
+    #     input_file = filename_constructor(operation_list[0] + "_ps")
+    #     for operation in operation_list:
+    #         input_file = self.call_generic_function(input_file, operation_map.get(operation))
+            #call generic function has to return the output file from previous operation
+            #certain settings would be incompatible with chaining. 
+            #       multiple files as output
+            #       briss gui launching

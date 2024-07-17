@@ -40,7 +40,9 @@ class Converter(QObject):
             else:
                 output_paths = tts_word_count(full_text, output_txt_path)
                 if self.settings.add_file_checkbox.isChecked():
-                    file_tree.add_file(output_paths[0])
+                    output_file = output_paths[0]
+                    file_tree.add_file()
+                return output_file
         else:
             tts_word_count(full_text)
             QApplication.clipboard().setText(full_text)

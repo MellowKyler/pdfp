@@ -89,5 +89,6 @@ class Converter(QObject):
 
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
+        return output_file
 
 file2pdf = Converter()

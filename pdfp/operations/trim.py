@@ -69,5 +69,6 @@ class Converter(QObject):
         logger.success(f"Conversion complete. Output: {output_file}")
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
+        return output_file
 
 trim = Converter()

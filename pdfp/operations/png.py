@@ -4,6 +4,7 @@ from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 import pymupdf
 import logging
+import os
 
 logger = logging.getLogger("pdfp")
 
@@ -38,14 +39,20 @@ class Converter(QObject):
         logger.info(f"Converting {pdf} to PNG...")
         QApplication.processEvents()
 
+        settings = SettingsWindow.instance()
+
         doc = pymupdf.open(pdf)
         if pg < 1 or pg > len(doc):
             raise ValueError("Invalid page number")
         page = doc.load_page(pg - 1)
         pix = page.get_pixmap()
-        output_file = construct_filename(pdf, "png_ps", str(pg))
+        if settings.png_cover_checkbox.isChecked():
+            output_file = os.path.join(os.path.dirname(pdf), "cover.png")
+        else:
+            output_file = construct_filename(pdf, "png_ps", str(pg))
         pix.save(output_file)
 
         logger.success(f"Conversion complete. Output: {output_file}")
+        return output_file
 
 pdf2png = Converter()

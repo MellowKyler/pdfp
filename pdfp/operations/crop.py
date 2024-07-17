@@ -76,6 +76,7 @@ class Converter(QObject):
                 logger.success(f"Crop complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
                     file_tree.add_file(output_file)
+                return output_file
             except subprocess.CalledProcessError as e:
                 logger.error(f"Conversion failed with exit code {e.returncode}.")
             self.worker_done.emit(worker_name)
