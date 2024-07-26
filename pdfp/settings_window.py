@@ -88,6 +88,7 @@ class SettingsWindow(QWidget):
         ocr_optimize_label = QLabel("Optimization level: ")
         self.ocr_optimize_level = NoScrollSpinBox()
         self.ocr_optimize_level.setRange(0,3)
+        self.native_ocr_checkbox = QCheckBox("Use native ocrmypdf package")
 
         ocr_grid = QGridLayout()
         ocr_grid.addWidget(ocr_settings_label,0,0,1,3,alignment=Qt.AlignCenter)
@@ -97,8 +98,9 @@ class SettingsWindow(QWidget):
         ocr_grid.addWidget(ocr_optimize_label,2,0,alignment=Qt.AlignRight)
         ocr_grid.addWidget(self.ocr_optimize_level,2,1,alignment=Qt.AlignLeft)
         ocr_grid.addWidget(self.ocr_deskew_checkbox,3,0,1,3,alignment=Qt.AlignCenter)
+        ocr_grid.addWidget(self.native_ocr_checkbox,4,0,1,3,alignment=Qt.AlignCenter)
         ocr_grid.setColumnStretch(0,50)
-        ocr_grid.setColumnStretch(1,10)
+        ocr_grid.setColumnStretch(1,15)
         ocr_grid.setColumnStretch(2,35)
 
         ocr_box = QGroupBox()
@@ -153,18 +155,59 @@ class SettingsWindow(QWidget):
         cc_box.setLayout(cc_grid)
 
         #tts
-        tts_settings_label = QLabel("<strong>TTS Settings</strong>")
+        tts_settings_label = QLabel("<strong>Text-To-Speech Settings</strong>")
         self.split_txt_checkbox = QCheckBox("If text is too large for TTS, split .mp3 to multiple files")
         self.split_txt_checkbox.toggled.connect(self.split_txt_checkbox_action)
         self.wordcount_split_label = QLabel("Word count to split on:")
         self.wordcount_split_display = QLineEdit()
         self.wordcount_split_display.setPlaceholderText("Default: 100000")
 
+        self.enable_balabolka_checkbox = QCheckBox("Use Balabolka instead of gTTS")
+        self.enable_balabolka_checkbox.toggled.connect(self.enable_balabolka_checkbox_action)
+
+        #balabolka / tts
+        bal_settings_label = QLabel("<strong>Balabolka Settings</strong>")
+
+        self.balabolka_location_button = QPushButton("Balabolka location")
+        self.balabolka_location_button.setFixedWidth(125)
+        self.balabolka_location_display = QLineEdit()
+        self.balabolka_location_display.setPlaceholderText("Required")
+        self.balabolka_location_display.setReadOnly(True)
+        self.balabolka_location_display.setFixedWidth(235)
+        self.balabolka_location_button.clicked.connect(self.select_balabolka_file)
+        balabolka_location_layout = QHBoxLayout()
+        balabolka_location_layout.addWidget(self.balabolka_location_button)
+        balabolka_location_layout.addWidget(self.balabolka_location_display)
+
+        self.wine_prefix_checkbox = QCheckBox("Use Wine prefix")
+        self.wine_prefix_checkbox.toggled.connect(self.wine_prefix_checkbox_action)
+
+        self.wine_prefix_location_button = QPushButton("Wine prefix location")
+        self.wine_prefix_location_button.setFixedWidth(125)
+        self.wine_prefix_location_display = QLineEdit()
+        self.wine_prefix_location_display.setPlaceholderText("Not required")
+        self.wine_prefix_location_display.setReadOnly(True)
+        self.wine_prefix_location_button.clicked.connect(self.select_wine_prefix_folder)
+        wine_prefix_location_layout = QHBoxLayout()
+        wine_prefix_location_layout.addWidget(self.wine_prefix_location_button)
+        wine_prefix_location_layout.addWidget(self.wine_prefix_location_display)
+
+        bal_grid = QGridLayout()
+        bal_grid.addWidget(bal_settings_label,0,0,alignment=Qt.AlignCenter)
+        bal_grid.addLayout(balabolka_location_layout,1,0,alignment=Qt.AlignCenter)
+        bal_grid.addWidget(self.wine_prefix_checkbox,2,0,alignment=Qt.AlignCenter)
+        bal_grid.addLayout(wine_prefix_location_layout,3,0,alignment=Qt.AlignCenter)
+
+        self.bal_box = QGroupBox()
+        self.bal_box.setLayout(bal_grid)
+
         tts_grid = QGridLayout()
         tts_grid.addWidget(tts_settings_label,0,0,1,2,alignment=Qt.AlignCenter)
         tts_grid.addWidget(self.split_txt_checkbox,1,0,1,2,alignment=Qt.AlignCenter)
         tts_grid.addWidget(self.wordcount_split_label,2,0,alignment=Qt.AlignRight)
         tts_grid.addWidget(self.wordcount_split_display,2,1,alignment=Qt.AlignLeft)
+        tts_grid.addWidget(self.enable_balabolka_checkbox,3,0,1,2,alignment=Qt.AlignCenter)
+        tts_grid.addWidget(self.bal_box,4,0,1,2,alignment=Qt.AlignCenter)
         self.wordcount_split_label.setFixedWidth(150)
         self.wordcount_split_display.setFixedWidth(150)
 
@@ -413,6 +456,7 @@ class SettingsWindow(QWidget):
         self.ocr_pdf_radio.setChecked(ocr_pdf_checked := get_value("ocr_pdf_checked", False, type=bool))
         self.ocr_pdfa_radio.setChecked(not ocr_pdf_checked)
         self.ocr_optimize_level.setValue(get_value("ocr_optimize_level", 0, type=int))
+        self.native_ocr_checkbox.setChecked(get_value("native_ocr", True, type=bool))
 
         #briss/crop
         self.auto_crop_radio.setChecked(auto_crop_checked := get_value("auto_crop_checked", False, type=bool))
@@ -428,6 +472,13 @@ class SettingsWindow(QWidget):
         self.split_txt_checkbox.setChecked(enable_split_txt := get_value("enable_split_txt", True, type=bool))
         self.split_txt_checkbox_action(enable_split_txt)
         self.wordcount_split_display.setText(get_value("wordcount_split", "100000", type=str))
+
+        self.enable_balabolka_checkbox.setChecked(enable_balabolka := get_value("enable_balabolka", False, type=bool))
+        self.enable_balabolka_checkbox_action(enable_balabolka)
+        self.balabolka_location_display.setText(get_value("balabolka_location", "", type=str))
+        self.wine_prefix_checkbox.setChecked(enable_wine_prefix := get_value("enable_wine_prefix", False, type=bool))
+        self.wine_prefix_checkbox_action(enable_wine_prefix)
+        self.wine_prefix_location_display.setText(get_value("wine_prefix_location", "", type=str))
 
         #filename
         self.default_filename_checkbox.setChecked(enable_default_filename := get_value("enable_default_filename", False, type=bool))
@@ -501,6 +552,7 @@ class SettingsWindow(QWidget):
         set_value("ocr_deskew", self.ocr_deskew_checkbox.isChecked())
         set_value("ocr_pdf_checked", self.ocr_pdf_radio.isChecked())
         set_value("ocr_optimize_level", self.ocr_optimize_level.value())
+        set_value("native_ocr", self.native_ocr_checkbox.isChecked())
 
         #briss/crop
         set_value("auto_crop_checked", self.auto_crop_radio.isChecked())
@@ -513,6 +565,11 @@ class SettingsWindow(QWidget):
         #tts
         set_value("enable_split_txt", self.split_txt_checkbox.isChecked())
         set_value("wordcount_split", self.wordcount_split_display.text())
+
+        set_value("enable_balabolka", self.enable_balabolka_checkbox.isChecked())
+        set_value("balabolka_location", self.balabolka_location_display.text())
+        set_value("enable_wine_prefix", self.wine_prefix_checkbox.isChecked())
+        set_value("wine_prefix_location", self.wine_prefix_location_display.text())
 
         #filename
         set_value("enable_default_filename", self.default_filename_checkbox.isChecked())
@@ -622,6 +679,10 @@ class SettingsWindow(QWidget):
         """
         self.ps_box.setEnabled(checked)
 
+    def wine_prefix_checkbox_action(self, checked):
+        self.wine_prefix_location_button.setEnabled(checked)
+        self.wine_prefix_location_display.setEnabled(checked)
+
     def split_txt_checkbox_action(self, checked):
         """
         Handle action for split text checkbox.
@@ -669,6 +730,20 @@ class SettingsWindow(QWidget):
             checked (bool): Whether the checkbox is checked or not.
         """
         self.pgnum_wrap_input.setEnabled(checked)
+
+    def enable_balabolka_checkbox_action(self, checked):
+        self.bal_box.setEnabled(checked)
+        self.split_txt_checkbox.setEnabled(not checked)
+        self.wordcount_split_label.setEnabled(not checked)
+        self.wordcount_split_display.setEnabled(not checked)
+
+    def select_balabolka_file(self):
+        selected_file = self.select_file()
+        self.balabolka_location_display.setText(selected_file)
+
+    def select_wine_prefix_folder(self):
+        selected_folder = self.select_folder()
+        self.wine_prefix_location_display.setText(selected_folder)
 
     def select_briss_file(self):
         """Open a file dialog to select Briss executable and set its location in the UI."""

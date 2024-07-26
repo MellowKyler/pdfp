@@ -9,7 +9,9 @@ from pdfp.utils.clean_text import clean_text
 from pdfp.utils.tts_limit import tts_word_count
 from gtts import gTTS
 import pymupdf
-import logging
+import shlex
+import subprocess
+import platform
 
 logger = logging.getLogger("pdfp")
 
@@ -102,6 +104,33 @@ class Converter(QObject):
         self.settings = SettingsWindow.instance()
         logger.info(f"Converting {pdf}")
 
+        if self.settings.enable_balabolka_checkbox.isChecked():
+            system_platform = platform.system()
+            logger.debug(f"Operating System: {system_platform}")
+            balabolka_location = self.settings.balabolka_location_display.text()
+            if system_platform == "Windows":
+                balabolka_command = balabolka_location
+            else:
+                wine_prefix_location = self.settings.wine_prefix_location_display.text()
+                wine_prefix_location = shlex.quote(wine_prefix_location)
+                wine_prefix_enabled = self.settings.wine_prefix_checkbox.isChecked()
+                if balabolka_location == "":
+                    logger.error("Balabolka location is not specified")
+                    return
+                balabolka_command = ["wine-stable", "C:\\windows\\command\\start.exe", "/Unix", balabolka_location]
+                if wine_prefix_enabled:
+                    if wine_prefix_location == "":
+                        logger.error(f"Wine Prefix is enabled but not specified")
+                        return
+                    wine_prefix_cmd = ["env", f"WINEPREFIX={wine_prefix_location}"]
+                    balabolka_command = wine_prefix_cmd + balabolka_command
+            try:
+                subprocess.Popen(balabolka_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                logger.success("Launching Balabolka...")
+            except Exception as e:
+                logger.error(f"Launching Balabolka failed with error: {e}")
+            return
+
         shared_state = SharedState()
 
         worker_name = f"TTS_{pdf}"
@@ -144,6 +173,7 @@ class Converter(QObject):
         tts_logger.disabled = True
         tts_logger.removeHandler(handler)
         handler.close()
+
         return output_file
 
     def get_temp_dir(self):

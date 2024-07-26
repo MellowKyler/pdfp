@@ -6,6 +6,7 @@ from pdfp.utils.filename_constructor import construct_filename
 import ocrmypdf
 import pymupdf
 import logging
+import subprocess
 
 logger = logging.getLogger("pdfp")
 
@@ -121,20 +122,43 @@ class Converter(QObject):
         logger.debug(f"filetype: {ocr_filetype}")
         optimize_level = self.settings.ocr_optimize_level.value()
         logger.debug(f"optimize: {optimize_level}")
+        native_ocr = self.settings.native_ocr_checkbox.isChecked()
 
-        try:
-            ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True)
-            logger.success(f"OCR complete. Output: {output_file}")
-            if self.settings.add_file_checkbox.isChecked():
-                file_tree.add_file(output_file)
-        except Exception as e:
-            error_msg = f"Error converting {pdf}: {str(e)}"
-            logger.error(error_msg)
-
+        if native_ocr:
+            if self.check_command_installed("ocrmypdf"):
+                try:
+                    cmd = ["ocrmypdf", "--force-ocr", "--quiet", "--optimize", str(optimize_level), "--output-type", ocr_filetype, pdf, output_file]
+                    if deskew_toggle:
+                        cmd.append("--deskew")
+                    logger.debug(f"Command: {cmd}")
+                    subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    logger.success(f"OCR complete. Output: {output_file}")
+                    if self.settings.add_file_checkbox.isChecked():
+                        file_tree.add_file(output_file)
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Conversion failed with exit code {e.returncode}")
+        else:
+            try:
+                ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True)
+                logger.success(f"OCR complete. Output: {output_file}")
+                if self.settings.add_file_checkbox.isChecked():
+                    file_tree.add_file(output_file)
+            except Exception as e:
+                error_msg = f"Error converting {pdf}: {str(e)}"
+                logger.error(error_msg)
+    
         self.worker_done.emit(worker_name)
         ocr_logger.disabled = True
         ocr_logger.removeHandler(handler)
         handler.close()
         return output_file
+
+    def check_command_installed(self, command):
+        try:
+            result = subprocess.run([command, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return True
+        except:
+            logger.error(f"Error: {command} not installed.")
+            return False
 
 ocr = Converter()
