@@ -5,6 +5,7 @@ import logging
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
+from send2trash import send2trash
 
 logger = logging.getLogger("pdfp")
 
@@ -107,14 +108,21 @@ class FileTreeWidget(QTreeView):
         Args:
             event (QContextMenuEvent): The context menu event.
         """
-        delete_icon = (QIcon.fromTheme("list-remove"))
+        #remove_icon = (QIcon.fromTheme("list-remove"))
+        #delete_icon = (QIcon.fromTheme("edit-delete"))
 
+        remove_action = QAction(QIcon.fromTheme("list-remove"), "Remove", self)
+        remove_action.triggered.connect(self.remove_selected_items)
+        remove_action.setShortcut(QKeySequence("Del"))
         delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", self)
         delete_action.triggered.connect(self.delete_selected_items)
-        delete_action.setShortcut(QKeySequence("Del"))
+        delete_action.setShortcut(QKeySequence("Shift+Del"))
+        remove_all_action = QAction(QIcon.fromTheme("list-remove"), "Remove All", self)
+        remove_all_action.triggered.connect(self.remove_all_items)
+        remove_all_action.setShortcut(QKeySequence("Ctrl+Del"))
         delete_all_action = QAction(QIcon.fromTheme("edit-delete"), "Delete All", self)
         delete_all_action.triggered.connect(self.delete_all_items)
-        delete_all_action.setShortcut(QKeySequence("Ctrl+Del"))
+        delete_all_action.setShortcut(QKeySequence("Ctrl+Shift+Del"))
         open_files_action = QAction(QIcon.fromTheme("document-open"), "Open Files", self)
         open_files_action.triggered.connect(self.open_files)
         open_files_action.setShortcut(QKeySequence("Ctrl+O"))
@@ -134,8 +142,10 @@ class FileTreeWidget(QTreeView):
         selected_count = len(self.selectedIndexes())
         if selected_count == 0:
             menu.addAction(select_all_action)
+            menu.addAction(remove_all_action)
             menu.addAction(delete_all_action)
             select_all_action.setEnabled(has_files)
+            remove_all_action.setEnabled(has_files)
             delete_all_action.setEnabled(has_files)
         if selected_count > 1:
             menu.addAction(open_files_action)
@@ -147,6 +157,7 @@ class FileTreeWidget(QTreeView):
             parent_dir_action.setText("Open Folder")
         if selected_count > 0:
             menu.addAction(deselect_all_action)
+            menu.addAction(remove_action)
             menu.addAction(delete_action)
             
         menu.exec_(event.globalPos())
@@ -157,23 +168,13 @@ class FileTreeWidget(QTreeView):
     def deselect_all(self):
         self.clearSelection()
 
-    def delete_all_items(self):
-        """
-        Delete all items from the widget.
-        """
-        self.model.clear()
-        self.file_paths.clear()
-    
     def delete_selected_items(self):
         """
-        Delete selected items from the widget.
-
-        Removes the selected items from the model and the set of file paths.
+        Trash the selected items and remove them from the model.
         """
         if not (indexes := self.selectedIndexes()):
             return
-        # Collect items to delete in reverse order to avoid index shifting issues
-        items_to_delete = []
+        items_to_remove = []
         for index in sorted(indexes, reverse=True):
             if not index.isValid():
                 continue
@@ -183,9 +184,54 @@ class FileTreeWidget(QTreeView):
             file_path = item.text()
             if not file_path:
                 continue
-            items_to_delete.append((index, file_path))
+            if os.path.isfile(file_path):
+                send2trash(file_path)
+            items_to_remove.append((index, file_path))
+        
+        for index, file_path in items_to_remove:
+            if file_path in self.file_paths:
+                self.model.removeRow(index.row())
+                self.file_paths.remove(file_path)
 
-        for index, file_path in items_to_delete:
+    def delete_all_items(self):
+        """
+        Trash and remove all items from the widget.
+        """
+        print("youmadeit :)")
+        for file_path in self.file_paths:
+            print(f"filepath: {file_path}")
+            if os.path.isfile(file_path):
+                send2trash(file_path)
+        self.model.clear()
+        self.file_paths.clear()
+
+    def remove_all_items(self):
+        """
+        Remove all items from the widget.
+        """
+        self.model.clear()
+        self.file_paths.clear()
+    
+    def remove_selected_items(self):
+        """
+        Remove the selected items from the model.
+        """
+        if not (indexes := self.selectedIndexes()):
+            return
+        # Collect items to remove in reverse order to avoid index shifting issues
+        items_to_remove = []
+        for index in sorted(indexes, reverse=True):
+            if not index.isValid():
+                continue
+            item = self.model.itemFromIndex(index)
+            if not item:
+                continue
+            file_path = item.text()
+            if not file_path:
+                continue
+            items_to_remove.append((index, file_path))
+
+        for index, file_path in items_to_remove:
             if file_path in self.file_paths:
                 self.model.removeRow(index.row())
                 self.file_paths.remove(file_path)
@@ -196,12 +242,16 @@ class FileTreeWidget(QTreeView):
         Args:
             event (QKeyEvent): The key press event.
         """
-        if event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ControlModifier):
+        if event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
             self.delete_all_items()
+        elif event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ControlModifier):
+            self.remove_all_items()
+        elif event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ShiftModifier):
+            self.delete_selected_items()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_selected_items()
         elif event.key() == Qt.Key_A and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
             self.deselect_all()
-        elif event.key() == Qt.Key_Delete:
-            self.delete_selected_items()
         elif event.key() == Qt.Key_E and event.modifiers() == (Qt.ControlModifier):
             self.open_parent_dir()
         elif event.key() == Qt.Key_O and event.modifiers() == (Qt.ControlModifier):
