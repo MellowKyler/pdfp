@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
         """Show the About popup."""
         msg_box = QMessageBox()
         msg_box.setWindowTitle("PDF Processor")
-        msg_box.setText("<strong>Version 0.2.0</strong>")
+        msg_box.setText("<strong>Version 0.2.1</strong>")
         pdf_utils_icon = QPixmap(os.path.join(QDir.currentPath(), "images", "logo.ico"))
         msg_box.setIconPixmap(pdf_utils_icon)
         html_text = (
@@ -203,7 +203,7 @@ class MyProgressBar(QObject):
         self.progress += n
         self.progress_percentage = (self.progress / self.total_parts) * 100
         self.pw.worker_progress(self.wn, self.progress_percentage)
-        logger.debug(f"Worker progress: {self.wn}, {self.progress_percentage}")
+        # logger.debug(f"Worker progress: {self.wn}, {self.progress_percentage}") #very chatty
         QApplication.processEvents()
 
 @hookimpl
