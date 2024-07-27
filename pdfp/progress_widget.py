@@ -60,7 +60,6 @@ class ProgressWidget(QScrollArea):
         Call this function when referencing ProgressWidget values.
         """
         if cls._instance is None:
-            print("no progress widget")
             cls._instance = ProgressWidget()
         return cls._instance
 
@@ -100,12 +99,12 @@ class ProgressWidget(QScrollArea):
         Args:
             worker_name (str): Name of the worker.
         """
-        logger.warning(f"Before init workers: {self.workers}")
-        logger.warning(f"Initializing new worker: {worker_name}")
+        logger.debug(f"Before init workers: {self.workers}")
+        logger.debug(f"Initializing new worker: {worker_name}")
         progress = WorkerProgress(worker_name, self.width() - 35)
         self.workers[worker_name] = progress
         self.pb_list.addWidget(progress)
-        logger.warning(f"After init workers: {self.workers}")
+        logger.debug(f"After init workers: {self.workers}")
 
     def worker_progress(self, worker_name, progress):
         """
@@ -114,10 +113,8 @@ class ProgressWidget(QScrollArea):
             worker_name (str): Name of the worker.
             progress (int): Progress value to update.
         """
-        logger.warning(f"worker_progress({worker_name}, {progress})")  # very chatty
-        print("Before Toggle - Parent:", self.parent())
+        # logger.debug(f"worker_progress({worker_name}, {progress})")  # very chatty
         self.setVisible(True)
-        print("After Toggle - Parent:", self.parent())
         if worker_name not in self.workers:
             self.init_worker_progress(worker_name)
         worker = self.workers[worker_name]
@@ -148,8 +145,8 @@ class ProgressWidget(QScrollArea):
             worker_name (str): Name of the worker.
             label_prefix (str): New prefix for the worker's label.
         """
-        logger.warning(f"Before revising label workers: {self.workers}")
-        logger.warning(f"Revising worker label: {worker_name}, {label_prefix}")
+        logger.debug(f"Before revising label workers: {self.workers}")
+        logger.debug(f"Revising worker label: {worker_name}, {label_prefix}")
         if worker_name not in self.workers:
             self.worker_progress(worker_name, 0)
         operation, file_path = worker_name.split("_", 1)
@@ -172,96 +169,3 @@ class ProgressWidget(QScrollArea):
                 worker = self.workers[worker_name]
                 worker.label.setMaximumWidth(maxwidth)
         return super().eventFilter(obj, event)
-
-
-
-# wn = ""
-
-# class MyProgressBar(QObject):
-#     _instance_parent = None
-#     _wn = None
-#     def __init__(
-#         self,
-#         *,
-#         total: int | float | None,
-#         desc: str | None,
-#         unit: str | None,
-#         disable: bool = False,
-#         **kwargs,
-#     ):
-#         super().__init__()
-#         print(f"total: {total}")
-#         print(f"desc: {desc}")
-#         self.total = total
-#         self.desc = desc
-
-#         # self.pw = ProgressWidget.instance()
-#         print(f"instance parent: {_instance_parent}")
-#         print(f"instance parent: {instance_parent}")
-#         self.pw = use_progress_widget(instance_parent)
-#         print("FAKE PROGRESS WIDGET")
-
-#     def __enter__(self):
-#         """Enter a progress bar context."""
-#         if wn == "":
-#             return self
-#         self.pw.revise_worker_label(wn, self.desc)
-#         logger.debug(f"Revising worker label: {self.desc}")
-#         self.progress = 0
-#         self.total_parts = self.total
-#         self.progress_percentage = 0
-#         return self
-
-#     def __exit__(self, *args):
-#         """Exit a progress bar context."""
-#         if self.desc == "Linearizing":
-#             self.pw.worker_done(wn)
-#         return False
-
-#     def update(self, n=1, *, completed=None):
-#         """Update the progress bar by an increment."""
-#         if wn == "":
-#             return
-#         self.progress += n
-#         self.progress_percentage = (self.progress / self.total_parts) * 100
-#         self.pw.worker_progress(wn, self.progress_percentage)
-#         logger.debug(f"Worker progress: {wn}, {self.progress_percentage}")
-#         QApplication.processEvents()
-
-# @hookimpl
-# def get_progressbar_class():
-#     return MyProgressBar
-
-# @hookimpl
-# def validate(pdfinfo, options):
-#     # global wn
-#     MyProgressBar._wn = f"OCR_{options.input_file}"
-#     # print(f"wn validate: {wn}")
-#     logger.debug(f"Validate worker name: {wn}")
-
-
-# instance_parent = None
-
-# def send_main_window(parent):
-#     print(f"parent: {parent}")
-#     if not MyProgressBar._instance_parent:
-#         MyProgressBar._instance_parent = parent
-#         print("mw sent")
-
-# def use_progress_widget(parent):
-#     # global instance_parent
-#     # if instance_parent is None:
-#     #     instance_parent = parent
-#     # if not MyProgressBar._instance_parent:
-#     #     MyProgressBar._instance_parent = parent
-#     # print(f"{parent}")
-#     progress_widget = ProgressWidget.instance()
-#     container = QWidget(parent)
-#     container.setLayout(QVBoxLayout())
-#     container.layout().addWidget(progress_widget)
-#     return progress_widget
-
-    # progress_widget = ProgressWidget.instance()
-    # container.setLayout(QVBoxLayout())  # Remove the unnecessary container creation
-    # container.layout().addWidget(progress_widget)  # Instead, add directly to parent
-    # return progress_widget

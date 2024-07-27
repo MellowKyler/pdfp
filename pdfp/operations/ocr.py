@@ -24,45 +24,7 @@ class SharedState:
         self.progress = 0
         self.total_parts = 0 
         self.progress_percentage = 0
-
-class QueueHandler(logging.Handler):
-    """
-    Custom logging handler to process log messages and update shared state and UI elements accordingly for python package ocr.
-    Args:
-        shared_state (SharedState): Instance of SharedState to track operation progress.
-        worker_progress (Signal): Signal to emit progress updates with worker name and percentage. Connects to progress_widget.
-        revise_worker_label (Signal): Signal to update worker labels. Connects to progress_widget.
-        worker_name (str): Name of the worker for logging purposes. Connects to progress_widget.
-    """
-    def __init__(self, shared_state, worker_progress, revise_worker_label, worker_name):
-        super().__init__()
-        self.shared_state = shared_state
-        self.worker_progress = worker_progress
-        self.revise_worker_label = revise_worker_label
-        self.worker_name = worker_name
-
-    def emit(self, record):
-        """
-        Processes the log record and updates the shared state and UI elements as needed for python package ocr.
-        Args:
-            record (LogRecord): Log record containing information about the operation.
-        Notes:
-            - If the log message is "Grafting", updates progress and progress percentage.
-            - If the log message is "Postprocessing...", updates progress bar label.
-        """
-        try:
-            msg = self.format(record)
-            if msg == "Grafting":
-                self.shared_state.progress += 1
-                self.shared_state.progress_percentage = (self.shared_state.progress / self.shared_state.total_parts) * 100
-                self.worker_progress.emit(self.worker_name, self.shared_state.progress_percentage)
-                QApplication.processEvents()
-            if msg == "Postprocessing...":
-                self.revise_worker_label.emit(self.worker_name, "OCR Postprocessing")
-                QApplication.processEvents()
-
-        except Exception:
-            self.handleError(record)
+        self.postprocessing = False
 
 class Converter(QObject):
     """
@@ -103,7 +65,7 @@ class Converter(QObject):
         self.shared_state = SharedState()
         self.worker_name = f"OCR_{pdf}"
         logger.debug(f"OCR assigned worker name: {self.worker_name}")
-        # self.worker_progress.emit(self.worker_name, 0)
+        self.worker_progress.emit(self.worker_name, 0)
 
         self.shared_state.total_parts = len(pymupdf.open(pdf))
         logger.debug(f"PDF Length: {self.shared_state.total_parts}")
@@ -121,6 +83,10 @@ class Converter(QObject):
         optimize_level = self.settings.ocr_optimize_level.value()
         logger.debug(f"optimize: {optimize_level}")
         native_ocr = self.settings.native_ocr_checkbox.isChecked()
+
+        project_root = QDir.currentPath()
+        progress_plugin = os.path.join(project_root, "main_window.py")
+        logger.debug(f"Plugin dir: {progress_plugin}")
 
         if native_ocr:
             if not self.check_command_installed("ocrmypdf"):
@@ -142,16 +108,8 @@ class Converter(QObject):
                 self.worker_done.emit(self.worker_name)
                 logger.error(f"Conversion failed with exit code {e.returncode}")
         else:
-            # ocr_logger = logging.getLogger('ocrmypdf')
-            # ocr_logger.setLevel(logging.DEBUG)
-            # handler = QueueHandler(self.shared_state, self.worker_progress, self.revise_worker_label, self.worker_name)
-            # ocr_logger.addHandler(handler)
             try:
-                project_root = QDir.currentPath()
-                # progress_plugin = os.path.join(project_root, "utils", "ocr_progress_plugin.py")
-                # progress_plugin = os.path.join(project_root, "progress_widget.py")
-                progress_plugin = os.path.join(project_root, "main_window.py")
-                logger.debug(f"Plugin dir: {progress_plugin}")
+                ocrmypdf.configure_logging(verbosity=-1) # --quiet equivalent
                 ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True, plugins=progress_plugin)
                 logger.success(f"OCR complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
@@ -161,11 +119,7 @@ class Converter(QObject):
                 logger.error(tb_str)
                 error_msg = f"Error converting {pdf}: {str(e)}"
                 logger.error(error_msg)
-            # finally:
-                # self.worker_done.emit(self.worker_name)
-                # ocr_logger.disabled = True
-                # ocr_logger.removeHandler(handler)
-                # handler.close()
+                self.worker_done.emit(self.worker_name)
         return output_file
 
     def check_command_installed(self, command):
@@ -189,13 +143,18 @@ class Converter(QObject):
         msg = self.process.readAllStandardError().data().decode()
         #the Grafting message is sometimes sent attached to other messages.
         #only accept Grafting if it is the end of the message or right before a newline.
-        if re.search(r'Grafting(?=\n|$)', msg):
+        update_postprocessing_bar = ((self.shared_state.postprocessing == True) and (re.search(r'Page \d+(?=\n|$)', msg)))
+        if re.search(r'Grafting(?=\n|$)', msg) or update_postprocessing_bar:
             self.shared_state.progress += 1
             self.shared_state.progress_percentage = (self.shared_state.progress / self.shared_state.total_parts) * 100
             self.worker_progress.emit(self.worker_name, self.shared_state.progress_percentage)
             QApplication.processEvents()
         if re.search(r'Postprocessing...', msg):
+            self.shared_state.postprocessing = True
             self.revise_worker_label.emit(self.worker_name, "OCR Postprocessing")
+            self.shared_state.progress = 0
+            self.shared_state.progress_percentage = 0
+            self.worker_progress.emit(self.worker_name, self.shared_state.progress_percentage)
             QApplication.processEvents()
 
     def process_finished(self, output_file):
