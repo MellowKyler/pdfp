@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal, QProcess
+from PySide6.QtCore import QObject, Signal, QProcess, QDir
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
@@ -7,6 +7,8 @@ import pymupdf
 import logging
 import re
 import subprocess
+import os
+import traceback
 
 logger = logging.getLogger("pdfp")
 
@@ -101,7 +103,7 @@ class Converter(QObject):
         self.shared_state = SharedState()
         self.worker_name = f"OCR_{pdf}"
         logger.debug(f"OCR assigned worker name: {self.worker_name}")
-        self.worker_progress.emit(self.worker_name, 0)
+        # self.worker_progress.emit(self.worker_name, 0)
 
         self.shared_state.total_parts = len(pymupdf.open(pdf))
         logger.debug(f"PDF Length: {self.shared_state.total_parts}")
@@ -140,23 +142,30 @@ class Converter(QObject):
                 self.worker_done.emit(self.worker_name)
                 logger.error(f"Conversion failed with exit code {e.returncode}")
         else:
-            ocr_logger = logging.getLogger('ocrmypdf')
-            ocr_logger.setLevel(logging.DEBUG)
-            handler = QueueHandler(self.shared_state, self.worker_progress, self.revise_worker_label, self.worker_name)
-            ocr_logger.addHandler(handler)
+            # ocr_logger = logging.getLogger('ocrmypdf')
+            # ocr_logger.setLevel(logging.DEBUG)
+            # handler = QueueHandler(self.shared_state, self.worker_progress, self.revise_worker_label, self.worker_name)
+            # ocr_logger.addHandler(handler)
             try:
-                ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True)
+                project_root = QDir.currentPath()
+                # progress_plugin = os.path.join(project_root, "utils", "ocr_progress_plugin.py")
+                # progress_plugin = os.path.join(project_root, "progress_widget.py")
+                progress_plugin = os.path.join(project_root, "main_window.py")
+                logger.debug(f"Plugin dir: {progress_plugin}")
+                ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True, plugins=progress_plugin)
                 logger.success(f"OCR complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
                     self.file_tree.add_file(output_file)
             except Exception as e:
+                tb_str = traceback.format_exc()
+                logger.error(tb_str)
                 error_msg = f"Error converting {pdf}: {str(e)}"
                 logger.error(error_msg)
-            finally:
-                self.worker_done.emit(self.worker_name)
-                ocr_logger.disabled = True
-                ocr_logger.removeHandler(handler)
-                handler.close()
+            # finally:
+                # self.worker_done.emit(self.worker_name)
+                # ocr_logger.disabled = True
+                # ocr_logger.removeHandler(handler)
+                # handler.close()
         return output_file
 
     def check_command_installed(self, command):

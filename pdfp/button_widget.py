@@ -56,6 +56,9 @@ class ButtonWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.app = QApplication.instance()
+        # if self.app is None:
+        #     raise RuntimeError("QApplication instance is not created")
+        # print("QApplication instance created:", QApplication.instance())
         self.settings = SettingsWindow.instance()
         self.file_tree_widget = FileTreeWidget.instance()
 

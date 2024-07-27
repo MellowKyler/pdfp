@@ -6,10 +6,13 @@ from pdfp.settings_window import SettingsWindow
 from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.button_widget import ButtonWidget
 from pdfp.log_widget import LogWidget
-from pdfp.progress_widget import ProgressWidget
+# from pdfp.progress_widget import ProgressWidget
+from pdfp.progress_widget import *
 import logging
 
 logger = logging.getLogger("pdfp")
+
+# global_progress_widget = None
 
 class MainWindow(QMainWindow):
     """
@@ -51,7 +54,14 @@ class MainWindow(QMainWindow):
         self.button_widget = ButtonWidget.instance()
         self.button_widget.button_toggle.connect(self.toggle_button_widget)
         self.button_widget.setEnabled(False)
-        self.progress_widget = ProgressWidget()
+        self.progress_widget = ProgressWidget.instance()
+        # MyProgressBar._progress_widget = self.progress_widget
+        # global global_progress_widget
+        # global_progress_widget = self.progress_widget
+        # print(f"main global: {global_progress_widget}")
+        # self.progress_widget = use_progress_widget(self)
+        # send_main_window(self)
+        print("REAL PROGRESS WIDGET")
         self.progress_widget.setVisible(False)
 
         hsplitter = QSplitter(Qt.Horizontal)
@@ -158,3 +168,74 @@ class MainWindow(QMainWindow):
     def toggle_button_widget(self, toggle):
         """Enable or disable ButtonWidget."""
         self.button_widget.setEnabled(toggle)
+
+
+class MyProgressBar(QObject):
+    # progress_widget = None
+    wn = ""
+    def __init__(
+        self,
+        *,
+        total: int | float | None,
+        desc: str | None,
+        unit: str | None,
+        disable: bool = False,
+        **kwargs,
+    ):
+        super().__init__()
+        print(f"total: {total}")
+        print(f"desc: {desc}")
+        self.total = total
+        self.desc = desc
+
+        self.pw = ProgressWidget.instance()
+        # print(f"instance parent: {_instance_parent}")
+        # print(f"instance parent: {instance_parent}")
+        # self.pw = use_progress_widget(instance_parent)
+        # print("FAKE PROGRESS WIDGET")
+        # self.pw = MainWindow.progress_window
+        # self.pw = self.progress_widget
+        # global global_progress_widget
+        # print(f"global: {global_progress_widget}")
+        # self.pw = global_progress_widget
+
+    def __enter__(self):
+        """Enter a progress bar context."""
+        if self.wn == "":
+            return self
+        self.pw.revise_worker_label(self.wn, self.desc)
+        logger.debug(f"Revising worker label: {self.desc}")
+        self.progress = 0
+        self.total_parts = self.total
+        self.progress_percentage = 0
+        return self
+
+    def __exit__(self, *args):
+        """Exit a progress bar context."""
+        if self.desc == "Linearizing":
+            self.pw.worker_done(self.wn)
+        return False
+
+    def update(self, n=1, *, completed=None):
+        """Update the progress bar by an increment."""
+        if self.wn == "":
+            return
+        self.progress += n
+        self.progress_percentage = (self.progress / self.total_parts) * 100
+        self.pw.worker_progress(self.wn, self.progress_percentage)
+        logger.debug(f"Worker progress: {self.wn}, {self.progress_percentage}")
+        QApplication.processEvents()
+
+    # def set_progress_widget(self, progress_widget):
+    #     self.pw = progress_widget
+
+@hookimpl
+def get_progressbar_class():
+    return MyProgressBar
+
+@hookimpl
+def validate(pdfinfo, options):
+    # global wn
+    MyProgressBar.wn = f"OCR_{options.input_file}"
+    # print(f"wn validate: {wn}")
+    logger.debug(f"Validate worker name: {MyProgressBar.wn}")
