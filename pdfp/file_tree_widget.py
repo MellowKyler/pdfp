@@ -197,9 +197,8 @@ class FileTreeWidget(QTreeView):
         """
         Trash and remove all items from the widget.
         """
-        print("youmadeit :)")
         for file_path in self.file_paths:
-            print(f"filepath: {file_path}")
+            logger.debug(f"deleting file: {file_path}")
             if os.path.isfile(file_path):
                 send2trash(file_path)
         self.model.clear()
@@ -267,7 +266,7 @@ class FileTreeWidget(QTreeView):
             file_path (str): The path of the file to be added.
         """
         if not os.path.exists(file_path):
-            logger.warning(f"Added file: {file_path}")
+            logger.warning(f"Path not valid: {file_path}")
             return
         if any(file_path.lower().endswith(ext) for ext in self.allowed_extensions):
             if file_path not in self.file_paths:

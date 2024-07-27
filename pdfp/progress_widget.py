@@ -72,6 +72,7 @@ class ProgressWidget(QScrollArea):
         Args:
             worker_name (str): Name of the worker.
         """
+        logger.debug(f"Initializing new worker: {worker_name}")
         progress = WorkerProgress(worker_name, self.width() - 35)
         self.workers[worker_name] = progress
         self.pb_list.addWidget(progress)
@@ -83,6 +84,7 @@ class ProgressWidget(QScrollArea):
             worker_name (str): Name of the worker.
             progress (int): Progress value to update.
         """
+        # logger.debug(f"worker_progress({worker_name}, {progress})")  # very chatty
         self.setVisible(True)
         if worker_name not in self.workers:
             self.init_worker_progress(worker_name)
@@ -95,12 +97,16 @@ class ProgressWidget(QScrollArea):
         Args:
             worker_name (str): Name of the worker.
         """
+        logger.debug(f"Worker done: {worker_name}")
+        logger.debug(f"Before workers: {self.workers}")
         worker = self.workers.pop(worker_name, None)
+        logger.debug(f"After workers: {self.workers}")
         if worker:
             worker.setVisible(False)
             self.pb_list.removeWidget(worker)
             worker.deleteLater()
         if len(self.workers) == 0:
+            logger.debug("No more workers. Closing progress widget.")
             self.setVisible(False)
 
     def revise_worker_label(self, worker_name, label_prefix):

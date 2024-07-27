@@ -1,11 +1,11 @@
-import logging
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QProcess
 from PySide6.QtWidgets import QApplication
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 import ocrmypdf
 import pymupdf
 import logging
+import re
 import subprocess
 
 logger = logging.getLogger("pdfp")
@@ -25,7 +25,7 @@ class SharedState:
 
 class QueueHandler(logging.Handler):
     """
-    Custom logging handler to process log messages and update shared state and UI elements accordingly.
+    Custom logging handler to process log messages and update shared state and UI elements accordingly for python package ocr.
     Args:
         shared_state (SharedState): Instance of SharedState to track operation progress.
         worker_progress (Signal): Signal to emit progress updates with worker name and percentage. Connects to progress_widget.
@@ -41,7 +41,7 @@ class QueueHandler(logging.Handler):
 
     def emit(self, record):
         """
-        Processes the log record and updates the shared state and UI elements as needed.
+        Processes the log record and updates the shared state and UI elements as needed for python package ocr.
         Args:
             record (LogRecord): Log record containing information about the operation.
         Notes:
@@ -97,18 +97,14 @@ class Converter(QObject):
 
         logger.info(f"OCRing {pdf}...")
         QApplication.processEvents()
+        self.file_tree = file_tree
+        self.shared_state = SharedState()
+        self.worker_name = f"OCR_{pdf}"
+        logger.debug(f"OCR assigned worker name: {self.worker_name}")
+        self.worker_progress.emit(self.worker_name, 0)
 
-        shared_state = SharedState()
-
-        worker_name = f"OCR_{pdf}"
-        self.worker_progress.emit(worker_name, 0)
-
-        ocr_logger = logging.getLogger('ocrmypdf')
-        ocr_logger.setLevel(logging.DEBUG)
-        handler = QueueHandler(shared_state, self.worker_progress, self.revise_worker_label, worker_name)
-        ocr_logger.addHandler(handler)
-
-        shared_state.total_parts = len(pymupdf.open(pdf))
+        self.shared_state.total_parts = len(pymupdf.open(pdf))
+        logger.debug(f"PDF Length: {self.shared_state.total_parts}")
 
         output_file = construct_filename(pdf, "ocr_ps")
 
@@ -125,40 +121,83 @@ class Converter(QObject):
         native_ocr = self.settings.native_ocr_checkbox.isChecked()
 
         if native_ocr:
-            if self.check_command_installed("ocrmypdf"):
-                try:
-                    cmd = ["ocrmypdf", "--force-ocr", "--quiet", "--optimize", str(optimize_level), "--output-type", ocr_filetype, pdf, output_file]
-                    if deskew_toggle:
-                        cmd.append("--deskew")
-                    logger.debug(f"Command: {cmd}")
-                    subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    logger.success(f"OCR complete. Output: {output_file}")
-                    if self.settings.add_file_checkbox.isChecked():
-                        file_tree.add_file(output_file)
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Conversion failed with exit code {e.returncode}")
+            if not self.check_command_installed("ocrmypdf"):
+                logger.error(f"ocrmypdf is not installed natively. Please install through your operating system's package manager or uncheck the box in settings.")
+                return
+            self.process = QProcess()
+            self.process.readyReadStandardError.connect(self.handle_stderr)
+            self.process.finished.connect(lambda: self.process_finished(output_file))
+            try:
+                cmd = ["ocrmypdf", "--force-ocr", "-v", "1", "--optimize", str(optimize_level), "--output-type", ocr_filetype, pdf, output_file]
+                if deskew_toggle:
+                    cmd.append("--deskew")
+                logger.debug(f"Command: {cmd}")
+                self.process.start(cmd[0], cmd[1:])
+                #QProcess start is async unless we wait. I want this eventually but I'm not set up for it yet
+                #it stops blocking before process_finished can run though. button_toggle triggers before we finish
+                self.process.waitForFinished()
+            except subprocess.CalledProcessError as e:
+                self.worker_done.emit(self.worker_name)
+                logger.error(f"Conversion failed with exit code {e.returncode}")
         else:
+            ocr_logger = logging.getLogger('ocrmypdf')
+            ocr_logger.setLevel(logging.DEBUG)
+            handler = QueueHandler(self.shared_state, self.worker_progress, self.revise_worker_label, self.worker_name)
+            ocr_logger.addHandler(handler)
             try:
                 ocrmypdf.ocr(pdf, output_file, deskew=deskew_toggle, output_type=ocr_filetype, optimize=optimize_level, progress_bar=False, force_ocr=True)
                 logger.success(f"OCR complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
-                    file_tree.add_file(output_file)
+                    self.file_tree.add_file(output_file)
             except Exception as e:
                 error_msg = f"Error converting {pdf}: {str(e)}"
                 logger.error(error_msg)
-    
-        self.worker_done.emit(worker_name)
-        ocr_logger.disabled = True
-        ocr_logger.removeHandler(handler)
-        handler.close()
+            finally:
+                self.worker_done.emit(self.worker_name)
+                ocr_logger.disabled = True
+                ocr_logger.removeHandler(handler)
+                handler.close()
         return output_file
 
     def check_command_installed(self, command):
+        """
+        Run a placeholder command to determine if the program is installed.
+        Args:
+            command (str): The program to check installation status of.
+        """
         try:
             result = subprocess.run([command, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             return True
         except:
             logger.error(f"Error: {command} not installed.")
             return False
+
+    def handle_stderr(self):
+        """
+        Processes the standard error and updates the shared state and UI elements as needed for native ocr operations.
+        ocrmypdf sends all log messages to stderr because it uses stdout for the pdf output.
+        """
+        msg = self.process.readAllStandardError().data().decode()
+        #the Grafting message is sometimes sent attached to other messages.
+        #only accept Grafting if it is the end of the message or right before a newline.
+        if re.search(r'Grafting(?=\n|$)', msg):
+            self.shared_state.progress += 1
+            self.shared_state.progress_percentage = (self.shared_state.progress / self.shared_state.total_parts) * 100
+            self.worker_progress.emit(self.worker_name, self.shared_state.progress_percentage)
+            QApplication.processEvents()
+        if re.search(r'Postprocessing...', msg):
+            self.revise_worker_label.emit(self.worker_name, "OCR Postprocessing")
+            QApplication.processEvents()
+
+    def process_finished(self, output_file):
+        """
+        Run cleanup for native ocr operations.
+        Args:
+            output_file (str): The full path to the output.
+        """
+        logger.success(f"OCR complete. Output: {output_file}")
+        if self.settings.add_file_checkbox.isChecked():
+            self.file_tree.add_file(output_file)
+        self.worker_done.emit(self.worker_name)
 
 ocr = Converter()

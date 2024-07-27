@@ -72,14 +72,14 @@ class Converter(QObject):
                         QApplication.processEvents()
                     if process.poll() is not None:
                         break
-
                 logger.success(f"Crop complete. Output: {output_file}")
                 if self.settings.add_file_checkbox.isChecked():
                     file_tree.add_file(output_file)
                 return output_file
             except subprocess.CalledProcessError as e:
                 logger.error(f"Conversion failed with exit code {e.returncode}.")
-            self.worker_done.emit(worker_name)
+            finally:
+                self.worker_done.emit(worker_name)
         else:
             logger.info(f"Launching Briss...")
             QApplication.processEvents()
