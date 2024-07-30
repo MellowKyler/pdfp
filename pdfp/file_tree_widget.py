@@ -32,6 +32,8 @@ class FileTreeWidget(QTreeView):
         """
         if not cls._instance:
             cls._instance = super(FileTreeWidget, cls).__new__(cls, *args, **kwargs)
+            logger.debug("Initializing File Tree Widget...")
+        logger.debug("Returning File Tree Widget")
         return cls._instance
     @classmethod
     def instance(cls):
@@ -42,6 +44,8 @@ class FileTreeWidget(QTreeView):
         """
         if cls._instance is None:
             cls._instance = FileTreeWidget()
+            logger.debug("Initializing File Tree Widget...")
+        logger.debug("Returning File Tree Widget")
         return cls._instance
 
     button_toggle = Signal(bool)
@@ -102,6 +106,7 @@ class FileTreeWidget(QTreeView):
         """
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
+            logger.debug(f"urls: {urls}")
             for url in urls:
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
@@ -307,6 +312,7 @@ class FileTreeWidget(QTreeView):
         """
         self.trashed_files = []
         if not (indexes := self.selectedIndexes()):
+            logger.debug("No selected indexes.")
             return
         items_to_remove = []
         for index in sorted(indexes, reverse=True):
@@ -471,7 +477,7 @@ class FileTreeWidget(QTreeView):
             file_path (str): The path of the file to be added.
         """
         if not os.path.exists(file_path):
-            logger.warning(f"Path not valid: {file_path}")
+            logger.warning(f"Filepath does not exist: {file_path}")
             raise ValueError(f"Path not valid: {file_path}")
             return
         if any(file_path.lower().endswith(ext) for ext in self.allowed_extensions):
@@ -529,6 +535,7 @@ class FileTreeWidget(QTreeView):
         Open one or more selected files in the default application.
         """
         if not (indexes := self.selectedIndexes()):
+            logger.debug("No selected indexes.")
             return
         for index in sorted(indexes, reverse=True):
             self.open_file(index)
@@ -557,6 +564,7 @@ class FileTreeWidget(QTreeView):
         Open the parent directory of one or more selected files in the default application.
         """
         if not (indexes := self.selectedIndexes()):
+            logger.debug("No selected indexes.")
             return
         system_platform = platform.system()
         logger.debug(f"Operating System: {system_platform}")
