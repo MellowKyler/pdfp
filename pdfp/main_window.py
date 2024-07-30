@@ -105,14 +105,7 @@ class MainWindow(QMainWindow):
             if folder_paths:
                 selected_folder = folder_paths[0]
                 logger.debug(f"Selected folder: {selected_folder}")
-                self.file_tree_widget.add_file(selected_folder)
-
-                #does not recursively look in folders
-                for file_name in os.listdir(selected_folder):
-                    file_path = os.path.join(selected_folder, file_name)
-                    if os.path.isfile(file_path):
-                        logger.debug(f"Adding file: {file_path}")
-                        self.file_tree_widget.add_file(file_path)
+                self.file_tree_widget.add_folder(selected_folder)
 
     def settings_popup(self):
         """Show the settings window."""
