@@ -162,7 +162,7 @@ class SettingsWindow(QWidget):
         self.wordcount_split_display = QLineEdit()
         self.wordcount_split_display.setPlaceholderText("Default: 100000")
 
-        self.enable_balabolka_checkbox = QCheckBox("Use Balabolka instead of gTTS")
+        self.enable_balabolka_checkbox = QCheckBox("Use Balabolka rather than gTTS")
         self.enable_balabolka_checkbox.toggled.connect(self.enable_balabolka_checkbox_action)
 
         #balabolka / tts

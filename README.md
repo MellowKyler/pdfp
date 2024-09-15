@@ -7,7 +7,7 @@ PDF Processor - a GUI for some common PDF operations.
 
 ## Features
 - Converts files to PDF
-- Turns PDF pages into PNGs
+- Converts PDF pages into PNGs
 - Optical character recognition
 - Crops PDF dimensions
 - Removes pages and keeps specified pages
@@ -19,6 +19,13 @@ PDF Processor - a GUI for some common PDF operations.
 - Download [Briss](https://github.com/mbaeuerle/Briss-2.0)
   - Requires [Java](https://www.oracle.com/java/technologies/downloads) 8 or above
 - Install [Tesseract and Ghostscript](https://ocrmypdf.readthedocs.io/en/latest/installation.html#installing-on-windows) (requirements for ocrmypdf)
+
+### Optional - Balabolka TTS
+Download [Balabolka](https://www.cross-plus-a.com/balabolka.htm) as an alternative to gTTS
+- This is my preferred free Text-to-Speech method. gTTS gets rate limited very quickly.
+- If you are not on Windows, Balabolka runs through [Wine](https://www.winehq.org/). You can configure a Wine prefix if desired.
+- Ctrl+K for Skin options. "FM" is my preference.
+- Ctrl+Shift+D for Use Online TTS Service. "Google \[1\] - English (US)" is my preference.
 
 ## Installation and Running
 

@@ -33,7 +33,7 @@ class FileTreeWidget(QTreeView):
         if not cls._instance:
             cls._instance = super(FileTreeWidget, cls).__new__(cls, *args, **kwargs)
             logger.debug("Initializing File Tree Widget...")
-        logger.debug("Returning File Tree Widget")
+        #logger.debug("Returning File Tree Widget")
         return cls._instance
     @classmethod
     def instance(cls):
@@ -45,7 +45,7 @@ class FileTreeWidget(QTreeView):
         if cls._instance is None:
             cls._instance = FileTreeWidget()
             logger.debug("Initializing File Tree Widget...")
-        logger.debug("Returning File Tree Widget")
+        #logger.debug("Returning File Tree Widget")
         return cls._instance
 
     button_toggle = Signal(bool)
