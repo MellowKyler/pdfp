@@ -42,17 +42,6 @@ class SettingsWindow(QWidget):
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
-    @classmethod
-    def instance(cls):
-        """
-        Returns the single instance of SettingsWindow.
-        If no instance exists, creates one and returns it.
-        Call this function when referencing SettingsWindow values.
-        """
-        if cls._instance is None:
-            cls._instance = SettingsWindow()
-        return cls._instance
-
     restart_logger = Signal()
     log_signal = Signal(str)
 
@@ -168,11 +157,17 @@ class SettingsWindow(QWidget):
         cc_radio_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.cc_split_txt_checkbox = QCheckBox("If output too large for TTS, split .txt to multiple files")
+        self.cc_split_txt_checkbox.toggled.connect(self.cc_split_txt_checkbox_action)
+        self.cc_wordcount_split_label = QLabel("Word count to split on:")
+        self.cc_wordcount_split_display = QLineEdit()
+        self.cc_wordcount_split_display.setPlaceholderText("Default: 100000")
 
         cc_grid = QGridLayout()
-        cc_grid.addWidget(cc_settings_label, 0, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-        cc_grid.addLayout(cc_radio_layout, 1, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-        cc_grid.addWidget(self.cc_split_txt_checkbox, 2, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+        cc_grid.addWidget(cc_settings_label, 0, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        cc_grid.addLayout(cc_radio_layout, 1, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        cc_grid.addWidget(self.cc_split_txt_checkbox, 2, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+        cc_grid.addWidget(self.cc_wordcount_split_label, 3, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        cc_grid.addWidget(self.cc_wordcount_split_label, 3, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
         cc_box = QGroupBox()
         cc_box.setLayout(cc_grid)
@@ -612,6 +607,15 @@ class SettingsWindow(QWidget):
             checked (bool): Whether the checkbox is checked or not.
         """
         self.ps_box.setEnabled(checked)
+
+    def cc_split_txt_checkbox_action(self, checked: bool) -> None:
+        """
+        Handle action for split text checkbox.
+        Args:
+            checked (bool): Whether the checkbox is checked or not.
+        """
+        self.cc_wordcount_split_label.setEnabled(checked)
+        self.cc_wordcount_split_display.setEnabled(checked)
 
     def page_number_checkbox_action(self, checked: bool) -> None:
         """

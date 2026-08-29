@@ -478,7 +478,7 @@ class FileTreeWidget(QTreeView):
             self.restore_removed_items()
         self.last_action = "undo"
 
-    def add_file(self, file_path) -> None:
+    def add_file(self, file_path: pathlib.Path) -> None:
         """
         Add a file to the widget.
         Checks if the file exists, has an allowed extension, and is not already present in the widget.
