@@ -1,16 +1,19 @@
-import os
-from PySide6.QtWidgets import QWidget, QPushButton, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QStatusBar, QMessageBox, QSplitter, QLabel, QFileDialog, QApplication
-from PySide6.QtCore import QSize, Qt, QDir, QObject
-from PySide6.QtGui import QAction, QIcon, QPixmap
-from pdfp.settings_window import SettingsWindow
-from pdfp.file_tree_widget import FileTreeWidget
+import logging
+from pathlib import Path
+
+from ocrmypdf import hookimpl
+from PySide6.QtCore import QDir, QEvent, QObject, Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QSplitter
+
 from pdfp.button_widget import ButtonWidget
+from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.log_widget import LogWidget
 from pdfp.progress_widget import ProgressWidget
-import logging
-from ocrmypdf import hookimpl
+from pdfp.settings_window import SettingsWindow
 
 logger = logging.getLogger("pdfp")
+
 
 class MainWindow(QMainWindow):
     """
@@ -19,9 +22,9 @@ class MainWindow(QMainWindow):
     file_tree_widget and button_widget are housed in a horizontal splitter within a vertical splitter with log_widget.
     """
 
-    def __init__(self, app):
+    def __init__(self, app: QApplication) -> None:
         super().__init__()
-        self.app = app 
+        self.app = app
         self.setWindowTitle("PDF Processor")
         self.setGeometry(300, 500, 800, 650)
         self.setMinimumWidth(350)
@@ -29,7 +32,7 @@ class MainWindow(QMainWindow):
 
         self.settings_window = SettingsWindow.instance()
         if self.settings_window.remember_window_checkbox.isChecked():
-           self.restore_geometry()
+            self.restore_geometry()
 
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("&File")
@@ -44,7 +47,7 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self.about_popup)
         quit_action = file_menu.addAction("Quit")
         quit_action.triggered.connect(self.quit_app)
-        
+
         self.file_tree_widget = FileTreeWidget()
         self.file_tree_widget.button_toggle.connect(self.toggle_button_widget)
         self.log_widget = LogWidget()
@@ -55,21 +58,21 @@ class MainWindow(QMainWindow):
         self.progress_widget = ProgressWidget.instance()
         self.progress_widget.setVisible(False)
 
-        hsplitter = QSplitter(Qt.Horizontal)
+        hsplitter = QSplitter(Qt.Orientation.Horizontal)
         hsplitter.addWidget(self.file_tree_widget)
         hsplitter.addWidget(self.button_widget)
         hsplitter.setSizes([600, 200])
         hsplitter.setHandleWidth(8)
-        hsplitter.setContentsMargins(10,10,10,2)
+        hsplitter.setContentsMargins(10, 10, 10, 2)
 
-        hsplitter2 = QSplitter(Qt.Horizontal)
+        hsplitter2 = QSplitter(Qt.Orientation.Horizontal)
         hsplitter2.addWidget(self.log_widget)
         hsplitter2.addWidget(self.progress_widget)
-        hsplitter2.setContentsMargins(10,2,10,10)
-        hsplitter2.setSizes([600,200])
+        hsplitter2.setContentsMargins(10, 2, 10, 10)
+        hsplitter2.setSizes([600, 200])
         hsplitter2.setHandleWidth(8)
 
-        vsplitter = QSplitter(Qt.Vertical)
+        vsplitter = QSplitter(Qt.Orientation.Vertical)
         vsplitter.addWidget(hsplitter)
         vsplitter.addWidget(hsplitter2)
         vsplitter.setHandleWidth(8)
@@ -77,55 +80,55 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(vsplitter)
 
-    def quit_app(self):
+    def quit_app(self) -> None:
         """Close the pdfp application."""
         self.app.quit()
 
-    def select_files(self):
+    def select_files(self) -> None:
         """Launch a file selector to select multiple files and add them to file_tree_widget."""
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select Files")
-        file_dialog.setFileMode(QFileDialog.ExistingFiles)
-        
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+
         if file_dialog.exec():
             file_paths = file_dialog.selectedFiles()
             for file_path in file_paths:
-                logger.debug(f"Selected file: {file_path}")
+                logger.debug("Selected file: %s", file_path)
                 self.file_tree_widget.add_file(file_path)
 
-    def select_folder(self):
+    def select_folder(self) -> None:
         """Open a file dialog to select a folder and add the contents to file_tree_widget."""
         folder_dialog = QFileDialog(self)
         folder_dialog.setWindowTitle("Select a Folder")
-        folder_dialog.setFileMode(QFileDialog.Directory)
-        folder_dialog.setOption(QFileDialog.ShowDirsOnly, True)
-        
+        folder_dialog.setFileMode(QFileDialog.FileMode.Directory)
+        folder_dialog.setOption(QFileDialog.Option.ShowDirsOnly, on=True)
+
         if folder_dialog.exec():
             folder_paths = folder_dialog.selectedFiles()
             if folder_paths:
                 selected_folder = folder_paths[0]
-                logger.debug(f"Selected folder: {selected_folder}")
+                logger.debug("Selected folder: %s", selected_folder)
                 self.file_tree_widget.add_folder(selected_folder)
 
-    def settings_popup(self):
+    def settings_popup(self) -> None:
         """Show the settings window."""
         self.settings_window.show()
-    
-    def about_popup(self):
-        """Show the About popup."""
+
+    @staticmethod
+    def about_popup() -> None:
         msg_box = QMessageBox()
         msg_box.setWindowTitle("PDF Processor")
         msg_box.setText("<strong>Version 0.2.1</strong>")
-        pdf_utils_icon = QPixmap(os.path.join(QDir.currentPath(), "images", "logo.ico"))
+        pdf_utils_icon = QPixmap(str(Path(QDir.currentPath()) / "images" / "logo.ico"))
         msg_box.setIconPixmap(pdf_utils_icon)
         html_text = (
             "<p>A GUI for some common PDF operations.</p>"
-            "<p>Contact me on <a href=\"https://github.com/MellowKyler/pdfp\">GitHub</a>.</p>"
+            '<p>Contact me on <a href="https://github.com/DrearyWillow/pdfp">GitHub</a>.</p>'
         )
         msg_box.setInformativeText(html_text)
         msg_box.exec()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QEvent) -> None:
         """
         Save the main_window geometry and quit the entire application.
         Overrides the default closeEvent.
@@ -134,13 +137,13 @@ class MainWindow(QMainWindow):
         event.accept()
         self.app.quit()
 
-    def save_geometry(self):
+    def save_geometry(self) -> None:
         """Save main_window geometry, position, and size to the settings."""
         self.settings_window.settings.setValue("geometry", self.saveGeometry())
         self.settings_window.settings.setValue("pos", self.pos())
         self.settings_window.settings.setValue("size", self.size())
 
-    def restore_geometry(self):
+    def restore_geometry(self) -> None:
         """Restore main_window geometry, position, and size based on values in settings."""
         if geo := self.settings_window.settings.value("geometry"):
             self.restoreGeometry(geo)
@@ -149,25 +152,18 @@ class MainWindow(QMainWindow):
         if size := self.settings_window.settings.value("size"):
             self.resize(size)
 
-    def toggle_button_widget(self, toggle):
+    def toggle_button_widget(self, toggle: bool) -> None:
         """Enable or disable ButtonWidget."""
         self.button_widget.setEnabled(toggle)
 
 
 class MyProgressBar(QObject):
     wn = ""
-    def __init__(
-        self,
-        *,
-        total: int | float | None,
-        desc: str | None,
-        unit: str | None,
-        disable: bool = False,
-        **kwargs,
-    ):
+
+    def __init__(self, *, total: float | None, desc: str | None) -> None:
         super().__init__()
-        logger.debug(f"OCR job total units: {total}")
-        logger.debug(f"OCR job description: {desc}")
+        logger.debug("OCR job total units: %s", total)
+        logger.debug("OCR job description: %s", desc)
         self.total = total
         self.desc = desc
         self.pw = ProgressWidget.instance()
@@ -183,13 +179,13 @@ class MyProgressBar(QObject):
         self.progress_percentage = 0
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self) -> bool:
         """Exit a progress bar context."""
         if self.desc == "Linearizing":
             self.pw.worker_done(self.wn)
         return False
 
-    def update(self, n=1, *, completed=None):
+    def update(self, n=1, *, completed=None) -> None:
         """Update the progress bar by an increment."""
         if self.wn == "":
             return
@@ -199,11 +195,13 @@ class MyProgressBar(QObject):
         # logger.debug(f"Worker progress: {self.wn}, {self.progress_percentage}") #very chatty
         QApplication.processEvents()
 
+
 @hookimpl
 def get_progressbar_class():
     return MyProgressBar
 
+
 @hookimpl
-def validate(pdfinfo, options):
+def validate(pdfinfo, options) -> None:
     MyProgressBar.wn = f"OCR_{options.input_file}"
     logger.debug(f"Validate worker name: {MyProgressBar.wn}")

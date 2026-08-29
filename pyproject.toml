@@ -1,28 +1,54 @@
-[tool.poetry]
+[project]
 name = "pdfp"
-version = "0.2.1"
+version = "0.2.2"
 description = "PDF Processor - a GUI for some common PDF operations."
-authors = ["Dreary <drearywillowdev@gmail.com>"]
-license = "AGPL-3.0-only"
 readme = "README.md"
-homepage = "https://github.com/MellowKyler/pdfp"
+requires-python = ">=3.14"
+dependencies = [
+    "gtts>=2.5.4",
+    "ocrmypdf>=17.11.0",
+    "pymupdf>=1.28.2",
+    "pyside6>=6.11.2",
+    "send2trash>=2.1.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-PySide6 = "^6.5.0"
-pymupdf = "^1.24.7"
-gtts = "^2.5.1"
-ocrmypdf = "^16.4.1"
-send2trash = "^1.8.3"
+[tool.uv]
+package = true
 
-[tool.poetry.scripts]
+[project.scripts]
 pdfp = "pdfp.main:main"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.10",
+    "mypy>=2.3.1",
+    "ruff>=0.16.5",
+]
 
-[tool.poetry.urls]
-Source = "https://github.com/MellowKyler/pdfp"
-Issues = "https://github.com/MellowKyler/pdfp/issues"
-PyPi = "https://pypi.org/project/pdfp/"
+[tool.pyright]
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+preview = true
+select = ["ALL"]
+ignore = [
+    "D",
+    "missing-copyright-notice",
+    "raw-string-in-exception",
+    "raise-vanilla-args",
+    "docstring-missing-returns",
+    "missing-trailing-comma",
+    "invalid-function-name",
+    "too-many-public-methods",
+    "error-instead-of-exception",
+    "docstring-missing-exception",
+]

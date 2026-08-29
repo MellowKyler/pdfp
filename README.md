@@ -39,16 +39,9 @@ $ pdfp
 Or install from git (if I haven't published an update to PyPI):
 
 ```bash
-$ pip install git+https://github.com/MellowKyler/pdfp.git
+$ pip install git+https://github.com/DrearyWillow/pdfp.git
 $ pdfp
 ```
-
-### Run from source
-
-1. Have Python version 3.10-3.12 installed, and [poetry](https://python-poetry.org/)
-2. Download the source code
-3. Install required Python modules with `poetry install`
-4. Run the program with `poetry run pdfp`
 
 ## Notes
 Tested in Linux and Windows. Mac should work as well, but I don't own one so I can't confirm compatibility.

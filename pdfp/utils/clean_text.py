@@ -1,32 +1,26 @@
-import pymupdf
-from PySide6.QtCore import Signal, QObject
 import logging
+from pathlib import Path
+from typing import cast
+
+import pymupdf
 
 logger = logging.getLogger("pdfp")
 
-def clean_text(file):
-    """
-    Cleans up and normalizes the text of a file.
-    Args:
-        file (str): Fullpath to file with text to be transformed.
-    Returns:
-        text (str): Cleaned text.
-    """
 
-    lowerfile = file.lower()
-    if lowerfile.endswith('.pdf'):
+def clean_text(file: str) -> str | None:
+    path = Path(file)
+
+    if path.suffix.lower() == ".pdf":
         with pymupdf.open(file) as doc:
-            text = "\n".join([page.get_text() for page in doc])
-    elif lowerfile.endswith('.txt'):
-        with open(file, 'r', encoding='utf-8') as txt_file:
-            text = txt_file.read()
+            all_text = [cast("str", page.get_text()) for page in doc]  # pyright: ignore[reportUnknownMemberType]
+            text = "\n".join(all_text)
+    elif path.suffix.lower() == ".txt":
+        text = path.read_text(encoding="utf-8")
     else:
-        logger.warning(f"Filetype is not PDF or TXT.")
-        return
+        logger.warning("Filetype is not PDF or TXT.")
+        return None
 
-    text = ' '.join(text.splitlines())
-    text = text.replace('- ', '')
+    text = " ".join(text.splitlines())
+    text = text.replace("- ", "")
     text = text.strip()
-    text = ' '.join(text.split())
-    #text = text.encode('utf-8').decode('utf-8')
-    return text
+    return " ".join(text.split())

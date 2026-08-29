@@ -1,31 +1,32 @@
-import os
-from PySide6.QtCore import QObject, Signal
+import logging
+from pathlib import Path
+
+import pymupdf
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
+
+from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
-import pymupdf
-import logging
 
 logger = logging.getLogger("pdfp")
+
 
 class Converter(QObject):
     """
     Converter class for converting various file formats to PDF.
     """
-    def __init__(self):
-        super().__init__()
 
-    def check_for_cover_image(self, input_file):
-        dirpath = os.path.dirname(input_file)
-        filename = os.path.basename(input_file)
-        filename, _ = os.path.splitext(filename)
-        patterns = ["cover.jpg", "cover.jpeg", "cover.png"]
-        for pattern in patterns:
-            if os.path.exists(os.path.join(dirpath, pattern)):
-                return os.path.join(dirpath, pattern)
+    @staticmethod
+    def get_cover_image(input_file: str) -> str | None:
+        dirpath = Path(input_file).parent
+        for pattern in ("cover.jpg", "cover.jpeg", "cover.png"):
+            cover_image_path = dirpath / pattern
+            if cover_image_path.exists():
+                return str(cover_image_path)
         return None
 
-    def set_cover_image(self, cover_image, original_pdf):
+    def set_cover_image(self, cover_image: str, original_pdf: pymupdf.Document) -> pymupdf.Document:
         new_pdf = pymupdf.open()
         first_page = original_pdf[0]
         width, height = first_page.rect.width, first_page.rect.height
@@ -35,7 +36,7 @@ class Converter(QObject):
             new_pdf.insert_pdf(original_pdf, from_page=page_num, to_page=page_num)
         return new_pdf
 
-    def convert(self, file_tree, input_file):
+    def convert(self, file_tree: FileTreeWidget, input_file: str) -> None:
         """
         Converts the input file to PDF format.
             Args:
@@ -48,37 +49,37 @@ class Converter(QObject):
                 - Saves the converted PDF with a constructed filename.
                 - Optionally adds the converted file to the file_tree widget if specified in settings.
         """
-        if input_file.lower().endswith('.pdf'):
-            logger.error(f"File is already a PDF.")
-            return
-        elif not any(input_file.lower().endswith(ext) for ext in file_tree.allowed_extensions):
-            logger.error(f"{input_file} is not a supported filetype: {file_tree.allowed_extensions}")
-            return
+        input_path = Path(input_file)
 
-        logger.info(f"Converting {input_file} to PDF...")
+        if input_path.suffix.lower() == ".pdf":
+            logger.error("File is already a PDF.")
+            return None
+        if not any(input_file.lower().endswith(ext) for ext in file_tree.allowed_extensions):
+            logger.error("%s is not a supported filetype: %s", input_file, file_tree.allowed_extensions)
+            return None
+
+        logger.info("Converting %s to PDF...", input_file)
         QApplication.processEvents()
 
-        doc = pymupdf.open(input_file)
+        with pymupdf.open(input_file) as doc:
+            temp = doc.convert_to_pdf()
+            pdf = pymupdf.open("pdf", temp)
 
-        temp = doc.convert_to_pdf()
-        pdf = pymupdf.open("pdf", temp)
+            pdf.set_toc(doc.get_toc())  # pyright: ignore[reportUnknownMemberType]
 
-        toc = doc.get_toc()
-        pdf.set_toc(toc)
-
-        # link processing
-        for page in doc:
-            links = page.get_links()
-            page_out = pdf[page.number]
-            for l in links:
-                if l["kind"] == pymupdf.LINK_NAMED:
-                    continue
-                page_out.insert_link(l)
+            # link processing
+            for page in doc:
+                links = page.get_links()
+                page_out = pdf[page.number]
+                for l in links:
+                    if l["kind"] == pymupdf.LINK_NAMED:
+                        continue
+                    page_out.insert_link(l)
 
         self.settings = SettingsWindow.instance()
 
         if self.settings.f2p_cover_checkbox.isChecked():
-            cover_image = self.check_for_cover_image(input_file)
+            cover_image = self.get_cover_image(input_file)
             if cover_image:
                 pdf = self.set_cover_image(cover_image, pdf)
 
@@ -90,5 +91,6 @@ class Converter(QObject):
         if self.settings.add_file_checkbox.isChecked():
             file_tree.add_file(output_file)
         return output_file
+
 
 file2pdf = Converter()

@@ -1,20 +1,23 @@
-import os
-import subprocess
-import platform
 import logging
-from PySide6.QtWidgets import *
-from PySide6.QtGui import *
-from PySide6.QtCore import *
-from send2trash import send2trash
+import os
+import pathlib
+import platform
 import shutil
+import subprocess
+
+from PySide6.QtCore import QModelIndex, Signal
+from PySide6.QtGui import QAction, QContextMenuEvent, QDropEvent, QIcon, QKeyEvent, QKeySequence, QStandardItemModel, Qt
+from PySide6.QtWidgets import QAbstractItemView, QAbstractScrollArea, QMenu, QTreeView, QVBoxLayout
+from send2trash import send2trash
 
 logger = logging.getLogger("pdfp")
+
 
 class FileTreeWidget(QTreeView):
     """
     A custom QTreeView widget for displaying and managing a list of files.
 
-    This widget supports drag-and-drop functionality for adding files, 
+    This widget supports drag-and-drop functionality for adding files,
     context menu operations for deleting files, and keyboard shortcuts.
 
     Attributes:
@@ -25,16 +28,17 @@ class FileTreeWidget(QTreeView):
     """
 
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         """
         Override __new__ method to ensure only one instance of FileTreeWidget exists.
         If no existing instance, create one and return it. If an instance exists, return that instance.
         """
         if not cls._instance:
-            cls._instance = super(FileTreeWidget, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super().__new__(cls, *args, **kwargs)
             logger.debug("Initializing File Tree Widget...")
-        #logger.debug("Returning File Tree Widget")
         return cls._instance
+
     @classmethod
     def instance(cls):
         """
@@ -45,14 +49,13 @@ class FileTreeWidget(QTreeView):
         if cls._instance is None:
             cls._instance = FileTreeWidget()
             logger.debug("Initializing File Tree Widget...")
-        #logger.debug("Returning File Tree Widget")
         return cls._instance
 
     button_toggle = Signal(bool)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        
+
         self.model = QStandardItemModel()
         self.setModel(self.model)
         self.header().hide()
@@ -68,11 +71,10 @@ class FileTreeWidget(QTreeView):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        self.allowed_extensions = ['.pdf', '.epub', '.txt', '.cbz', '.mobi', '.xps', '.svg', '.fb2']
+        self.allowed_extensions = [".pdf", ".epub", ".txt", ".cbz", ".mobi", ".xps", ".svg", ".fb2"]
         self.file_paths = set()
 
         self.doubleClicked.connect(self.open_file)
-        # self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setEditTriggers(QAbstractItemView.SelectedClicked | QAbstractItemView.EditKeyPressed)
         self.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
@@ -83,7 +85,7 @@ class FileTreeWidget(QTreeView):
         self.removed_files = []
         self.restore_name = {}
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event) -> None:
         """
         Handle drag enter events.
 
@@ -95,7 +97,7 @@ class FileTreeWidget(QTreeView):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
-    def dropEvent(self, event):
+    def dropEvent(self, event: QDropEvent) -> None:
         """
         Handle drop events.
 
@@ -106,17 +108,17 @@ class FileTreeWidget(QTreeView):
         """
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
-            logger.debug(f"urls: {urls}")
+            logger.debug("urls: %s", urls)
             for url in urls:
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
-                    if os.path.isdir(file_path):
+                    if pathlib.Path(file_path).is_dir():
                         self.add_folder(file_path)
                     else:
                         self.add_file(file_path)
             event.acceptProposedAction()
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         """
         Handle context menu events.
         Args:
@@ -166,8 +168,7 @@ class FileTreeWidget(QTreeView):
         restore_trash_action.setShortcut(QKeySequence("Ctrl+Z"))
 
         has_files = bool(len(self.file_paths))
-        # has_trashed = bool(len(self.trashed_files))
-        valid_undo = self.last_action not in ("", "add_file", "undo") # != "" and self.last_action != "add_file" and self.last_action != "undo"
+        valid_undo = self.last_action not in {"", "add_file", "undo"}
 
         selected_count = len(self.selectedIndexes())
         if selected_count == 0:
@@ -193,52 +194,58 @@ class FileTreeWidget(QTreeView):
             menu.addAction(delete_action)
         menu.addAction(restore_trash_action)
         restore_trash_action.setEnabled(valid_undo)
-            
+
         menu.exec_(event.globalPos())
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         """
         Handle key press events.
         Args:
             event (QKeyEvent): The key press event.
         """
-        if event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
+        if event.key() == Qt.Key.Key_Delete and event.modifiers() == (
+            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+        ):
             self.delete_all_items()
-        elif event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_Delete and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.remove_all_items()
-        elif event.key() == Qt.Key_Delete and event.modifiers() == (Qt.ShiftModifier):
+        elif event.key() == Qt.Key.Key_Delete and event.modifiers() == (Qt.KeyboardModifier.ShiftModifier):
             self.delete_selected_items()
-        elif event.key() == Qt.Key_Delete:
+        elif event.key() == Qt.Key.Key_Delete:
             self.remove_selected_items()
-        elif event.key() == Qt.Key_A and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
+        elif event.key() == Qt.Key.Key_A and event.modifiers() == (
+            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+        ):
             self.deselect_all()
-        elif event.key() == Qt.Key_E and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_E and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.open_parent_dir()
-        elif event.key() == Qt.Key_O and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_O and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.open_files()
-        elif event.key() == Qt.Key_I and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
+        elif event.key() == Qt.Key.Key_I and event.modifiers() == (
+            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+        ):
             self.select_folder()
-        elif event.key() == Qt.Key_I and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_I and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.select_files()
-        elif event.key() == Qt.Key_Z and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_Z and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.undo_last_action()
-        elif event.key() == Qt.Key_F2:
+        elif event.key() == Qt.Key.Key_F2:
             self.rename_item()
-        elif event.key() == Qt.Key_Down and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_Down and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.move_item(1)
-        elif event.key() == Qt.Key_Up and event.modifiers() == (Qt.ControlModifier):
+        elif event.key() == Qt.Key.Key_Up and event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
             self.move_item(-1)
         else:
             super().keyPressEvent(event)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         if event.button() == Qt.LeftButton:
             index = self.indexAt(event.pos())
             if index.isValid() and self.selectionModel().isSelected(index):
                 self.rename_item()
         super().mousePressEvent(event)
 
-    def move_item(self, direction):
+    def move_item(self, direction) -> None:
         if not (indexes := self.selectedIndexes()):
             return
         index = self.currentIndex()
@@ -261,7 +268,7 @@ class FileTreeWidget(QTreeView):
         self.setCurrentIndex(new_index)
         self.selectionModel().select(new_index, QItemSelectionModel.Select)
 
-    def rename_item(self):
+    def rename_item(self) -> None:
         indexes = self.selectedIndexes()
         index = indexes[0]
         item = self.model.itemFromIndex(index)
@@ -270,43 +277,45 @@ class FileTreeWidget(QTreeView):
         self.edit(index)
         self.last_action = "rename"
 
-    def on_data_changed(self, top_left: QModelIndex, bottom_right: QModelIndex, roles):
+    def on_data_changed(self, top_left: QModelIndex, bottom_right: QModelIndex, roles) -> None:
         if top_left != bottom_right:  # Only one item changed
             return
         input_value = self.model.data(top_left)
         old_value = self.renamed_items.pop(top_left, None)
-        if old_value is None: # this prevents recursion when we set the file path text below
+        if old_value is None:  # this prevents recursion when we set the file path text below
             return
-        old_dir = os.path.dirname(old_value)
-        old_file = os.path.basename(old_value)
-        old_fn, old_ext = os.path.splitext(old_file)
-        logger.debug(f"Input item: {input_value}")
-        logger.debug(f"Old name: {old_value}")
+        old_dir = pathlib.Path(old_value).parent
+        old_file = pathlib.Path(old_value).name
+        _old_fn, old_ext = os.path.splitext(old_file)
+        logger.debug("Input item: %s", input_value)
+        logger.debug("Old name: %s", old_value)
 
         new_fn = input_value + old_ext
-        if ("/" in new_fn or "\\" in new_fn):
+        if "/" in new_fn or "\\" in new_fn:
             failed_file = os.path.join(old_dir, new_fn)
-            logger.error(f"Invalid rename \"{failed_file}\". Do not include directory path or file extensions when renaming.")
+            logger.error(
+                'Invalid rename "%s". Do not include directory path or file extensions when renaming.', failed_file
+            )
             new_fn = old_file
         elif new_fn == "":
-            logger.error(f"Invalid rename. File name cannot be null.")
+            logger.error("Invalid rename. File name cannot be null.")
             new_fn = old_file
         new_value = os.path.join(old_dir, new_fn)
-        logger.debug(f"New name: {new_value}")
-        os.rename(old_value, new_value)
+        logger.debug("New name: %s", new_value)
+        pathlib.Path(old_value).rename(new_value)
         self.model.itemFromIndex(bottom_right).setText(new_value)
         self.file_paths.remove(old_value)
         self.file_paths.add(new_value)
         self.restore_name[new_value] = old_value
-        logger.info(f"Renamed {old_value} to {new_value}")
+        logger.info("Renamed %s to %s", old_value, new_value)
 
-    def select_all(self):
+    def select_all(self) -> None:
         self.selectAll()
 
-    def deselect_all(self):
+    def deselect_all(self) -> None:
         self.clearSelection()
 
-    def delete_selected_items(self):
+    def delete_selected_items(self) -> None:
         """
         Trash the selected items and remove them from the model.
         """
@@ -324,104 +333,104 @@ class FileTreeWidget(QTreeView):
             file_path = item.text()
             if not file_path:
                 continue
-            if os.path.isfile(file_path):
+            if pathlib.Path(file_path).is_file():
                 self.trashed_files.append(file_path)
                 send2trash(file_path)
             items_to_remove.append((index, file_path))
-        
+
         for index, file_path in items_to_remove:
             if file_path in self.file_paths:
                 self.model.removeRow(index.row())
                 self.file_paths.remove(file_path)
         self.last_action = "trash"
 
-    def delete_all_items(self):
+    def delete_all_items(self) -> None:
         """
         Trash and remove all items from the widget.
         """
         self.trashed_files = []
         for file_path in self.file_paths:
-            logger.debug(f"deleting file: {file_path}")
-            if os.path.isfile(file_path):
+            logger.debug("deleting file: %s", file_path)
+            if pathlib.Path(file_path).is_file():
                 self.trashed_files.append(file_path)
                 send2trash(file_path)
         self.model.clear()
         self.file_paths.clear()
         self.last_action = "trash"
 
-    def restore_removed_items(self):
+    def restore_removed_items(self) -> None:
         logger.debug(f"Removed files list: {self.removed_files}")
         for file in self.removed_files:
             self.add_file(file)
-        removed_file_list = ', '.join(self.removed_files)
-        logger.info(f"Restored removed items: {removed_file_list}")
+        removed_file_list = ", ".join(self.removed_files)
+        logger.info("Restored removed items: %s", removed_file_list)
         self.removed_files = []
 
-    def restore_renamed_item(self):
+    def restore_renamed_item(self) -> None:
         if not self.restore_name:
-            logger.warning(f"No name to restore")
+            logger.warning("No name to restore")
         rename, original = self.restore_name.popitem()
-        os.rename(rename, original)
+        pathlib.Path(rename).rename(original)
         index = self.find_index_by_text(rename)
         if not index:
-            logger.error(f"No model index for: {rename}")
+            logger.error("No model index for: %s", rename)
         self.model.itemFromIndex(index).setText(original)
         self.file_paths.remove(rename)
         self.file_paths.add(original)
-        logger.info(f"UNDO: Name restored to {original} from {rename}")
+        logger.info("UNDO: Name restored to %s from %s", original, rename)
 
-    def restore_trashed_items(self):
+    def restore_trashed_items(self) -> None:
         logger.debug(f"Trashed file list: {self.trashed_files}")
         if len(self.trashed_files) == 0:
-            logger.warning(f"No files to restore from trash.")
+            logger.warning("No files to restore from trash.")
             return
         system_platform = platform.system()
-        logger.debug(f"Operating System: {system_platform}")
+        logger.debug("Operating System: %s", system_platform)
         if system_platform == "Windows":
             # for file_path in self.trashed_files:
             #     r = [name.original_filename() for name in list(winshell.recycle_bin())]
             #     index = r.index(file_path)
             #     winshell.undelete(r[index].original_filename())
             #     self.add_file(file_path)
-            logger.error(f"Trash restoration is not available on Windows.")
+            logger.error("Trash restoration is not available on Windows.")
         elif system_platform == "Darwin":  # macOS
             for file_path in self.trashed_files:
-                dirpath = os.path.dirname(file_path)
-                file = os.path.basename(file_path)
+                dirpath = pathlib.Path(file_path).parent
+                file = pathlib.Path(file_path).name
                 try:
-                    shutil.move('mv',f'~/.Trash/{file}', dirpath)
+                    shutil.move("mv", f"~/.Trash/{file}", dirpath)
                     self.add_file(file_path)
                 except:
-                    logger.warning(f"Failed to restore file: {file}")
+                    logger.warning("Failed to restore file: %s", file)
         elif system_platform == "Linux":
             for file_path in self.trashed_files:
-                dirpath = os.path.dirname(file_path)
-                file = os.path.basename(file_path)
+                dirpath = pathlib.Path(file_path).parent
+                file = pathlib.Path(file_path).name
                 try:
-                    home_dir = os.path.expanduser("~")
-                    trash_file = f'{home_dir}/.local/share/Trash/files/{file}'
-                    if os.path.exists(trash_file):
-                        logger.debug(f"Moving {trash_file} to {dirpath}")
+                    home_dir = pathlib.Path("~").expanduser()
+                    trash_file = f"{home_dir}/.local/share/Trash/files/{file}"
+                    if pathlib.Path(trash_file).exists():
+                        logger.debug("Moving %s to %s", trash_file, dirpath)
                         shutil.move(trash_file, dirpath)
-                    info_file = f'{home_dir}/.local/share/Trash/info/{file}.trashinfo'
-                    if os.path.exists(info_file):
-                        logger.debug(f"Removing info file: {info_file}")
-                        os.remove(info_file)
+                    info_file = f"{home_dir}/.local/share/Trash/info/{file}.trashinfo"
+                    if pathlib.Path(info_file).exists():
+                        logger.debug("Removing info file: %s", info_file)
+                        pathlib.Path(info_file).unlink()
                     else:
-                        logger.error(f"No trash info path found: {info_file}. Subsequent restores may not work.")
+                        logger.error("No trash info path found: %s. Subsequent restores may not work.", info_file)
                     self.add_file(file_path)
-                    logger.info(f"Restored {file_path} from trash.")
+                    logger.info("Restored %s from trash.", file_path)
                 except ValueError:
-                    logger.error(f"Failed to restore file: {file_path}")
+                    logger.error("Failed to restore file: %s", file_path)
                 except Exception:
-                    logger.error(f"Failed to restore file: {file_path}")
+                    logger.error("Failed to restore file: %s", file_path)
                     tb_str = traceback.format_exc()
                     logger.error(tb_str)
         else:
-            logger.error(f"Unsupported operating system: {system_platform}")
+            logger.error("Unsupported operating system: %s", system_platform)
         self.trashed_files = []
 
-    def remove_all_items(self):
+    def remove_all_items(self) -> None:
         """
         Remove all items from the widget.
         """
@@ -431,8 +440,8 @@ class FileTreeWidget(QTreeView):
         self.model.clear()
         self.file_paths.clear()
         self.last_action = "remove"
-    
-    def remove_selected_items(self):
+
+    def remove_selected_items(self) -> None:
         """
         Remove the selected items from the model.
         """
@@ -459,7 +468,7 @@ class FileTreeWidget(QTreeView):
                 self.file_paths.remove(file_path)
         self.last_action = "remove"
 
-    def undo_last_action(self):
+    def undo_last_action(self) -> None:
         logger.debug(f"Previous action: {self.last_action}")
         if self.last_action == "trash":
             self.restore_trashed_items()
@@ -469,68 +478,69 @@ class FileTreeWidget(QTreeView):
             self.restore_removed_items()
         self.last_action = "undo"
 
-    def add_file(self, file_path):
+    def add_file(self, file_path) -> None:
         """
         Add a file to the widget.
         Checks if the file exists, has an allowed extension, and is not already present in the widget.
         Args:
             file_path (str): The path of the file to be added.
         """
-        if not os.path.exists(file_path):
-            logger.warning(f"Filepath does not exist: {file_path}")
-            raise ValueError(f"Path not valid: {file_path}")
+        if not pathlib.Path(file_path).exists():
+            logger.warning("Filepath does not exist: %s", file_path)
+            msg = f"Path not valid: {file_path}"
+            raise ValueError(msg)
             return
         if any(file_path.lower().endswith(ext) for ext in self.allowed_extensions):
             if file_path not in self.file_paths:
                 file_item = QStandardItem(file_path)
                 self.model.appendRow(file_item)
                 self.file_paths.add(file_path)
-                logger.info(f"Added file: {file_path}")
+                logger.info("Added file: %s", file_path)
             else:
-                logger.warning(f"{file_path} is already present.")
+                logger.warning("%s is already present.", file_path)
         else:
             logger.warning(f"{file_path} is not a supported filetype: {self.allowed_extensions}")
         self.last_action = "add_file"
 
-    def add_folder(self, folder):
+    def add_folder(self, folder) -> None:
         """
         Add the contents of a folder to the widget.
         Args:
             folder (str): The path of the folder to be added.
         """
-        logger.debug(f"add_folder folder: {folder}")
+        logger.debug("add_folder folder: %s", folder)
         for file_name in os.listdir(folder):
             file_path = os.path.join(folder, file_name)
-            if os.path.isfile(file_path):
+            if pathlib.Path(file_path).is_file():
                 self.add_file(file_path)
 
-    def select_folder(self):
+    def select_folder(self) -> None:
         """Open a file dialog to select a folder and add the contents to file_tree_widget."""
         folder_dialog = QFileDialog(self)
         folder_dialog.setWindowTitle("Select a Folder")
         folder_dialog.setFileMode(QFileDialog.Directory)
         folder_dialog.setOption(QFileDialog.ShowDirsOnly, True)
-        
+
         if folder_dialog.exec():
             folder_paths = folder_dialog.selectedFiles()
             if folder_paths:
                 selected_folder = folder_paths[0]
-                logger.debug(f"Selected folder: {selected_folder}")
+                logger.debug("Selected folder: %s", selected_folder)
                 self.add_folder(selected_folder)
 
-    def select_files(self):
+    def select_files(self) -> None:
         """Launch a file selector to select multiple files and add them to file_tree_widget."""
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Select Files")
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
-        
+
         if file_dialog.exec():
             file_paths = file_dialog.selectedFiles()
             for file_path in file_paths:
-                logger.debug(f"Selected file: {file_path}")
+                logger.debug("Selected file: %s", file_path)
                 self.add_file(file_path)
 
-    def open_files(self):
+    def open_files(self) -> None:
         """
         Open one or more selected files in the default application.
         """
@@ -540,7 +550,7 @@ class FileTreeWidget(QTreeView):
         for index in sorted(indexes, reverse=True):
             self.open_file(index)
 
-    def open_file(self, index):
+    def open_file(self, index) -> None:
         """
         Open the file at the given index in the default application.
         Args:
@@ -554,12 +564,12 @@ class FileTreeWidget(QTreeView):
         file_path = item.text()
         if not file_path:
             return
-        logger.debug(f"open_file file: {file_path}")
-        if os.path.exists(file_path):
+        logger.debug("open_file file: %s", file_path)
+        if pathlib.Path(file_path).exists():
             QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
-            logger.info(f"Opened file: {file_path}")
+            logger.info("Opened file: %s", file_path)
 
-    def open_parent_dir(self):
+    def open_parent_dir(self) -> None:
         """
         Open the parent directory of one or more selected files in the default application.
         """
@@ -567,7 +577,7 @@ class FileTreeWidget(QTreeView):
             logger.debug("No selected indexes.")
             return
         system_platform = platform.system()
-        logger.debug(f"Operating System: {system_platform}")
+        logger.debug("Operating System: %s", system_platform)
         for index in sorted(indexes, reverse=True):
             if not index.isValid():
                 continue
@@ -577,10 +587,10 @@ class FileTreeWidget(QTreeView):
             file_path = item.text()
             if not file_path:
                 continue
-            logger.debug(f"file_path: {file_path}")
+            logger.debug("file_path: %s", file_path)
 
-            parent_dir = os.path.dirname(file_path)
-            logger.debug(f"parent_dir: {parent_dir}")
+            parent_dir = pathlib.Path(file_path).parent
+            logger.debug("parent_dir: %s", parent_dir)
             if system_platform == "Windows":
                 subprocess.Popen(f'explorer /select,"{parent_dir}"')
             elif system_platform == "Darwin":  # macOS
@@ -588,9 +598,9 @@ class FileTreeWidget(QTreeView):
             elif system_platform == "Linux":
                 subprocess.Popen(["xdg-open", parent_dir])
             else:
-                logger.error(f"Unsupported operating system: {system_platform}")
+                logger.error("Unsupported operating system: %s", system_platform)
 
-    def on_selection_changed(self, selected, deselected):
+    def on_selection_changed(self, selected, deselected) -> None:
         """
         Handle selection changes.
         Emit a signal to toggle ButtonWidget when the total number of selections changes from 0 to >0 or from >0 to 0.
@@ -599,7 +609,7 @@ class FileTreeWidget(QTreeView):
             deselected (QItemSelection): Newly deselected items.
         """
         current_selection_count = len(self.selectionModel().selectedIndexes())
-        if not hasattr(self, '_previous_selection_count'):
+        if not hasattr(self, "_previous_selection_count"):
             self._previous_selection_count = 0
         if self._previous_selection_count == 0 and current_selection_count > 0:
             self.button_toggle.emit(True)
@@ -608,8 +618,8 @@ class FileTreeWidget(QTreeView):
         self._previous_selection_count = current_selection_count
 
     def find_index_by_text(self, text):
-        """ 
-        Iterate through all rows and columns in the model to find the item with the given text. 
+        """
+        Iterate through all rows and columns in the model to find the item with the given text.
         Args:
             text: the filename of an item of an index to search for
         """

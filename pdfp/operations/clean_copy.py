@@ -1,26 +1,23 @@
-import os
-import subprocess
-import math
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QApplication
-from pdfp.settings_window import SettingsWindow
-from pdfp.utils.filename_constructor import construct_filename
-from pdfp.utils.clean_text import clean_text
-from pdfp.utils.tts_limit import tts_word_count
-import pymupdf
 import logging
 
+from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication
+
+from pdfp.settings_window import SettingsWindow
+from pdfp.utils.clean_text import clean_text
+from pdfp.utils.filename_constructor import construct_filename
+from pdfp.utils.tts_limit import tts_word_count
+
 logger = logging.getLogger("pdfp")
+
 
 class Converter(QObject):
     """
     Converter class to extract text from a PDF, transform it, and either write it to files
     or copy it to the clipboard based on user settings.
     """
-    def __init__(self):
-        super().__init__()
 
-    def copy_pdf(self, file_tree, pdf, cc_file_checked):
+    def copy_pdf(self, file_tree: QObject, pdf: str, cc_file_checked: bool) -> str | None:
         """
         Extracts text from a PDF, handles text splitting if enabled, and either writes it to multiple
         files or copies it to the clipboard.
@@ -46,9 +43,10 @@ class Converter(QObject):
         else:
             tts_word_count(full_text)
             QApplication.clipboard().setText(full_text)
-            logger.info(f"PDF contents copied to clipboard.")
+            logger.info("PDF contents copied to clipboard.")
+        return None
 
-    def convert(self, file_tree, pdf, cc_file_checked):
+    def convert(self, file_tree: QObject, pdf: str, cc_file_checked: bool) -> None:
         """
         Initiates the PDF text extraction and transformation process based on user settings.
         Args:
@@ -57,8 +55,9 @@ class Converter(QObject):
             cc_file_checked (bool): Indicates whether to split text into multiple files or copy to clipboard.
         """
         self.settings = SettingsWindow.instance()
-        logger.success(f"Converting {pdf}...")
+        logger.info("Converting %s...", pdf)
         QApplication.processEvents()
         self.copy_pdf(file_tree, pdf, cc_file_checked)
-        
+
+
 clean_copy = Converter()

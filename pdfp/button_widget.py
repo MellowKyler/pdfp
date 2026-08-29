@@ -1,18 +1,32 @@
-from PySide6.QtWidgets import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from pdfp.settings_window import SettingsWindow
-from pdfp.file_tree_widget import FileTreeWidget
-from pdfp.operations.file2pdf import file2pdf
-from pdfp.operations.png import pdf2png
-from pdfp.operations.ocr import ocr
-from pdfp.operations.crop import crop
-from pdfp.operations.trim import trim
-from pdfp.operations.clean_copy import clean_copy
-from pdfp.operations.tts import tts
 import logging
 
+from PySide6.QtCore import Signal
+from PySide6.QtGui import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
+
+from pdfp.file_tree_widget import FileTreeWidget
+from pdfp.operations.clean_copy import clean_copy
+from pdfp.operations.crop import crop
+from pdfp.operations.file2pdf import file2pdf
+from pdfp.operations.ocr import ocr
+from pdfp.operations.png import pdf2png
+from pdfp.operations.trim import trim
+from pdfp.settings_window import SettingsWindow
+
 logger = logging.getLogger("pdfp")
+
 
 class ButtonWidget(QWidget):
     """
@@ -22,7 +36,7 @@ class ButtonWidget(QWidget):
     It connects each button to its corresponding function and emits messages when buttons are clicked.
 
     Attributes:
-        button_toggle (Signal): Disables and enables button_widget when an operation begins and ends. 
+        button_toggle (Signal): Disables and enables button_widget when an operation begins and ends.
         main_window (QMainWindow): The main application window.
         app (QApplication): The application instance.
         settings (SettingsWindow): The settings window instance.
@@ -33,14 +47,16 @@ class ButtonWidget(QWidget):
     """
 
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         """
         Override __new__ method to ensure only one instance of SettingsWindow exists.
         If no existing instance, create one and return it. If an instance exists, return that instance.
         """
         if not cls._instance:
-            cls._instance = super(ButtonWidget, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
+
     @classmethod
     def instance(cls):
         """
@@ -53,12 +69,10 @@ class ButtonWidget(QWidget):
         return cls._instance
 
     button_toggle = Signal(bool)
-    def __init__(self):
+
+    def __init__(self) -> None:
         super().__init__()
         self.app = QApplication.instance()
-        # if self.app is None:
-        #     raise RuntimeError("QApplication instance is not created")
-        # print("QApplication instance created:", QApplication.instance())
         self.settings = SettingsWindow.instance()
         self.file_tree_widget = FileTreeWidget.instance()
 
@@ -70,7 +84,7 @@ class ButtonWidget(QWidget):
         f2pdf_box_layout.addWidget(f2pdf_button)
         f2pdf_box.setLayout(f2pdf_box_layout)
         f2pdf_box.setMaximumHeight(70)
-        
+
         png_page_label = QLabel("Page to convert to PNG:")
         png_page_label.setMaximumHeight(15)
         self.png_page = QLineEdit()
@@ -107,7 +121,7 @@ class ButtonWidget(QWidget):
         trim_label = QLabel("Pages to keep:")
         trim_label.setMaximumHeight(15)
         self.keep_pgs = QLineEdit()
-        self.keep_pgs.setPlaceholderText("Ex: \"12-16 32-end\"")
+        self.keep_pgs.setPlaceholderText('Ex: "12-16 32-end"')
         trim_button = QPushButton("Trim")
         trim_button.clicked.connect(self.trim_clicked)
         trim_box = QGroupBox()
@@ -127,28 +141,18 @@ class ButtonWidget(QWidget):
         cc_radio_layout = QHBoxLayout()
         cc_radio_layout.addWidget(cc_clipboard)
         cc_radio_layout.addWidget(self.cc_file)
-        cc_radio_layout.setAlignment(Qt.AlignCenter)
+        cc_radio_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         clean_copy_button = QPushButton("Clean Copy Contents")
         clean_copy_button.clicked.connect(self.clean_copy_clicked)
         cc_grid = QGridLayout()
-        cc_grid.addLayout(cc_radio_layout,0,0,alignment=Qt.AlignCenter)
-        cc_grid.addWidget(clean_copy_button,1,0)
+        cc_grid.addLayout(cc_radio_layout, 0, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+        cc_grid.addWidget(clean_copy_button, 1, 0)
         cc_grid.setHorizontalSpacing(0)
         cc_grid.setVerticalSpacing(0)
-        cc_grid.setContentsMargins(10,0,10,10)
+        cc_grid.setContentsMargins(10, 0, 10, 10)
         cc_box = QGroupBox()
         cc_box.setLayout(cc_grid)
         cc_box.setMaximumHeight(80)
-
-        tts_button = QPushButton("Text to Speech")
-        tts_button.clicked.connect(self.tts_clicked)
-        tts_box = QGroupBox()
-        tts_box_layout = QVBoxLayout()
-        tts_box_layout.setSpacing(1)
-        tts_box_layout.addWidget(tts_button)
-        tts_box.setLayout(tts_box_layout)
-        tts_box.setMaximumHeight(70)
-
 
         scrollable_content = QWidget()
         scrollable_content.setMinimumHeight(400)
@@ -159,7 +163,6 @@ class ButtonWidget(QWidget):
         scrollable_layout.addWidget(crop_button)
         scrollable_layout.addWidget(trim_box)
         scrollable_layout.addWidget(cc_box)
-        scrollable_layout.addWidget(tts_button)
         scrollable_layout.setSpacing(3)
 
         scroll_area = QScrollArea()
@@ -168,91 +171,80 @@ class ButtonWidget(QWidget):
         scroll_area.setWidget(scrollable_content)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(2,0,0,0)
+        layout.setContentsMargins(2, 0, 0, 0)
         layout.addWidget(scroll_area)
         self.setLayout(layout)
 
-    def f2pdf_clicked(self):
+    def f2pdf_clicked(self) -> None:
         """
         Handle the Convert to PDF button click event.
         Emits a message and calls the file2pdf conversion function.
         """
-        logger.info(f"Attempting to convert file to PDF...")
+        logger.info("Attempting to convert file to PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(file2pdf.convert)
         self.button_toggle.emit(True)
 
-    def png_clicked(self):
+    def png_clicked(self) -> None:
         """
         Handle the Extract PNG button click event.
         Emits a message and calls the pdf2png conversion function with the specified page number.
         """
         page = self.png_page.text()
-        logger.info(f"Attempting to convert PDF to PNG...")
+        logger.info("Attempting to convert PDF to PNG...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(pdf2png.convert, page)
         self.button_toggle.emit(True)
 
-    def ocr_clicked(self):
+    def ocr_clicked(self) -> None:
         """
         Handle the OCR button click event.
         Emits a message and calls the OCR conversion function.
         """
-        logger.info(f"Attempting to OCR PDF...")
+        logger.info("Attempting to OCR PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(ocr.convert)
         self.button_toggle.emit(True)
 
-    def crop_clicked(self):
+    def crop_clicked(self) -> None:
         """
         Handle the Crop button click event.
         Emits a message and calls the crop conversion function.
         """
-        logger.info(f"Attempting to crop PDF...")
+        logger.info("Attempting to crop PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(crop.convert)
         self.button_toggle.emit(True)
 
-    def trim_clicked(self):
+    def trim_clicked(self) -> None:
         """
         Handle the Trim Pages button click event.
         Emits a message and calls the trim conversion function with the specified pages to keep.
         """
         keep_pgs_input = self.keep_pgs.text()
-        logger.info(f"Attempting to trim PDF...")
+        logger.info("Attempting to trim PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(trim.convert, keep_pgs_input)
         self.button_toggle.emit(True)
 
-    def clean_copy_clicked(self):
+    def clean_copy_clicked(self) -> None:
         """
         Handle the Clean Copy button click event.
         Emits a message and calls the clean copy conversion function with the selected option.
         """
         cc_file_checked = self.cc_file.isChecked()
-        logger.info(f"Attempting to clean copy PDF...")
+        logger.info("Attempting to clean copy PDF...")
         QApplication.processEvents()
         self.button_toggle.emit(False)
         self.call_selected_function(clean_copy.convert, cc_file_checked)
         self.button_toggle.emit(True)
 
-    def tts_clicked(self):
-        """
-        Handle the Text to Speech button click event.
-        Emits a message and calls the TTS conversion function.
-        """
-        logger.info(f"Attempting to TTS PDF...")
-        QApplication.processEvents()
-        self.button_toggle.emit(False)
-        self.call_selected_function(tts.convert)
-        self.button_toggle.emit(True)
-
-    def call_selected_function(self, function, *args, **kwargs):
+    def call_selected_function(self, function, *args, **kwargs) -> None:
         """
         Call the selected function for each selected file.
         Emits a message if no items are selected or if selection is invalid.
@@ -263,7 +255,7 @@ class ButtonWidget(QWidget):
         """
         indexes = self.file_tree_widget.selectedIndexes()
         if not indexes:
-            logger.warning(f"No items selected")
+            logger.warning("No items selected")
             return
         for index in indexes:
             if not index.isValid():
@@ -271,7 +263,7 @@ class ButtonWidget(QWidget):
                 continue
             item = self.file_tree_widget.model.itemFromIndex(index)
             if not item:
-                logger.warning(f"No item in index: {index}")
+                logger.warning("No item in index: %s", index)
                 continue
             file_path = item.text()
             self.call_generic_function(file_path, function, *args, **kwargs)
@@ -287,7 +279,7 @@ class ButtonWidget(QWidget):
         """
         return function(self.file_tree_widget, file_path, *args, **kwargs)
 
-    def toggle_cc_file_line_edit(self, checked):
+    def toggle_cc_file_line_edit(self, checked) -> None:
         """
         Toggle the enable state of the cc_file_line_edit and cc_file_label widgets.
         Args:
@@ -296,16 +288,15 @@ class ButtonWidget(QWidget):
         self.cc_file_line_edit.setEnabled(checked)
         self.cc_file_label.setEnabled(checked)
 
-    #potentially standardize so that prefix/suffix, chain operations, and button_clicked can all use the same mapping
-    #could also simplify button_clicked methods by this
+    # potentially standardize so that prefix/suffix, chain operations, and button_clicked can all use the same mapping
+    # could also simplify button_clicked methods by this
     # operation_map = {
     #     "file2pdf": file2pdf.convert,
     #     "pdf2png": pdf2png.convert,
     #     "ocr": ocr.convert,
     #     "crop": crop.convert,
     #     "trim": trim.convert,
-    #     "cc": clean_copy.convert,
-    #     "tts": tts.convert
+    #     "cc": clean_copy.convert
     # }
 
     # def chain_operations(operation_list):
@@ -313,7 +304,7 @@ class ButtonWidget(QWidget):
     #     input_file = filename_constructor(operation_list[0] + "_ps")
     #     for operation in operation_list:
     #         input_file = self.call_generic_function(input_file, operation_map.get(operation))
-            #call generic function has to return the output file from previous operation
-            #certain settings would be incompatible with chaining. 
-            #       multiple files as output
-            #       briss gui launching
+    # call generic function has to return the output file from previous operation
+    # certain settings would be incompatible with chaining.
+    #       multiple files as output
+    #       briss gui launching

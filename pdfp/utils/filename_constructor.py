@@ -1,11 +1,14 @@
+import logging
 import os
 import re
+from pathlib import Path
+
 from pdfp.settings_window import SettingsWindow
-import logging
 
 logger = logging.getLogger("pdfp")
 
-def construct_filename(input_file, operation_ps_id, pgnum=""):
+
+def construct_filename(input_file: str, operation_ps_id: str, pgnum: str = "") -> str:
     """
     Construct a filename based on user settings and operation specifics.
     Args:
@@ -20,13 +23,13 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
         - Appends specific extensions based on the operation ('cc_ps', 'tts_ps', 'png_ps', default 'pdf').
     """
     settings = SettingsWindow.instance()
-    dirpath = os.path.dirname(input_file)
+    input_path = Path(input_file)
+    dirpath = input_path.parent
 
     if settings.default_filename_checkbox.isChecked():
         filename = settings.default_filename_input.currentText()
     else:
-        filename = os.path.basename(input_file)
-        filename, _ = os.path.splitext(filename)
+        filename = input_path.stem
 
         lowercase_enabled = settings.lowercase_filename_checkbox.isChecked()
         first_word_filename_enabled = settings.first_word_filename_checkbox.isChecked()
@@ -35,7 +38,7 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
             filename = filename.lower()
 
         if first_word_filename_enabled:
-            alpha_string = ''
+            alpha_string = ""
             found_alpha = False
             for char in filename:
                 if char.isalpha():
@@ -46,26 +49,28 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
             filename = alpha_string
 
         if settings.filler_char_checkbox.isChecked():
-            char_rm = [' ', '-', '_']
+            char_rm = [" ", "-", "_"]
             new_char = settings.filler_char_input.text()
-            pattern = r'[' + re.escape(''.join(char_rm)) + r']+'
+            pattern = r"[" + re.escape("".join(char_rm)) + r"]+"
             filename = re.sub(pattern, new_char, filename)
             filename = filename.strip(new_char)
 
     ps_enabled = settings.prefix_suffix_checkbox.isChecked()
-    disable_ps_ext = settings.disable_non_pdf_ps_checkbox.isChecked() and (operation_ps_id in ("png_ps", "cc_ps", "tts_ps")) # and input_file.endswith('.pdf') #txt files with cc could match output_file name
+    disable_ps_ext = settings.disable_non_pdf_ps_checkbox.isChecked() and (
+        operation_ps_id in {"png_ps", "cc_ps", "tts_ps"}
+    )
     if ps_enabled and not disable_ps_ext:
         prefix_enabled = settings.prefix_radio.isChecked()
         char_ps = settings.char_ps_input.text()
         operation_ps = settings.settings.value(operation_ps_id, "", type=str)
-        if operation_ps != "":
-            if prefix_enabled:
-                filename = f"{operation_ps}{char_ps}{filename}"
-            else:
-                filename = f"{filename}{char_ps}{operation_ps}"
-                
+        if operation_ps:
+            filename = f"{operation_ps}{char_ps}{filename}" if prefix_enabled else f"{filename}{char_ps}{operation_ps}"
+
     pgnum_enabled = settings.page_number_checkbox.isChecked()
-    if pgnum_enabled and ((operation_ps_id == "png_ps" and settings.png_pagenum_checkbox.isChecked()) or (operation_ps_id == "trim_ps" and settings.trim_pagenum_checkbox.isChecked())):
+    if pgnum_enabled and (
+        (operation_ps_id == "png_ps" and settings.png_pagenum_checkbox.isChecked())
+        or (operation_ps_id == "trim_ps" and settings.trim_pagenum_checkbox.isChecked())
+    ):
         if settings.pgnum_prefix_checkbox.isChecked():
             pgnum_prefix = settings.pgnum_prefix_input.text()
             pgnum = f"{pgnum_prefix}{pgnum}"
@@ -79,7 +84,7 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
                 logger.error("Not enough wrap characters. Enter 2 in settings.")
         filename = f"{filename} {pgnum}"
 
-    if filename == "":
+    if not filename:
         filename = "pdfp-output"
 
     output_file = os.path.join(dirpath, filename)
@@ -92,15 +97,12 @@ def construct_filename(input_file, operation_ps_id, pgnum=""):
     else:
         output_file = f"{output_file}.pdf"
 
-    if os.path.exists(output_file) and settings.prevent_overwrite_checkbox.isChecked():
+    if Path(output_file).exists() and settings.prevent_overwrite_checkbox.isChecked():
         base, extension = os.path.splitext(output_file)
         counter = 1
         new_output_file = output_file
-        if settings.filler_char_checkbox.isChecked():
-            filler = settings.filler_char_input.text()
-        else:
-            filler = "_"
-        while os.path.exists(new_output_file):
+        filler = settings.filler_char_input.text() if settings.filler_char_checkbox.isChecked() else "_"
+        while Path(new_output_file).exists():
             new_output_file = f"{base}{filler}{counter}{extension}"
             counter += 1
         output_file = new_output_file
