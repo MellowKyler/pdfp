@@ -1,10 +1,7 @@
 import logging
-import os
-import pathlib
+from pathlib import Path
 
 import pymupdf
-from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication
 
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
@@ -12,53 +9,35 @@ from pdfp.utils.filename_constructor import construct_filename
 logger = logging.getLogger("pdfp")
 
 
-class Converter(QObject):
-    """
-    Handles PDF to PNG conversion.
-    """
+def convert(pdf: str, page_number: str) -> None:
+    if not pdf.endswith(".pdf"):
+        logger.error("File is not a PDF.")
+        return
 
-    def __init__(self) -> None:
-        super().__init__()
+    try:
+        pg_num = int(page_number or "1")
+    except ValueError:
+        logger.error("Page selection input is not an integer")
+        return
 
-    def convert(self, file_tree, pdf, pg):
-        """
-        Converts a specific page of a PDF file to PNG format.
-        Args:
-            file_tree (QWidget): The file tree widget where output files may be added.
-            pdf (str): Path of the PDF file to convert.
-            pg (str): Page number (as a string) to convert to PNG. If empty, defaults to "1".
-        """
-        if not pdf.endswith(".pdf"):
-            logger.error("File is not a PDF.")
-            return None
+    logger.info("Converting %s to PNG...", pdf)
 
-        if pg == "":
-            pg = "1"
+    settings = SettingsWindow()
 
-        try:
-            pg = int(pg)
-        except ValueError:
-            logger.error("Page selection input is not an integer")
-            return None
+    doc = pymupdf.open(pdf)
+    if pg_num < 1 or pg_num > len(doc):
+        logger.error("Invalid page number")
+        return
 
-        logger.info("Converting %s to PNG...", pdf)
-        QApplication.processEvents()
+    page = doc.load_page(pg_num - 1)
+    pix = page.get_pixmap()
 
-        settings = SettingsWindow.instance()
+    if settings.png_cover_checkbox.isChecked():
+        output_file = Path(pdf).parent / "cover.png"
+    else:
+        output_file = construct_filename(pdf, "png_ps", str(page_number))
 
-        doc = pymupdf.open(pdf)
-        if pg < 1 or pg > len(doc):
-            raise ValueError("Invalid page number")
-        page = doc.load_page(pg - 1)
-        pix = page.get_pixmap()
-        if settings.png_cover_checkbox.isChecked():
-            output_file = os.path.join(pathlib.Path(pdf).parent, "cover.png")
-        else:
-            output_file = construct_filename(pdf, "png_ps", str(pg))
-        pix.save(output_file)
+    pix.save(output_file)
 
-        logger.success(f"Conversion complete. Output: {output_file}")
-        return output_file
+    logger.info("Conversion complete. Output: %s", output_file)
 
-
-pdf2png = Converter()

@@ -1,80 +1,66 @@
 import logging
 import re
+from pathlib import Path
 
 import pymupdf
-from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication
 
+from pdfp.file_tree_widget import FileTreeWidget
 from pdfp.settings_window import SettingsWindow
 from pdfp.utils.filename_constructor import construct_filename
 
 logger = logging.getLogger("pdfp")
 
 
-class Converter(QObject):
-    """
-    Handles PDF trimming operations based on specified page ranges.
-    """
+def parse_page_ranges(value: str, length: int) -> list[tuple[int, int]] | None:
+    ranges: list[tuple[int, int]] = []
 
-    def __init__(self) -> None:
-        super().__init__()
-
-    def convert(self, file_tree, pdf, keep_pgs):
-        """
-        Performs PDF trimming operation based on specified page ranges.
-        Args:
-            file_tree (QWidget): The file tree widget where output files may be added.
-            pdf (str): Path of the PDF file to trim.
-            keep_pgs (str): Page ranges or numbers to keep in the PDF.
-        """
-        if keep_pgs == "":
-            logger.error("No pages entered")
+    for part in value.split():
+        match = re.fullmatch(r"(\d+)(?:-(\d+|end))?", part)
+        if not match:
             return None
 
-        if not pdf.endswith(".pdf"):
-            self.util_msgs.emit("File is not a PDF.")
+        start = int(match.group(1))
+        end = match.group(2)
+
+        start -= 1
+        end = length if end == "end" else int(end or start + 1)
+
+        if not 0 <= start < end <= length:
             return None
 
-        logger.info("Converting %s", pdf)
-        QApplication.processEvents()
-        self.settings = SettingsWindow.instance()
+        ranges.append((start, end - 1))
 
-        input_pdf = pymupdf.open(pdf)
-        output_pdf = pymupdf.open()
-
-        pdf_length = len(input_pdf)
-
-        keep_pgs_list = keep_pgs.split()
-        page_ranges = []
-        try:
-            for pg_pair in keep_pgs_list:
-                if re.fullmatch(r"(\d+)", pg_pair):
-                    page_ranges.append((int(pg_pair), int(pg_pair)))
-                elif match := (re.fullmatch(r"(\d+)-(\d+)", pg_pair)):
-                    page_ranges.append((int(match.group(1)), int(match.group(2))))
-                elif match := (re.fullmatch(r"(\d+)-end", pg_pair)):
-                    page_ranges.append((int(match.group(1)), pdf_length))
-                else:
-                    logger.error("Invalid page number entry.")
-                    return None
-        except ValueError:
-            logger.error("Invalid page number entry.")
-            return None
-
-        for start, end in page_ranges:
-            for page_num in range(start - 1, end):
-                if page_num < 0 or page_num > pdf_length:
-                    logger.error("Invalid page number entry. Out of range.")
-                    return None
-                input_pdf.load_page(page_num)
-                output_pdf.insert_pdf(input_pdf, from_page=page_num, to_page=page_num)
-
-        output_file = construct_filename(pdf, "trim_ps", keep_pgs)
-        output_pdf.save(output_file)
-        logger.success(f"Conversion complete. Output: {output_file}")
-        if self.settings.add_file_checkbox.isChecked():
-            file_tree.add_file(output_file)
-        return output_file
+    return ranges
 
 
-trim = Converter()
+def trim(file_tree: FileTreeWidget, pdf: str, keep_pgs: str) -> None:
+    if not keep_pgs:
+        logger.error("No pages entered")
+        return
+
+    if not pdf.endswith(".pdf"):
+        logger.warning("File is not a PDF.")
+        return
+
+    logger.info("Trimming %s", pdf)
+    settings = SettingsWindow()
+
+    input_pdf = pymupdf.open(pdf)
+
+    page_ranges = parse_page_ranges(keep_pgs, len(input_pdf))
+    if page_ranges is None:
+        logger.error("Invalid page number entry.")
+        return
+
+    output_pdf = pymupdf.open()
+
+    for start, end in page_ranges:
+        output_pdf.insert_pdf(input_pdf, from_page=start, to_page=end)
+
+    output_file = construct_filename(pdf, "trim_ps", keep_pgs)
+    output_pdf.save(output_file)
+
+    logger.info("Conversion complete. Output: %s", output_file)
+
+    if settings.add_file_checkbox.isChecked():
+        file_tree.add_file(Path(output_file))

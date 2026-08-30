@@ -47,9 +47,6 @@ class Converter(QObject):
     revise_worker_label = Signal(str, str)
     worker_done = Signal(str)
 
-    def __init__(self) -> None:
-        super().__init__()
-
     def convert(self, file_tree, pdf):
         """
         Performs OCR on the specified PDF file.
